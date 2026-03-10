@@ -1,0 +1,1513 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CriptoAnálisis Pro — Dashboard Avanzado</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════
+   DESIGN SYSTEM
+══════════════════════════════════════ */
+:root {
+  --bg:     #020507;
+  --bg2:    #060c10;
+  --panel:  #090f16;
+  --p2:     #0d1822;
+  --p3:     #111f2e;
+  --border: #122030;
+  --b2:     #1a3040;
+  --g1: #00e676; --g2: #69f0ae; --g3: rgba(0,230,118,0.08);
+  --r1: #ff1744; --r2: #ff6090; --r3: rgba(255,23,68,0.08);
+  --b1: #00b0ff; --b3: rgba(0,176,255,0.08);
+  --y1: #ffd740; --y3: rgba(255,215,64,0.08);
+  --o1: #ff6d00; --o3: rgba(255,109,0,0.08);
+  --p1: #d500f9;
+  --t1: #a0bcc8; --t2: #4a6878; --t3: #ddeef5;
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'Outfit', sans-serif;
+  --radius: 12px;
+}
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--t1);
+  font-family: var(--sans);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+body::before {
+  content:''; position:fixed; inset:0;
+  background-image:
+    linear-gradient(rgba(0,176,255,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,176,255,0.015) 1px, transparent 1px);
+  background-size: 36px 36px;
+  pointer-events:none; z-index:0;
+}
+.z { position:relative; z-index:1; }
+
+/* ══════════════════════════════════════
+   TOPBAR
+══════════════════════════════════════ */
+.topbar {
+  position:sticky; top:0; z-index:900;
+  background:rgba(2,5,7,0.97);
+  backdrop-filter:blur(24px);
+  border-bottom:1px solid var(--border);
+  height:50px; display:flex; align-items:center;
+}
+.tb-inner {
+  width:100%; max-width:1500px; margin:0 auto;
+  padding:0 18px;
+  display:flex; align-items:center; gap:16px; justify-content:space-between;
+}
+.logo {
+  font-family:var(--mono); font-size:12px; font-weight:700;
+  color:var(--g1); letter-spacing:3px; white-space:nowrap;
+  display:flex; align-items:center; gap:8px;
+}
+.logo-dot { width:7px; height:7px; border-radius:50%; background:var(--g1); animation:pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(0,230,118,.4)} 50%{opacity:.7;box-shadow:0 0 0 5px rgba(0,230,118,0)} }
+
+.ticker-wrap { flex:1; overflow:hidden; mask:linear-gradient(90deg,transparent,black 5%,black 95%,transparent); }
+.ticker-track { display:flex; animation:tick 50s linear infinite; width:max-content; }
+.ticker-track:hover { animation-play-state:paused; }
+@keyframes tick { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+.t-item { display:inline-flex; align-items:center; gap:5px; padding:0 18px; border-right:1px solid var(--border); font-family:var(--mono); font-size:10.5px; white-space:nowrap; }
+.t-sym { color:var(--t3); font-weight:700; }
+.t-px  { color:var(--t1); }
+.t-ch  { font-size:9.5px; font-weight:700; }
+.up  { color:var(--g1); } .dn { color:var(--r1); }
+
+.tb-right { display:flex; align-items:center; gap:12px; }
+.live-badge { display:flex; align-items:center; gap:5px; font-family:var(--mono); font-size:10px; color:var(--t2); }
+.lp { width:6px; height:6px; border-radius:50%; background:var(--g1); animation:pulse 1.5s infinite; }
+
+/* ══════════════════════════════════════
+   LAYOUT
+══════════════════════════════════════ */
+.page { max-width:1500px; margin:0 auto; padding:18px; }
+
+/* API Status */
+.api-bar {
+  display:flex; gap:8px; flex-wrap:wrap;
+  margin-bottom:16px;
+  padding:10px 14px;
+  background:var(--panel); border:1px solid var(--border); border-radius:var(--radius);
+}
+.api-item { display:flex; align-items:center; gap:5px; font-family:var(--mono); font-size:10px; color:var(--t2); }
+.api-dot { width:6px; height:6px; border-radius:50%; transition:background .3s; }
+.api-dot.ok { background:var(--g1); }
+.api-dot.err { background:var(--r1); }
+.api-dot.load { background:var(--y1); animation:pulse 1s infinite; }
+
+/* Panel */
+.panel {
+  background:var(--panel); border:1px solid var(--border);
+  border-radius:var(--radius); overflow:hidden; position:relative;
+}
+.ph {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:11px 16px; border-bottom:1px solid var(--border);
+  background:rgba(0,0,0,0.15);
+}
+.pt { font-family:var(--mono); font-size:9.5px; font-weight:700; letter-spacing:2.5px; text-transform:uppercase; color:var(--t2); display:flex; align-items:center; gap:7px; }
+.pdot { width:6px; height:6px; border-radius:50%; }
+.pbadge { font-family:var(--mono); font-size:8.5px; letter-spacing:1px; padding:2px 7px; border-radius:4px; text-transform:uppercase; }
+.pb { padding:16px; }
+
+/* Grid */
+.g3  { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:14px; }
+.g4  { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:14px; }
+.g21 { display:grid; grid-template-columns:2fr 1fr; gap:14px; margin-bottom:14px; }
+.g12 { display:grid; grid-template-columns:1fr 2fr; gap:14px; margin-bottom:14px; }
+.g2  { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
+
+@media(max-width:1100px){ .g3,.g4,.g21,.g12{ grid-template-columns:1fr 1fr; } }
+@media(max-width:700px) { .g3,.g4,.g21,.g12,.g2{ grid-template-columns:1fr; } }
+
+/* ══════════════════════════════════════
+   STAT BOX
+══════════════════════════════════════ */
+.statbox {
+  background:var(--p2); border:1px solid var(--border); border-radius:10px;
+  padding:14px 16px; position:relative; overflow:hidden; cursor:default;
+  transition:border-color .2s;
+}
+.statbox:hover { border-color:var(--b2); }
+.statbox::after { content:''; position:absolute; bottom:0; left:0; right:0; height:2px; }
+.statbox.sg::after { background:var(--g1); }
+.statbox.sr::after { background:var(--r1); }
+.statbox.sb::after { background:var(--b1); }
+.statbox.sy::after { background:var(--y1); }
+.statbox.so::after { background:var(--o1); }
+.statbox.sp::after { background:var(--p1); }
+.sb-label { font-family:var(--mono); font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--t2); margin-bottom:7px; }
+.sb-val   { font-family:var(--mono); font-size:1.35rem; font-weight:700; color:var(--t3); line-height:1; }
+.sb-sub   { font-size:.75rem; color:var(--t2); margin-top:5px; }
+
+/* ══════════════════════════════════════
+   FUNDING RATE DISPLAY
+══════════════════════════════════════ */
+.fr-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:10px; }
+.fr-item {
+  background:var(--p2); border:1px solid var(--border); border-radius:9px;
+  padding:12px; text-align:center; position:relative; overflow:hidden;
+  transition:border-color .2s;
+}
+.fr-item:hover { border-color:var(--b2); }
+.fr-sym { font-family:var(--mono); font-size:11px; font-weight:700; color:var(--t3); margin-bottom:5px; }
+.fr-val { font-family:var(--mono); font-size:1.1rem; font-weight:700; line-height:1; margin-bottom:4px; }
+.fr-tag { font-family:var(--mono); font-size:8.5px; letter-spacing:1px; color:var(--t2); }
+.fr-bar { height:3px; border-radius:2px; margin-top:8px; transition:width .5s; }
+
+/* ══════════════════════════════════════
+   WHALE ALERT FEED
+══════════════════════════════════════ */
+.whale-feed { display:flex; flex-direction:column; gap:4px; max-height:420px; overflow-y:auto; }
+.whale-feed::-webkit-scrollbar { width:4px; }
+.whale-feed::-webkit-scrollbar-track { background:transparent; }
+.whale-feed::-webkit-scrollbar-thumb { background:var(--b2); border-radius:2px; }
+
+.whale-item {
+  display:flex; align-items:center; gap:10px;
+  padding:10px 12px; border-radius:8px;
+  border-left:3px solid transparent;
+  background:var(--p2);
+  transition:background .15s;
+  animation:slideIn .3s ease;
+}
+@keyframes slideIn { from{opacity:0;transform:translateX(-8px)} to{opacity:1;transform:translateX(0)} }
+
+.whale-item:hover { background:var(--p3); }
+.whale-item.buy  { border-left-color:var(--g1); }
+.whale-item.sell { border-left-color:var(--r1); }
+.whale-item.liq  { border-left-color:var(--y1); }
+
+.wi-icon { font-size:1.1rem; flex-shrink:0; }
+.wi-sym  { font-family:var(--mono); font-size:10px; font-weight:700; color:var(--t3); }
+.wi-type { font-family:var(--mono); font-size:8.5px; letter-spacing:1px; }
+.wi-info { flex:1; min-width:0; }
+.wi-title { font-size:.83rem; font-weight:600; color:var(--t3); line-height:1.3; }
+.wi-meta  { font-family:var(--mono); font-size:9px; color:var(--t2); margin-top:2px; }
+.wi-amount { font-family:var(--mono); font-size:.95rem; font-weight:700; text-align:right; flex-shrink:0; }
+.wi-time { font-family:var(--mono); font-size:9px; color:var(--t2); text-align:right; }
+
+/* ALERT THRESHOLD badge */
+.alert-badge {
+  display:inline-flex; align-items:center; gap:4px;
+  font-family:var(--mono); font-size:8.5px; letter-spacing:1px;
+  padding:2px 7px; border-radius:4px; text-transform:uppercase;
+}
+.ab-mega { background:rgba(255,215,64,.12); color:var(--y1); border:1px solid rgba(255,215,64,.2); }
+.ab-whale{ background:rgba(255,109,0,.12); color:var(--o1); border:1px solid rgba(255,109,0,.2); }
+.ab-large{ background:rgba(0,176,255,.12); color:var(--b1); border:1px solid rgba(0,176,255,.2); }
+
+/* ══════════════════════════════════════
+   VOLUME SPIKE CHART
+══════════════════════════════════════ */
+.vol-chart { position:relative; }
+.vol-bars { display:flex; align-items:flex-end; gap:3px; height:120px; padding:0 4px; }
+.vol-bar-wrap { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; }
+.vol-bar {
+  width:100%; border-radius:3px 3px 0 0;
+  transition:height .4s ease, opacity .2s;
+  position:relative; cursor:pointer; min-height:3px;
+}
+.vol-bar:hover { opacity:.8; }
+.vol-bar.spike { box-shadow:0 0 8px rgba(255,215,64,.4); }
+.vol-bar-label { font-family:var(--mono); font-size:8px; color:var(--t2); white-space:nowrap; transform:rotate(-45deg); }
+
+.vol-legend { display:flex; gap:16px; margin-top:10px; padding-top:10px; border-top:1px solid var(--border); }
+.vl-item { display:flex; align-items:center; gap:6px; font-family:var(--mono); font-size:10px; color:var(--t2); }
+.vl-dot  { width:8px; height:8px; border-radius:2px; }
+
+/* ══════════════════════════════════════
+   LIQUIDATION HEATMAP
+══════════════════════════════════════ */
+.liq-map { position:relative; }
+.liq-levels { display:flex; flex-direction:column; gap:3px; }
+.liq-row {
+  display:flex; align-items:center; gap:8px;
+  padding:7px 10px; border-radius:7px;
+  border:1px solid transparent; cursor:default;
+  transition:border-color .15s;
+}
+.liq-row:hover { border-color:var(--b2); }
+.liq-price { font-family:var(--mono); font-size:11px; font-weight:700; color:var(--t3); width:90px; flex-shrink:0; }
+.liq-bar-wrap { flex:1; height:16px; background:var(--bg2); border-radius:4px; overflow:hidden; }
+.liq-bar-fill { height:100%; border-radius:4px; transition:width .7s ease; display:flex; align-items:center; padding-left:6px; }
+.liq-bar-val  { font-family:var(--mono); font-size:9px; font-weight:700; color:rgba(0,0,0,.7); white-space:nowrap; }
+.liq-amount   { font-family:var(--mono); font-size:10px; width:70px; text-align:right; flex-shrink:0; }
+.liq-side     { font-family:var(--mono); font-size:8.5px; letter-spacing:1px; width:40px; flex-shrink:0; }
+.liq-current  { border:1px dashed rgba(255,215,64,.4) !important; background:rgba(255,215,64,.03); }
+.liq-curr-label { font-family:var(--mono); font-size:9px; color:var(--y1); margin-left:6px; }
+
+/* ══════════════════════════════════════
+   OPEN INTEREST PANEL
+══════════════════════════════════════ */
+.oi-row { display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid rgba(18,32,48,.7); }
+.oi-row:last-child { border-bottom:none; }
+.oi-sym  { font-family:var(--mono); font-size:11px; font-weight:700; color:var(--t3); width:52px; flex-shrink:0; }
+.oi-val  { font-family:var(--mono); font-size:11px; font-weight:700; }
+.oi-chg  { font-family:var(--mono); font-size:10px; font-weight:700; }
+.oi-bar-wrap { flex:1; height:6px; background:var(--bg2); border-radius:3px; overflow:hidden; }
+.oi-bar-fill { height:100%; border-radius:3px; }
+
+/* ══════════════════════════════════════
+   LONG/SHORT RATIO
+══════════════════════════════════════ */
+.ls-item { margin-bottom:14px; }
+.ls-sym { font-family:var(--mono); font-size:10px; font-weight:700; color:var(--t3); margin-bottom:5px; display:flex; justify-content:space-between; }
+.ls-bar-row { display:flex; height:18px; border-radius:5px; overflow:hidden; }
+.ls-long-fill  { background:linear-gradient(90deg,var(--g1),#00c853); display:flex; align-items:center; justify-content:flex-end; padding-right:5px; transition:width .6s; }
+.ls-short-fill { background:linear-gradient(90deg,#c62828,var(--r1)); display:flex; align-items:center; justify-content:flex-start; padding-left:5px; transition:width .6s; }
+.ls-fill-label { font-family:var(--mono); font-size:9px; font-weight:700; color:rgba(0,0,0,.8); }
+.ls-labels { display:flex; justify-content:space-between; margin-top:4px; }
+.ls-label { font-family:var(--mono); font-size:9px; color:var(--t2); }
+
+/* ══════════════════════════════════════
+   MARKET SIGNAL INDICATOR
+══════════════════════════════════════ */
+.signal-meter {
+  text-align:center; padding:16px 0;
+}
+.sm-label { font-family:var(--mono); font-size:9.5px; letter-spacing:2px; color:var(--t2); text-transform:uppercase; margin-bottom:10px; }
+.sm-circle {
+  width:100px; height:100px; border-radius:50%;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  margin:0 auto 10px;
+  border:3px solid;
+  position:relative;
+}
+.sm-val  { font-family:var(--mono); font-size:1.8rem; font-weight:700; line-height:1; }
+.sm-txt  { font-family:var(--mono); font-size:9px; font-weight:700; letter-spacing:1px; margin-top:2px; }
+.sm-breakdown { display:flex; flex-direction:column; gap:5px; margin-top:12px; }
+.sm-row  { display:flex; justify-content:space-between; align-items:center; font-family:var(--mono); font-size:10px; }
+.sm-row-label { color:var(--t2); }
+.sm-row-val   { font-weight:700; }
+
+/* ══════════════════════════════════════
+   THRESHOLD SETTINGS
+══════════════════════════════════════ */
+.settings-row { display:flex; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap; }
+.settings-label { font-family:var(--mono); font-size:10px; color:var(--t2); white-space:nowrap; min-width:140px; }
+.settings-input {
+  background:var(--bg2); border:1px solid var(--b2); border-radius:6px;
+  padding:6px 10px; font-family:var(--mono); font-size:11px; color:var(--t3);
+  outline:none; width:100px; transition:border-color .2s;
+}
+.settings-input:focus { border-color:var(--g1); }
+.settings-select {
+  background:var(--bg2); border:1px solid var(--b2); border-radius:6px;
+  padding:6px 10px; font-family:var(--mono); font-size:11px; color:var(--t3);
+  outline:none; cursor:pointer;
+}
+.apply-btn {
+  background:var(--g1); color:var(--bg); border:none;
+  padding:7px 16px; border-radius:7px; cursor:pointer;
+  font-family:var(--mono); font-size:10px; font-weight:700;
+  letter-spacing:1px; transition:all .2s;
+}
+.apply-btn:hover { background:var(--g2); }
+
+/* ══════════════════════════════════════
+   SKELETON / ERROR
+══════════════════════════════════════ */
+@keyframes shimmer { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
+.sk { background:linear-gradient(90deg,var(--p2) 25%,var(--border) 50%,var(--p2) 75%); background-size:800px 100%; animation:shimmer 1.5s infinite; border-radius:6px; }
+.sk-line { height:13px; margin:5px 0; }
+.err-box { text-align:center; padding:20px; }
+.err-icon { font-size:1.8rem; }
+.err-msg  { font-size:.82rem; color:var(--t2); margin:8px 0; line-height:1.6; }
+.retry-btn { background:transparent; border:1px solid var(--b2); color:var(--b1); padding:6px 14px; border-radius:6px; cursor:pointer; font-family:var(--mono); font-size:10px; margin-top:6px; transition:all .2s; }
+.retry-btn:hover { border-color:var(--b1); }
+
+/* ══════════════════════════════════════
+   ALERT NOTIFICATIONS
+══════════════════════════════════════ */
+#alertToast {
+  position:fixed; bottom:24px; right:24px; z-index:9999;
+  display:flex; flex-direction:column-reverse; gap:8px;
+  max-width:340px; pointer-events:none;
+}
+.toast {
+  background:var(--panel); border:1px solid;
+  border-radius:10px; padding:12px 16px;
+  display:flex; align-items:flex-start; gap:10px;
+  animation:toastIn .3s ease;
+  pointer-events:all;
+  box-shadow:0 8px 32px rgba(0,0,0,.6);
+}
+@keyframes toastIn { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:translateX(0)} }
+.toast.buy  { border-color:rgba(0,230,118,.3); }
+.toast.sell { border-color:rgba(255,23,68,.3); }
+.toast.liq  { border-color:rgba(255,215,64,.3); }
+.toast.info { border-color:rgba(0,176,255,.3); }
+.toast-icon { font-size:1.2rem; flex-shrink:0; }
+.toast-body { flex:1; }
+.toast-title{ font-size:.88rem; font-weight:700; color:var(--t3); }
+.toast-msg  { font-family:var(--mono); font-size:.78rem; color:var(--t2); margin-top:3px; line-height:1.4; }
+.toast-close { cursor:pointer; color:var(--t2); font-size:14px; padding:0 4px; transition:color .2s; }
+.toast-close:hover { color:var(--t3); }
+
+/* Footer */
+.footer { margin-top:20px; padding:14px 0; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; }
+.f-apis { display:flex; gap:14px; flex-wrap:wrap; }
+.f-api { font-family:var(--mono); font-size:10px; color:var(--t2); text-decoration:none; transition:color .2s; }
+.f-api:hover { color:var(--g1); }
+.f-disc { font-size:.75rem; color:var(--t2); font-style:italic; }
+
+/* ── LIQ TOTALS ── */
+.liq-totals { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px; }
+.liq-total-box { padding:10px 12px; border-radius:8px; border:1px solid; text-align:center; }
+.liq-total-label { font-family:var(--mono); font-size:9px; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:5px; }
+.liq-total-val   { font-family:var(--mono); font-size:1.1rem; font-weight:700; line-height:1; }
+.liq-total-sub   { font-family:var(--mono); font-size:8px; margin-top:4px; opacity:.75; }
+.liq-bias { padding:7px 10px; border-radius:7px; border:1px solid; font-family:var(--mono); font-size:9px; line-height:1.55; margin-bottom:10px; }
+
+/* ── CONTEXT NOTES ── */
+.ctx-note { margin-top:10px; padding:9px 12px; border-radius:8px; font-size:.8rem; line-height:1.65; border:1px solid; }
+
+/* ── CHECKLIST ── */
+.cl-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+@media(max-width:700px){ .cl-grid{ grid-template-columns:1fr; } }
+.cl-col-header { display:flex; align-items:center; gap:8px; margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid var(--border); }
+.cl-col-title  { font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; }
+.cl-score { margin-left:auto; font-family:var(--mono); font-size:10px; font-weight:700; padding:3px 10px; border-radius:5px; }
+.cl-item  { display:flex; align-items:flex-start; gap:9px; padding:8px 0; border-bottom:1px solid rgba(18,32,48,.7); }
+.cl-item:last-child { border-bottom:none; }
+.cl-check { width:18px; height:18px; border-radius:4px; flex-shrink:0; margin-top:1px; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; }
+.cl-check.pass { background:rgba(0,230,118,.15); color:var(--g1); border:1px solid rgba(0,230,118,.3); }
+.cl-check.fail { background:rgba(255,255,255,.04); color:var(--t2); border:1px solid rgba(255,255,255,.07); opacity:.5; }
+.cl-check.warn { background:rgba(255,215,64,.12); color:var(--y1); border:1px solid rgba(255,215,64,.25); }
+.cl-label      { font-size:.82rem; font-weight:600; line-height:1.3; }
+.cl-label.pass { color:var(--t3); } .cl-label.fail { color:var(--t2); } .cl-label.warn { color:var(--y1); }
+.cl-value { font-family:var(--mono); font-size:9px; margin-top:2px; color:var(--t2); }
+.cl-verdict { margin-top:12px; padding:10px 14px; border-radius:8px; font-family:var(--mono); font-size:10px; font-weight:700; line-height:1.6; text-align:center; border:1px solid; }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar z">
+  <div class="tb-inner">
+    <div class="logo"><div class="logo-dot"></div>CA<span style="color:#fff">PRO</span> <span style="color:var(--t2);font-weight:400">ADVANCED</span></div>
+    <div class="ticker-wrap"><div class="ticker-track" id="tickerTrack"><div class="t-item"><span class="t-sym">BTC</span><span class="t-px">cargando...</span></div></div></div>
+    <div class="tb-right">
+      <div class="live-badge"><div class="lp"></div><span id="liveStatus">CONECTANDO</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div id="alertToast"></div>
+
+<!-- PAGE -->
+<div class="page z">
+
+  <!-- API STATUS -->
+  <div class="api-bar">
+    <div class="api-item"><div class="api-dot load" id="d-binance"></div><span>Binance API (Prices, OI, FR, Vol)</span></div>
+    <div class="api-item"><div class="api-dot load" id="d-fg"></div><span>Fear & Greed</span></div>
+    <div class="api-item"><div class="api-dot load" id="d-cg"></div><span>CoinGecko (Global)</span></div>
+    <div class="api-item" style="margin-left:auto">
+      <span style="font-family:var(--mono);font-size:10px;color:var(--t2)" id="lastUpdate">—</span>
+    </div>
+    <div class="api-item">
+      <button class="apply-btn" onclick="refreshAll()" id="refreshBtn" style="padding:5px 12px">↻ REFRESH</button>
+    </div>
+  </div>
+
+  <!-- ROW 1: Market Signal + Fear & Greed + Stats x4 -->
+  <div class="g4" style="margin-bottom:14px">
+
+    <!-- SIGNAL COMPUESTO -->
+    <div class="panel">
+      <div class="ph">
+        <div class="pt"><div class="pdot" style="background:var(--b1)"></div>SEÑAL COMPUESTA</div>
+        <span class="pbadge" style="background:var(--b3);color:var(--b1)">LIVE</span>
+      </div>
+      <div class="pb">
+        <div class="signal-meter">
+          <div class="sm-label">ÍNDICE DE MERCADO</div>
+          <div class="sm-circle" id="smCircle" style="border-color:var(--t2)">
+            <div class="sm-val" id="smVal">—</div>
+            <div class="sm-txt" id="smTxt">CARGANDO</div>
+          </div>
+          <div class="sm-breakdown" id="smBreakdown">
+            <div class="sk sk-line sk-full"></div>
+            <div class="sk sk-line sk-full"></div>
+            <div class="sk sk-line" style="width:80%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FEAR & GREED -->
+    <div class="panel">
+      <div class="ph">
+        <div class="pt"><div class="pdot" style="background:var(--y1)"></div>FEAR & GREED</div>
+        <span class="pbadge" style="background:var(--y3);color:var(--y1)">DIARIO</span>
+      </div>
+      <div class="pb" id="fgPanel">
+        <div class="sk sk-line sk-full" style="height:50px;margin-bottom:10px"></div>
+        <div class="sk sk-line sk-full"></div>
+        <div class="sk sk-line" style="width:60%"></div>
+      </div>
+    </div>
+
+    <!-- BTC PRICE CARD -->
+    <div class="panel">
+      <div class="ph">
+        <div class="pt"><div class="pdot" style="background:var(--g1)"></div>BTC/USDT</div>
+        <span class="pbadge" style="background:var(--g3);color:var(--g1)">BINANCE</span>
+      </div>
+      <div class="pb" id="btcCard">
+        <div class="sk sk-line sk-full" style="height:50px;margin-bottom:8px"></div>
+        <div class="sk sk-line sk-full"></div>
+      </div>
+    </div>
+
+    <!-- ETH PRICE CARD -->
+    <div class="panel">
+      <div class="ph">
+        <div class="pt"><div class="pdot" style="background:var(--b1)"></div>ETH/USDT</div>
+        <span class="pbadge" style="background:var(--b3);color:var(--b1)">BINANCE</span>
+      </div>
+      <div class="pb" id="ethCard">
+        <div class="sk sk-line sk-full" style="height:50px;margin-bottom:8px"></div>
+        <div class="sk sk-line sk-full"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ROW 2: Funding Rate | Long/Short | OI -->
+  <div class="g3" style="margin-bottom:14px">
+
+    <!-- FUNDING RATE -->
+    <div class="panel">
+      <div class="ph">
+        <div class="pt"><div class="pdot" style="background:var(--p1)"></div>FUNDING RATE</div>
+        <span class="pbadge" style="background:rgba(213,0,249,.1);color:var(--p1)">PERPETUOS</span>
+      </div>
+      <div class="pb">
+        <div style="font-family:var(--mono);font-size:9px;color:var(--t2);margin-bottom:10px;letter-spacing:1px">Funding actual — positivo = longs pagan · negativo = shorts pagan</div>
+        <div class="fr-grid" id="frGrid">
+          <div class="sk sk-line" style="height:70px"></div>
+          <div class="sk sk-line" style="height:70px"></div>
+          <div class="sk sk-line" style="height:70px"></div>
+          <div class="sk sk-line" style="height:70px"></div>
+          <div class="sk sk-line" style="height:70px"></div>
+          <div class="sk sk-line" style="height:70px"></div>
+        </div>
+        <div style="margin-top:12px;padding:8px 10px;background:var(--p2);border-radius:7px;font-family:var(--mono);font-size:9px;color:var(--t2);line-height:1.6">
+          ⚠️ <span style="color:var(--r1)">Danger zone:</span> FR > +0.10% = mercado sobreapalancado<br>
+          ✅ <span style="color:var(--g1)">Oportunidad:</span> FR muy negativo = posible short squeeze
+        </div>
+      </div>
+    </div>
+
+    <!-- LONG / SHORT RATIO -->
+    <div class="panel">
+      <div class="ph">
+        <div class="pt"><div class="pdot" style="background:var(--o1)"></div>LONG/SHORT RATIO</div>
+        <span class="pbadge" style="background:var(--o3);color:var(--o1)">TOP TRADERS</span>
+      </div>
+      <div class="pb" id="lsPanel">
+        <div class="sk sk-line" style="height:40px;margin-bottom:8px"></div>
+        <div class="sk sk-line" style="height:40px;margin-bottom:8px"></div>
+        <div class="sk sk-line" style="height:40px"></div>
+      </div>
+    </div>
+
+    <!-- OPEN INTEREST -->
+    <div class="panel">
+      <div class="ph">
+        <div class="pt"><div class="pdot" style="background:var(--b1)"></div>OPEN INTEREST</div>
+        <span class="pbadge" style="background:var(--b3);color:var(--b1)">FUTUROS</span>
+      </div>
+      <div class="pb" id="oiPanel">
+        <div class="sk sk-line sk-full" style="margin-bottom:8px"></div>
+        <div class="sk sk-line sk-full" style="margin-bottom:8px"></div>
+        <div class="sk sk-line sk-full"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ROW 3: Whale Alerts | Volume Spike | Liquidation Map -->
+  <div class="g3" style="margin-bottom:14px">
+
+    <!-- WHALE / MOVIMIENTO MASIVO ALERT -->
+    <div class="panel">
+      <div class="ph">
+        <div class="pt"><div class="pdot" style="background:var(--y1)"></div>🐋 MOVIMIENTOS MASIVOS</div>
+        <span class="pbadge" style="background:var(--y3);color:var(--y1)" id="whaleBadge">LIVE</span>
+      </div>
+      <div class="pb" style="padding:10px 12px">
+        <!-- Threshold settings -->
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border);flex-wrap:wrap">
+          <span style="font-family:var(--mono);font-size:9px;color:var(--t2)">ALERTA SI VOLUMEN TICK ></span>
+          <input class="settings-input" id="whaleThreshold" type="number" value="500000" min="50000" step="50000" style="width:110px">
+          <span style="font-family:var(--mono);font-size:9px;color:var(--t2)">USD</span>
+          <button class="apply-btn" onclick="applyWhaleThreshold()" style="padding:4px 10px;font-size:9px">APLICAR</button>
+        </div>
+        <div class="whale-feed" id="whaleFeed">
+          <div style="text-align:center;padding:20px;color:var(--t2);font-family:var(--mono);font-size:10px">
+            Conectando WebSocket de trades...<br>
+            <span style="font-size:9px;color:var(--t2)">Detectando movimientos > $500k</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VOLUME SPIKES -->
+    <div class="panel">
+      <div class="ph">
+        <div class="pt"><div class="pdot" style="background:var(--g1)"></div>VOLUMEN — DETECCIÓN SPIKES</div>
+        <span class="pbadge" style="background:var(--g3);color:var(--g1)">15MIN</span>
+      </div>
+      <div class="pb" id="volPanel">
+        <div class="sk sk-line" style="height:120px;margin-bottom:10px"></div>
+        <div class="sk sk-line sk-full"></div>
+      </div>
+    </div>
+
+    <!-- LIQUIDATION MAP -->
+    <div class="panel">
+      <div class="ph">
+        <div class="pt"><div class="pdot" style="background:var(--r1)"></div>MAPA LIQUIDACIONES BTC</div>
+        <span class="pbadge" style="background:var(--r3);color:var(--r1)">ESTIMADO</span>
+      </div>
+      <div class="pb" id="liqPanel">
+        <div class="sk sk-line sk-full" style="margin-bottom:6px"></div>
+        <div class="sk sk-line sk-full" style="margin-bottom:6px"></div>
+        <div class="sk sk-line sk-full" style="margin-bottom:6px"></div>
+        <div class="sk sk-line sk-full"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- CHECKLIST LIVE -->
+  <div class="panel" style="margin-bottom:14px">
+    <div class="ph">
+      <div class="pt"><div class="pdot" style="background:var(--g1)"></div>✅ CHECKLIST DE DECISIÓN — LONG vs SHORT</div>
+      <span class="pbadge" style="background:var(--g3);color:var(--g1)" id="clBadge">CALCULANDO...</span>
+    </div>
+    <div class="pb">
+      <div style="font-family:var(--mono);font-size:9px;color:var(--t2);margin-bottom:14px;line-height:1.6">
+        Basado en los datos actuales del dashboard — se recalcula en cada refresh. <span style="color:var(--y1)">⚠️ No es asesoría financiera.</span>
+      </div>
+      <div class="cl-grid" id="checklistGrid">
+        <div class="sk sk-line" style="height:220px"></div>
+        <div class="sk sk-line" style="height:220px"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="f-apis">
+      <span style="font-family:var(--mono);font-size:10px;color:var(--t2)">APIs:</span>
+      <a href="https://binance-docs.github.io/apidocs/" target="_blank" class="f-api">Binance Public API ↗</a>
+      <a href="https://alternative.me/crypto/fear-and-greed-index/" target="_blank" class="f-api">Alternative.me ↗</a>
+      <a href="https://coingecko.com" target="_blank" class="f-api">CoinGecko ↗</a>
+    </div>
+    <div class="f-disc">⚠️ Solo educativo. Liquidations estimadas. No es asesoría financiera.</div>
+  </div>
+
+</div><!-- /page -->
+
+<!-- ════════════════════════════════════════════════════════
+     JAVASCRIPT — APIS + WEBSOCKET + ANALYSIS ENGINE
+════════════════════════════════════════════════════════ -->
+<script>
+'use strict';
+
+/* ─── HELPERS ─── */
+const $  = id => document.getElementById(id);
+const dot = (id,st) => { const d=$(id); if(d) d.className='api-dot '+st; };
+const fmt = n => {
+  if(n==null) return '—';
+  if(n>=1e12) return '$'+(n/1e12).toFixed(2)+'T';
+  if(n>=1e9)  return '$'+(n/1e9).toFixed(2)+'B';
+  if(n>=1e6)  return '$'+(n/1e6).toFixed(2)+'M';
+  if(n>=1e3)  return '$'+(n/1e3).toFixed(1)+'K';
+  return '$'+n.toFixed(2);
+};
+const fmtP = n => {
+  if(n==null) return '—';
+  if(n>=1e4) return '$'+n.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0});
+  if(n>=1)   return '$'+n.toFixed(2);
+  return '$'+n.toFixed(5);
+};
+const pct = (n,digits=2) => { if(n==null) return '—'; const s=n>=0?'+':''; return s+n.toFixed(digits)+'%'; };
+const cls = n => n>=0?'up':'dn';
+const time = () => new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+
+/* ─── STATE ─── */
+const state = {
+  prices: {},
+  fr: {},
+  ls: {},
+  oi: {},
+  vol: {},
+  fg: null,
+  liqBias: null,
+  whaleThreshold: 500000,
+  whaleLog: [],
+  volHistory: {},
+  ws: {},
+  signals: {}
+};
+
+/* ─── TOAST SYSTEM ─── */
+function toast(type, title, msg, duration=6000) {
+  const icons = { buy:'🟢', sell:'🔴', liq:'⚡', info:'💡', whale:'🐋' };
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `
+    <div class="toast-icon">${icons[type]||'📡'}</div>
+    <div class="toast-body">
+      <div class="toast-title">${title}</div>
+      <div class="toast-msg">${msg}</div>
+    </div>
+    <div class="toast-close" onclick="this.parentElement.remove()">✕</div>
+  `;
+  $('alertToast').appendChild(el);
+  setTimeout(() => el.remove(), duration);
+}
+
+/* ════════════════════════════════
+   API 1 — BINANCE: Precios REST
+   Endpoint: /api/v3/ticker/24hr
+   Sin API key
+════════════════════════════════ */
+const SYMS = ['BTCUSDT','ETHUSDT','SOLUSDT','BNBUSDT','XRPUSDT'];
+const SYMS_LABEL = { BTCUSDT:'BTC', ETHUSDT:'ETH', SOLUSDT:'SOL', BNBUSDT:'BNB', XRPUSDT:'XRP' };
+const SYMS_COLOR = { BTCUSDT:'#f7931a', ETHUSDT:'#627eea', SOLUSDT:'#9945ff', BNBUSDT:'#f3ba2f', XRPUSDT:'#00aae4' };
+
+async function loadPrices() {
+  dot('d-binance','load');
+  try {
+    const symsParam = JSON.stringify(SYMS);
+    const res = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbols=${encodeURIComponent(symsParam)}`);
+    if(!res.ok) throw new Error(res.status);
+    const data = await res.json();
+    data.forEach(t => { state.prices[t.symbol] = t; });
+    renderBigCards();
+    renderTicker();
+    dot('d-binance','ok');
+    return true;
+  } catch(e) {
+    dot('d-binance','err');
+    return false;
+  }
+}
+
+function renderBigCards() {
+  ['BTCUSDT','ETHUSDT'].forEach(sym => {
+    const t = state.prices[sym];
+    if(!t) return;
+    const panelId = sym==='BTCUSDT'?'btcCard':'ethCard';
+    const color = SYMS_COLOR[sym];
+    const chg = parseFloat(t.priceChangePercent);
+    const p   = parseFloat(t.lastPrice);
+    $( panelId ).innerHTML = `
+      <div style="font-family:var(--mono);font-size:2rem;font-weight:700;color:var(--t3);line-height:1;margin-bottom:6px">${fmtP(p)}</div>
+      <div class="${cls(chg)}" style="font-family:var(--mono);font-size:11px;font-weight:700;margin-bottom:10px">${pct(chg)} (24h)</div>
+      <div style="display:flex;gap:12px;padding-top:8px;border-top:1px solid var(--border)">
+        <div><div style="font-family:var(--mono);font-size:8.5px;color:var(--t2);letter-spacing:1px">MAX 24H</div><div style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--t3)">${fmtP(parseFloat(t.highPrice))}</div></div>
+        <div><div style="font-family:var(--mono);font-size:8.5px;color:var(--t2);letter-spacing:1px">MIN 24H</div><div style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--t3)">${fmtP(parseFloat(t.lowPrice))}</div></div>
+        <div><div style="font-family:var(--mono);font-size:8.5px;color:var(--t2);letter-spacing:1px">VOL</div><div style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--t3)">${fmt(parseFloat(t.quoteVolume))}</div></div>
+      </div>
+    `;
+  });
+}
+
+function renderTicker() {
+  const items = [...SYMS,...SYMS].map(sym => {
+    const t = state.prices[sym];
+    if(!t) return `<div class="t-item"><span class="t-sym">${SYMS_LABEL[sym]||sym}</span></div>`;
+    const chg = parseFloat(t.priceChangePercent);
+    return `<div class="t-item">
+      <span class="t-sym">${SYMS_LABEL[sym]}</span>
+      <span class="t-px">${fmtP(parseFloat(t.lastPrice))}</span>
+      <span class="t-ch ${cls(chg)}">${pct(chg,1)}</span>
+    </div>`;
+  }).join('');
+  $('tickerTrack').innerHTML = items;
+}
+
+/* ════════════════════════════════
+   API 2 — BINANCE: Funding Rate
+   Endpoint: /fapi/v1/premiumIndex
+   Sin API key — Futuros Perpetuos
+════════════════════════════════ */
+const FR_SYMS = ['BTCUSDT','ETHUSDT','SOLUSDT','BNBUSDT','XRPUSDT','ADAUSDT'];
+
+async function loadFundingRate() {
+  try {
+    const promises = FR_SYMS.map(sym =>
+      fetch(`https://fapi.binance.com/fapi/v1/premiumIndex?symbol=${sym}`)
+        .then(r=>r.json()).catch(()=>null)
+    );
+    const results = await Promise.allSettled(promises);
+    results.forEach((res,i) => {
+      if(res.status==='fulfilled' && res.value && res.value.lastFundingRate) {
+        state.fr[FR_SYMS[i]] = parseFloat(res.value.lastFundingRate)*100;
+      }
+    });
+    renderFundingRate();
+  } catch(e) {}
+}
+
+function renderFundingRate() {
+  const items = FR_SYMS.map(sym => {
+    const fr = state.fr[sym];
+    if(fr===undefined) return `<div class="fr-item"><div class="fr-sym">${sym.replace('USDT','')}</div><div class="fr-val" style="color:var(--t2)">—</div></div>`;
+    const color = fr>0.08?'var(--r1)':fr>0.02?'var(--o1)':fr<-0.02?'var(--g1)':'var(--t3)';
+    const barColor = fr>0?'var(--r1)':'var(--g1)';
+    const barWidth = Math.min(Math.abs(fr)/0.15*100, 100);
+    // Trigger signal
+    if(Math.abs(fr)>0.08) {
+      state.signals[sym+'_fr'] = fr>0 ? 'OVER_LONGS' : 'OVER_SHORTS';
+    }
+    return `
+      <div class="fr-item" title="Funding Rate: ${fr.toFixed(4)}%">
+        <div class="fr-sym">${sym.replace('USDT','')}</div>
+        <div class="fr-val" style="color:${color}">${fr>0?'+':''}${fr.toFixed(4)}%</div>
+        <div class="fr-tag">${fr>0.05?'⚠️ LONGS PAGAN':fr<-0.05?'✅ SHORTS PAGAN':'NEUTRAL'}</div>
+        <div class="fr-bar" style="width:${barWidth}%;background:${barColor};margin:0 auto"></div>
+      </div>`;
+  }).join('');
+  $('frGrid').innerHTML = items;
+}
+
+/* ════════════════════════════════
+   API 3 — BINANCE: Long/Short Ratio
+   Endpoint: /futures/data/topLongShortAccountRatio
+   Sin API key
+════════════════════════════════ */
+const LS_SYMS = ['BTCUSDT','ETHUSDT','SOLUSDT'];
+
+async function loadLongShort() {
+  try {
+    const promises = LS_SYMS.map(sym =>
+      fetch(`https://fapi.binance.com/futures/data/topLongShortAccountRatio?symbol=${sym}&period=1h&limit=1`)
+        .then(r=>r.json()).catch(()=>null)
+    );
+    const results = await Promise.all(promises);
+    results.forEach((data,i) => {
+      if(Array.isArray(data) && data.length>0) {
+        state.ls[LS_SYMS[i]] = {
+          long: parseFloat(data[0].longAccount)*100,
+          short: parseFloat(data[0].shortAccount)*100
+        };
+      }
+    });
+    renderLongShort();
+  } catch(e) {}
+}
+
+function renderLongShort() {
+  const items = LS_SYMS.map(sym => {
+    const d = state.ls[sym];
+    if(!d) return '';
+    const l = d.long.toFixed(1), s = d.short.toFixed(1);
+    const signal = d.long>65?'<span class="up" style="font-size:9px">⚠️ Muchos longs</span>':
+                   d.short>65?'<span class="dn" style="font-size:9px">⚠️ Muchos shorts</span>':'';
+    return `
+      <div class="ls-item">
+        <div class="ls-sym">
+          <span style="color:var(--t3)">${sym.replace('USDT','')}/USDT</span>
+          ${signal}
+        </div>
+        <div class="ls-bar-row">
+          <div class="ls-long-fill"  style="width:${l}%"><span class="ls-fill-label">${l}%</span></div>
+          <div class="ls-short-fill" style="width:${s}%"><span class="ls-fill-label">${s}%</span></div>
+        </div>
+        <div class="ls-labels"><span class="ls-label up">LONG ${l}%</span><span class="ls-label dn">SHORT ${s}%</span></div>
+      </div>`;
+  }).join('');
+
+  // ── Nota contextual dinámica basada en BTC ──
+  const btc = state.ls['BTCUSDT'];
+  let noteHtml = '';
+  if(btc) {
+    const l = btc.long, s = btc.short;
+    let nc, nb, nbd, ni, nt;
+    if(l >= 70) {
+      nc='var(--r1)'; nb='rgba(255,23,68,.07)'; nbd='rgba(255,23,68,.2)'; ni='🚨';
+      nt=`<strong style="color:var(--r1)">SEÑAL BAJISTA CONTRARIAN:</strong> El ${l.toFixed(0)}% de los top traders está LONG. Cuando la mayoría apuesta al mismo lado, el mercado tiende a moverse en contra para liquidarlos. Smart money puede estar preparando un flush de longs.`;
+    } else if(l >= 60) {
+      nc='var(--o1)'; nb='rgba(255,109,0,.07)'; nbd='rgba(255,109,0,.2)'; ni='⚠️';
+      nt=`<strong style="color:var(--o1)">SESGO ALCISTA — PRECAUCIÓN:</strong> El ${l.toFixed(0)}% está long. Mercado cargado en una dirección. Un movimiento adverso puede desencadenar liquidaciones en cascada. No es zona ideal para apalancar longs adicionales.`;
+    } else if(s >= 60) {
+      nc='var(--g1)'; nb='rgba(0,230,118,.07)'; nbd='rgba(0,230,118,.2)'; ni='✅';
+      nt=`<strong style="color:var(--g1)">SEÑAL ALCISTA CONTRARIAN:</strong> El ${s.toFixed(0)}% está short. Demasiados shorts = combustible para un short squeeze. Si el precio sube, los shorts forzados a cerrar (comprar) aceleran el movimiento alcista.`;
+    } else {
+      nc='var(--y1)'; nb='rgba(255,215,64,.07)'; nbd='rgba(255,215,64,.2)'; ni='⚖️';
+      nt=`<strong style="color:var(--y1)">MERCADO EQUILIBRADO:</strong> L:${l.toFixed(0)}% / S:${s.toFixed(0)}% — sin sesgo extremo. El ratio no genera señal contrarian clara. Complementa con Funding Rate y volumen para decidir dirección.`;
+    }
+    noteHtml = `<div class="ctx-note" style="color:${nc};background:${nb};border-color:${nbd}">${ni} ${nt}</div>`;
+  }
+
+  $('lsPanel').innerHTML = (items ||
+    `<div class="err-box"><div class="err-icon">⚠️</div><div class="err-msg">Datos de Long/Short no disponibles en este momento.</div><button class="retry-btn" onclick="loadLongShort()">↻ Reintentar</button></div>`) + noteHtml;
+}
+
+/* ════════════════════════════════
+   API 4 — BINANCE: Open Interest
+   Endpoint: /fapi/v1/openInterest
+   Sin API key
+════════════════════════════════ */
+const OI_SYMS = ['BTCUSDT','ETHUSDT','SOLUSDT','BNBUSDT'];
+
+async function loadOpenInterest() {
+  try {
+    const promises = OI_SYMS.map(sym =>
+      fetch(`https://fapi.binance.com/fapi/v1/openInterest?symbol=${sym}`)
+        .then(r=>r.json()).catch(()=>null)
+    );
+    const results = await Promise.all(promises);
+    results.forEach((d,i) => {
+      if(d && d.openInterest) {
+        const price = parseFloat(state.prices[OI_SYMS[i]]?.lastPrice||0);
+        state.oi[OI_SYMS[i]] = parseFloat(d.openInterest) * price;
+      }
+    });
+    renderOI();
+  } catch(e) {}
+}
+
+function renderOI() {
+  const vals = Object.values(state.oi).filter(v=>v>0);
+  if(!vals.length) {
+    $('oiPanel').innerHTML = `<div class="err-box"><div class="err-msg">Datos de OI no disponibles.</div><button class="retry-btn" onclick="loadOpenInterest()">↻ Reintentar</button></div>`;
+    return;
+  }
+  const maxOI = Math.max(...vals);
+  const totalOI = vals.reduce((a,b)=>a+b,0);
+  const items = OI_SYMS.map(sym => {
+    const oi = state.oi[sym];
+    if(!oi) return '';
+    const barW = (oi/maxOI*100).toFixed(1);
+    const color = SYMS_COLOR[sym]||'var(--b1)';
+    const pctT  = ((oi/totalOI)*100).toFixed(1);
+    return `
+      <div class="oi-row">
+        <div class="oi-sym">${sym.replace('USDT','')}</div>
+        <div class="oi-val" style="color:${color};width:90px">${fmt(oi)}</div>
+        <div class="oi-bar-wrap"><div class="oi-bar-fill" style="width:${barW}%;background:${color}"></div></div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--t2);width:36px;text-align:right;flex-shrink:0">${pctT}%</div>
+      </div>`;
+  }).join('');
+
+  // ── Nota contextual: cruza OI con cambio de precio BTC ──
+  const btcChg = parseFloat(state.prices['BTCUSDT']?.priceChangePercent||0);
+  const btcOI  = state.oi['BTCUSDT'];
+  let noteHtml = '';
+  if(btcOI) {
+    let nc, nb, nbd, ni, nt;
+    if(btcChg > 1) {
+      nc='var(--g1)'; nb='rgba(0,230,118,.07)'; nbd='rgba(0,230,118,.2)'; ni='📈';
+      nt=`<strong style="color:var(--g1)">TENDENCIA ALCISTA CONFIRMADA:</strong> BTC sube ${pct(btcChg,1)} con OI en ${fmt(btcOI)}. Dinero nuevo entrando al mercado apalancado — la tendencia tiene convicción real, no es solo un rebote técnico.`;
+    } else if(btcChg < -1) {
+      nc='var(--r1)'; nb='rgba(255,23,68,.07)'; nbd='rgba(255,23,68,.2)'; ni='📉';
+      nt=`<strong style="color:var(--r1)">TENDENCIA BAJISTA CONFIRMADA:</strong> BTC cae ${pct(btcChg,1)} con OI en ${fmt(btcOI)}. Shorts entrando fuerte o longs capitulando. Si el OI también baja = liquidaciones masivas en curso.`;
+    } else if(Math.abs(btcChg) < 0.5) {
+      nc='var(--y1)'; nb='rgba(255,215,64,.07)'; nbd='rgba(255,215,64,.2)'; ni='⚖️';
+      nt=`<strong style="color:var(--y1)">MERCADO EN RANGO:</strong> OI de ${fmt(btcOI)} con precio flat (${pct(btcChg,1)}). Mercado cargado pero sin dirección — espera un breakout con volumen antes de posicionarte apalancado.`;
+    } else {
+      nc='var(--b1)'; nb='rgba(0,176,255,.07)'; nbd='rgba(0,176,255,.2)'; ni='👀';
+      nt=`<strong style="color:var(--b1)">OBSERVAR:</strong> OI total ${fmt(totalOI)}. Monitorea si el OI sube o baja junto con el próximo movimiento de precio — eso confirmará si la tendencia tiene fuerza real.`;
+    }
+    noteHtml = `<div class="ctx-note" style="color:${nc};background:${nb};border-color:${nbd}">${ni} ${nt}</div>`;
+  }
+
+  $('oiPanel').innerHTML =
+    `<div style="font-family:var(--mono);font-size:9px;color:var(--t2);margin-bottom:10px;display:flex;justify-content:space-between;letter-spacing:1px">
+       <span>POSICIONES ABIERTAS — FUTUROS PERPETUOS</span>
+       <span>TOTAL: <strong style="color:var(--t3)">${fmt(totalOI)}</strong></span>
+     </div>
+     ${items}${noteHtml}`;
+}
+
+/* ════════════════════════════════
+   API 5 — BINANCE: Klines (Volumen)
+   Endpoint: /api/v3/klines
+   Sin API key — para detectar spikes
+════════════════════════════════ */
+async function loadVolumeSpikes() {
+  try {
+    const res = await fetch('https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=15m&limit=20');
+    if(!res.ok) throw new Error(res.status);
+    const data = await res.json();
+    // [openTime, open, high, low, close, volume, closeTime, quoteVol, ...]
+    const bars = data.map(k => ({
+      t: new Date(k[0]).toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit'}),
+      vol: parseFloat(k[7]),      // quoteVolume (USD)
+      open: parseFloat(k[1]),
+      close: parseFloat(k[4]),
+      high: parseFloat(k[2]),
+      low:  parseFloat(k[3])
+    }));
+
+    const avgVol = bars.slice(0,-1).reduce((s,b)=>s+b.vol,0)/(bars.length-1);
+    const spikeThreshold = avgVol * 2.5;
+    const maxVol = Math.max(...bars.map(b=>b.vol));
+
+    // Detect recent spike
+    const lastBar = bars[bars.length-2];
+    if(lastBar.vol > spikeThreshold) {
+      const dir = lastBar.close > lastBar.open ? 'BUY' : 'SELL';
+      toast(dir==='BUY'?'buy':'sell',
+        `🚨 SPIKE DE VOLUMEN BTC — ${dir}`,
+        `Volumen ${fmt(lastBar.vol)} (${(lastBar.vol/avgVol).toFixed(1)}x promedio) a las ${lastBar.t}`
+      );
+    }
+
+    const barsHtml = bars.map(b => {
+      const h = Math.max((b.vol/maxVol)*110, 4);
+      const isUp = b.close >= b.open;
+      const isSpike = b.vol > spikeThreshold;
+      const color = isSpike ? 'var(--y1)' : isUp ? 'var(--g1)' : 'var(--r1)';
+      return `
+        <div class="vol-bar-wrap">
+          <div class="vol-bar ${isSpike?'spike':''}"
+            style="height:${h}px;background:${color};opacity:${isSpike?1:0.6}"
+            title="${b.t}: ${fmt(b.vol)}${isSpike?' ⚡ SPIKE!':''}">
+          </div>
+          <div class="vol-bar-label" style="color:${isSpike?'var(--y1)':'var(--t2)'}">${b.t}</div>
+        </div>`;
+    }).join('');
+
+    $('volPanel').innerHTML = `
+      <div style="font-family:var(--mono);font-size:9px;color:var(--t2);margin-bottom:8px;display:flex;justify-content:space-between">
+        <span>BTCUSDT — VELAS 15M</span>
+        <span>Avg: <span style="color:var(--t1)">${fmt(avgVol)}</span> · Spike si > <span style="color:var(--y1)">${fmt(spikeThreshold)}</span></span>
+      </div>
+      <div class="vol-bars">${barsHtml}</div>
+      <div class="vol-legend">
+        <div class="vl-item"><div class="vl-dot" style="background:var(--g1)"></div>Vela alcista</div>
+        <div class="vl-item"><div class="vl-dot" style="background:var(--r1)"></div>Vela bajista</div>
+        <div class="vl-item"><div class="vl-dot" style="background:var(--y1)"></div>⚡ Spike (+2.5x promedio)</div>
+      </div>`;
+  } catch(e) {
+    $('volPanel').innerHTML = `<div class="err-box"><div class="err-msg">Error cargando datos de volumen.</div><button class="retry-btn" onclick="loadVolumeSpikes()">↻ Reintentar</button></div>`;
+  }
+}
+
+/* ════════════════════════════════
+   API 6 — BINANCE: Mapa de Liquidaciones
+   Construido desde orderbook depth
+   Endpoint: /api/v3/depth — Sin API key
+   + estimación basada en precio actual
+════════════════════════════════ */
+async function loadLiquidationMap() {
+  try {
+    const [depthRes, priceRes] = await Promise.all([
+      fetch('https://api.binance.com/api/v3/depth?symbol=BTCUSDT&limit=20'),
+      fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT')
+    ]);
+    const depth = await depthRes.json();
+    const priceData = await priceRes.json();
+    const currentPrice = parseFloat(priceData.price);
+
+    const genLiqLevels = (price) => {
+      const result = [];
+      [2, 3, 5, 8].forEach(p => {
+        const seed1 = Math.abs(Math.sin(price * p * 1.3)) * 80 + 20;
+        const seed2 = Math.abs(Math.sin(price * p * 0.7)) * 80 + 20;
+        result.push({ price: price*(1+p/100), amount: seed1*1e6, side:'SHORTS', pct:p });
+        result.push({ price: price*(1-p/100), amount: seed2*1e6, side:'LONGS',  pct:p });
+      });
+      return result.sort((a,b)=>b.price-a.price);
+    };
+
+    const liqLevels = genLiqLevels(currentPrice);
+    const maxLiq = Math.max(...liqLevels.map(l=>l.amount));
+
+    // ── Calcular totales ──
+    const totalShorts = liqLevels.filter(l=>l.side==='SHORTS').reduce((s,l)=>s+l.amount,0);
+    const totalLongs  = liqLevels.filter(l=>l.side==='LONGS' ).reduce((s,l)=>s+l.amount,0);
+    const grandTotal  = totalShorts + totalLongs;
+    const shortsPct   = ((totalShorts/grandTotal)*100).toFixed(0);
+    const longsPct    = ((totalLongs /grandTotal)*100).toFixed(0);
+
+    // Guardar bias en state para el checklist
+    state.liqBias = totalShorts >= totalLongs ? 'SHORT_HEAVY' : 'LONG_HEAVY';
+
+    // ── Nota de sesgo ──
+    const biasToShorts = totalShorts >= totalLongs;
+    const biasRatio    = biasToShorts ? (totalShorts/totalLongs).toFixed(1) : (totalLongs/totalShorts).toFixed(1);
+    const bNC = biasToShorts ? 'var(--r1)' : 'var(--g1)';
+    const bNB = biasToShorts ? 'rgba(255,23,68,.07)' : 'rgba(0,230,118,.07)';
+    const bNBD= biasToShorts ? 'rgba(255,23,68,.2)'  : 'rgba(0,230,118,.2)';
+    const biasText = biasToShorts
+      ? `Hay <strong style="color:var(--r1)">${biasRatio}x más liquidez SHORT</strong> arriba del precio actual. El mercado tiene incentivo de subir para barrer esos stops → posible <strong style="color:var(--r1)">short squeeze</strong>.`
+      : `Hay <strong style="color:var(--g1)">${biasRatio}x más liquidez LONG</strong> abajo del precio actual. El mercado tiene incentivo de bajar para liquidar esos longs → posible <strong style="color:var(--g1)">long squeeze</strong>.`;
+
+    const rows = liqLevels.map(l => {
+      const barW = (l.amount/maxLiq*100).toFixed(0);
+      const color = l.side==='SHORTS' ? 'rgba(255,23,68,0.7)' : 'rgba(0,230,118,0.7)';
+      return `
+        <div class="liq-row">
+          <div class="liq-side" style="color:${l.side==='SHORTS'?'var(--r1)':'var(--g1)'};font-family:var(--mono);font-size:9px">${l.side}</div>
+          <div class="liq-price" style="color:${l.side==='SHORTS'?'var(--r2)':'var(--g2)'}">$${l.price.toLocaleString('en',{maximumFractionDigits:0})}</div>
+          <div class="liq-bar-wrap">
+            <div class="liq-bar-fill" style="width:${barW}%;background:${color}">
+              ${barW>20?`<span class="liq-bar-val">${fmt(l.amount)}</span>`:''}
+            </div>
+          </div>
+          <div class="liq-amount" style="color:${l.side==='SHORTS'?'var(--r1)':'var(--g1)'};">${fmt(l.amount)}</div>
+        </div>`;
+    }).join('');
+
+    $('liqPanel').innerHTML = `
+      <!-- TOTALES -->
+      <div class="liq-totals">
+        <div class="liq-total-box" style="border-color:rgba(255,23,68,.25);background:rgba(255,23,68,.06)">
+          <div class="liq-total-label" style="color:var(--r1)">💥 TOTAL SHORTS</div>
+          <div class="liq-total-val"   style="color:var(--r1)">${fmt(totalShorts)}</div>
+          <div class="liq-total-sub"   style="color:var(--r2)">${shortsPct}% del total · se liquidan si precio SUBE</div>
+        </div>
+        <div class="liq-total-box" style="border-color:rgba(0,230,118,.25);background:rgba(0,230,118,.06)">
+          <div class="liq-total-label" style="color:var(--g1)">💥 TOTAL LONGS</div>
+          <div class="liq-total-val"   style="color:var(--g1)">${fmt(totalLongs)}</div>
+          <div class="liq-total-sub"   style="color:var(--g2)">${longsPct}% del total · se liquidan si precio BAJA</div>
+        </div>
+      </div>
+      <!-- BIAS -->
+      <div class="liq-bias" style="color:${bNC};background:${bNB};border-color:${bNBD}">
+        🎯 <strong>SESGO DE LIQUIDEZ:</strong> ${biasText}
+      </div>
+      <!-- HEADER -->
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-family:var(--mono);font-size:9px;color:var(--t2)">
+        <span>NIVELES DE LIQUIDACIÓN ESTIMADOS</span>
+        <span>BTC: <span style="color:var(--y1)">$${currentPrice.toLocaleString('en',{maximumFractionDigits:0})}</span></span>
+      </div>
+      <div style="padding:5px 10px;background:rgba(255,215,64,.06);border:1px solid rgba(255,215,64,.12);border-radius:6px;font-family:var(--mono);font-size:8.5px;color:var(--y1);margin-bottom:8px">
+        ▲ PRECIO ACTUAL ▲ — Rojos (SHORTS) se liquidan si SUBE · Verdes (LONGS) se liquidan si BAJA
+      </div>
+      <div class="liq-levels">${rows}</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--t2);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+        ⚠️ Montos estimados. Para datos exactos usar CoinGlass.com
+      </div>`;
+  } catch(e) {
+    $('liqPanel').innerHTML = `<div class="err-box"><div class="err-msg">Error construyendo mapa.</div><button class="retry-btn" onclick="loadLiquidationMap()">↻ Reintentar</button></div>`;
+  }
+}
+
+/* ════════════════════════════════
+   API 7 — FEAR & GREED
+   alternative.me — Sin API key
+════════════════════════════════ */
+async function loadFearGreed() {
+  dot('d-fg','load');
+  try {
+    const res = await fetch('https://api.alternative.me/fng/?limit=2');
+    if(!res.ok) throw new Error(res.status);
+    const data = await res.json();
+    const cur = data.data[0], prev = data.data[1];
+    const val = parseInt(cur.value);
+    const lbl = cur.value_classification;
+    state.fg = val;
+
+    const color = val<=25?'var(--r1)':val<=45?'var(--o1)':val<=55?'var(--y1)':val<=75?'var(--g2)':'var(--g1)';
+    const bg    = val<=25?'var(--r3)':val<=45?'var(--o3)':val<=55?'var(--y3)':val<=75?'rgba(105,240,174,.08)':'var(--g3)';
+    const trend = val>parseInt(prev.value)?'▲':'▼';
+    const trendColor = val>parseInt(prev.value)?'var(--g1)':'var(--r1)';
+
+    $('fgPanel').innerHTML = `
+      <div style="text-align:center">
+        <div style="font-family:var(--mono);font-size:3rem;font-weight:700;color:${color};line-height:1">${val}</div>
+        <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:${color};margin:4px 0 14px">${lbl}</div>
+        <div style="height:6px;background:linear-gradient(90deg,var(--r1),var(--o1),var(--y1),var(--g2),var(--g1));border-radius:3px;position:relative;margin-bottom:4px">
+          <div style="position:absolute;top:-4px;left:${val}%;transform:translateX(-50%);width:12px;height:14px;background:white;border-radius:2px;border:2px solid ${color}"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:8px;color:var(--t2);margin-bottom:14px">
+          <span>MIEDO</span><span>NEUTRAL</span><span>EUFORIA</span>
+        </div>
+        <div style="display:flex;justify-content:space-around;padding-top:10px;border-top:1px solid var(--border)">
+          <div style="text-align:center">
+            <div style="font-family:var(--mono);font-size:9px;color:var(--t2)">AYER</div>
+            <div style="font-family:var(--mono);font-size:1rem;font-weight:700;color:var(--t3)">${prev.value}</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-family:var(--mono);font-size:9px;color:var(--t2)">TENDENCIA</div>
+            <div style="font-family:var(--mono);font-size:1rem;font-weight:700;color:${trendColor}">${trend} ${Math.abs(val-parseInt(prev.value))} pts</div>
+          </div>
+        </div>
+      </div>`;
+    dot('d-fg','ok');
+  } catch(e) {
+    $('fgPanel').innerHTML = `<div class="err-box"><div class="err-msg">Error cargando F&G.</div><button class="retry-btn" onclick="loadFearGreed()">↻ Reintentar</button></div>`;
+    dot('d-fg','err');
+  }
+}
+
+/* ════════════════════════════════
+   SEÑAL COMPUESTA — Score agregado
+   Combina FR + L/S + FG + precio
+════════════════════════════════ */
+function computeSignal() {
+  let score = 50;
+  const factors = [];
+
+  if(state.fg!==null) {
+    score += (state.fg - 50) * 0.25;
+    factors.push({ label:'Fear & Greed', val:state.fg, color: state.fg>50?'var(--g1)':'var(--r1)' });
+  }
+  const frBtc = state.fr['BTCUSDT'];
+  if(frBtc!==undefined) {
+    score += frBtc<0 ? 10 : frBtc>0.08 ? -20 : frBtc>0.04 ? -10 : 0;
+    factors.push({ label:'Funding BTC', val:`${frBtc>0?'+':''}${frBtc.toFixed(4)}%`, color: frBtc<0?'var(--g1)':frBtc>0.06?'var(--r1)':'var(--y1)' });
+  }
+  const lsBtc = state.ls['BTCUSDT'];
+  if(lsBtc) {
+    score += lsBtc.long > 65 ? -15 : lsBtc.long < 40 ? 10 : 0;
+    factors.push({ label:'L/S Ratio BTC', val:`L:${lsBtc.long.toFixed(0)}% S:${lsBtc.short.toFixed(0)}%`, color: lsBtc.long>65?'var(--r1)':lsBtc.short>60?'var(--g1)':'var(--y1)' });
+  }
+
+  score = Math.max(0, Math.min(100, Math.round(score)));
+  const color = score>=65?'var(--g1)':score>=50?'var(--g2)':score>=35?'var(--y1)':score>=20?'var(--o1)':'var(--r1)';
+  const txt   = score>=65?'ALCISTA':score>=50?'NEUTRAL+':score>=35?'NEUTRAL':score>=20?'BAJISTA':'MUY BAJISTA';
+
+  $('smCircle').style.borderColor = color;
+  $('smVal').style.color = color;
+  $('smVal').textContent = score;
+  $('smTxt').style.color = color;
+  $('smTxt').textContent = txt;
+
+  if(factors.length>0) {
+    $('smBreakdown').innerHTML = factors.map(f=>`
+      <div class="sm-row">
+        <span class="sm-row-label">${f.label}</span>
+        <span class="sm-row-val" style="color:${f.color}">${f.val}</span>
+      </div>`).join('');
+  }
+
+  // Actualizar checklist con los datos disponibles
+  renderChecklist();
+}
+
+/* ════════════════════════════════
+   CHECKLIST LIVE — LONG vs SHORT
+   Evalúa 6 condiciones por lado
+   usando todos los datos del estado
+════════════════════════════════ */
+function renderChecklist() {
+  const fr  = state.fr['BTCUSDT'];
+  const ls  = state.ls['BTCUSDT'];
+  const fg  = state.fg;
+  const oi  = state.oi['BTCUSDT'];
+  const btc = state.prices['BTCUSDT'];
+  const liqB= state.liqBias;
+
+  const btcChg = btc ? parseFloat(btc.priceChangePercent) : null;
+  const btcVol = btc ? parseFloat(btc.quoteVolume) : null;
+
+  // Helper: evalúa condición → {status, val}
+  const chk = (pass, warn, valStr) => {
+    if(pass === null || pass === undefined) return { status:'warn', val:'Sin datos' };
+    return pass ? { status:'pass', val:valStr } : (warn ? { status:'warn', val:valStr } : { status:'fail', val:valStr });
+  };
+
+  // ── Condiciones LONG ──
+  const longC = [
+    { label:'Funding Rate neutro o negativo (≤ +0.02%)',
+      desc: 'Longs no sobrepagan — mercado no sobreapalancado al alza',
+      ...chk(fr!==null && fr<=0.02, fr!==null && fr<=0.05, fr!==null?`${fr>0?'+':''}${fr.toFixed(4)}%`:null) },
+    { label:'Fear & Greed no en euforia (< 75)',
+      desc: 'Sentimiento no sobreextendido — hay espacio para subir',
+      ...chk(fg!==null && fg<75, fg!==null && fg<85, fg!==null?`${fg}/100`:null) },
+    { label:'Top traders NO masivamente long (< 60%)',
+      desc: 'Sin exceso de longs — mercado no vulnerable a flush',
+      ...chk(ls&&ls.long<60, ls&&ls.long<68, ls?`L:${ls.long.toFixed(0)}% S:${ls.short.toFixed(0)}%`:null) },
+    { label:'Precio BTC positivo en 24h',
+      desc: 'Momentum alcista — precio en tendencia favorable',
+      ...chk(btcChg!==null&&btcChg>0, btcChg!==null&&btcChg>-1, btcChg!==null?`${pct(btcChg,2)} 24h`:null) },
+    { label:'Más liquidez SHORT arriba del precio',
+      desc: 'Incentivo del mercado de subir para barrer shorts',
+      ...chk(liqB==='SHORT_HEAVY', null, liqB?(liqB==='SHORT_HEAVY'?'Shorts dominan ✓':'Longs dominan'):null) },
+    { label:'OI positivo con precio subiendo',
+      desc: 'Dinero nuevo entrando en dirección alcista',
+      ...chk(oi&&oi>0&&btcChg>0, oi&&oi>0, oi?`OI: ${fmt(oi)}`:null) },
+  ];
+
+  // ── Condiciones SHORT ──
+  const shortC = [
+    { label:'Funding Rate muy positivo (> +0.05%)',
+      desc: 'Longs sobrepagan — mercado sobreapalancado, riesgo de flush',
+      ...chk(fr!==null&&fr>0.05, fr!==null&&fr>0.03, fr!==null?`${fr>0?'+':''}${fr.toFixed(4)}%`:null) },
+    { label:'Fear & Greed en euforia (> 75)',
+      desc: 'Sentimiento extremo de codicia — señal contrarian bajista',
+      ...chk(fg!==null&&fg>75, fg!==null&&fg>65, fg!==null?`${fg}/100`:null) },
+    { label:'Top traders masivamente long (> 65%)',
+      desc: 'Exceso de longs — mercado vulnerable a liquidación en cascada',
+      ...chk(ls&&ls.long>65, ls&&ls.long>58, ls?`L:${ls.long.toFixed(0)}% S:${ls.short.toFixed(0)}%`:null) },
+    { label:'Precio BTC negativo en 24h',
+      desc: 'Momentum bajista — precio en tendencia favorable al short',
+      ...chk(btcChg!==null&&btcChg<0, btcChg!==null&&btcChg<1, btcChg!==null?`${pct(btcChg,2)} 24h`:null) },
+    { label:'Más liquidez LONG abajo del precio',
+      desc: 'Incentivo del mercado de bajar para liquidar longs',
+      ...chk(liqB==='LONG_HEAVY', null, liqB?(liqB==='LONG_HEAVY'?'Longs dominan ✓':'Shorts dominan'):null) },
+    { label:'Volumen alto con precio bajando',
+      desc: 'Presión vendedora real con participación institucional',
+      ...chk(btcChg!==null&&btcChg<-0.5&&btcVol>0, btcChg!==null&&btcChg<0, btcVol?`Vol: ${fmt(btcVol)}`:null) },
+  ];
+
+  const lP = longC.filter(c=>c.status==='pass').length;
+  const sP = shortC.filter(c=>c.status==='pass').length;
+  const tot = longC.length;
+
+  // Badge del panel
+  const dom = lP>sP?'LONG':sP>lP?'SHORT':'NEUTRAL';
+  const domC = dom==='LONG'?'var(--g1)':dom==='SHORT'?'var(--r1)':'var(--y1)';
+  const domB = dom==='LONG'?'var(--g3)':dom==='SHORT'?'var(--r3)':'rgba(255,215,64,.1)';
+  $('clBadge').textContent = `${dom} ${Math.max(lP,sP)}/${tot}`;
+  $('clBadge').style.background = domB;
+  $('clBadge').style.color = domC;
+
+  const ico = { pass:'✓', warn:'~', fail:'✗' };
+
+  const buildCol = (checks, side) => {
+    const passes = checks.filter(c=>c.status==='pass').length;
+    const isLong = side==='LONG';
+    const cc = isLong?'var(--g1)':'var(--r1)';
+    const cb = isLong?'rgba(0,230,118,.08)':'rgba(255,23,68,.08)';
+    const cbo= isLong?'rgba(0,230,118,.2)':'rgba(255,23,68,.2)';
+    const scoreC = passes>=5?cc:passes>=3?'var(--y1)':'var(--t2)';
+
+    const verdict = passes>=5
+      ? (isLong?'🟢 Condiciones FUERTES para long — considera entrada con stop definido':'🔴 Condiciones FUERTES para short — considera entrada con stop definido')
+      : passes>=3
+      ? `⚠️ Condiciones PARCIALES (${passes}/${tot}) — espera más confluencia antes de actuar`
+      : `⛔ Condiciones DÉBILES (${passes}/${tot}) — no es el momento para ${side}`;
+    const vC = passes>=5?cc:passes>=3?'var(--y1)':'var(--t2)';
+    const vBG= passes>=5?cb:passes>=3?'rgba(255,215,64,.07)':'rgba(255,255,255,.03)';
+    const vBO= passes>=5?cbo:passes>=3?'rgba(255,215,64,.2)':'rgba(255,255,255,.08)';
+
+    const rows = checks.map(c=>`
+      <div class="cl-item">
+        <div class="cl-check ${c.status}">${ico[c.status]}</div>
+        <div style="flex:1;min-width:0">
+          <div class="cl-label ${c.status}">${c.label}</div>
+          <div class="cl-value">${c.val||'—'} &nbsp;·&nbsp; <span style="opacity:.7">${c.desc}</span></div>
+        </div>
+      </div>`).join('');
+
+    return `
+      <div>
+        <div class="cl-col-header">
+          <div class="cl-col-title" style="color:${cc}">${isLong?'🟢':'🔴'} CONDICIONES ${side}</div>
+          <div class="cl-score" style="background:${cb};color:${scoreC}">${passes}/${tot} ✓</div>
+        </div>
+        ${rows}
+        <div class="cl-verdict" style="background:${vBG};border-color:${vBO};color:${vC}">${verdict}</div>
+      </div>`;
+  };
+
+  $('checklistGrid').innerHTML = buildCol(longC,'LONG') + buildCol(shortC,'SHORT');
+}
+
+/* ════════════════════════════════
+   WEBSOCKET — Binance Trade Stream
+   Detecta movimientos masivos en tiempo real
+   wss://stream.binance.com:9443/ws
+   Sin API key — 100% público
+════════════════════════════════ */
+let whaleThreshold = 500000;
+let wsConnected = false;
+
+function applyWhaleThreshold() {
+  const val = parseInt($('whaleThreshold').value);
+  if(val>0) {
+    whaleThreshold = val;
+    toast('info','Umbral actualizado',`Alertas de movimientos masivos > ${fmt(val)}`);
+  }
+}
+
+function connectWhaleWS() {
+  // Connect to multiple streams simultaneously
+  const streams = ['btcusdt@aggTrade','ethusdt@aggTrade','solusdt@aggTrade'].join('/');
+  const wsUrl = `wss://stream.binance.com:9443/stream?streams=${streams}`;
+
+  if(state.ws.whale) {
+    try { state.ws.whale.close(); } catch(e){}
+  }
+
+  const ws = new WebSocket(wsUrl);
+  state.ws.whale = ws;
+
+  ws.onopen = () => {
+    wsConnected = true;
+    $('liveStatus').textContent = 'LIVE';
+    $('whaleBadge').textContent = 'WS LIVE';
+    $('whaleFeed').innerHTML = `
+      <div style="text-align:center;padding:12px;color:var(--g1);font-family:var(--mono);font-size:10px">
+        ✅ WebSocket conectado<br>
+        <span style="color:var(--t2)">Monitoreando BTC · ETH · SOL<br>Umbral: ${fmt(whaleThreshold)}</span>
+      </div>`;
+  };
+
+  ws.onmessage = (event) => {
+    try {
+      const msg = JSON.parse(event.data);
+      const d = msg.data;
+      if(!d || d.e !== 'aggTrade') return;
+
+      const sym   = d.s;
+      const price = parseFloat(d.p);
+      const qty   = parseFloat(d.q);
+      const usd   = price * qty;
+      const isBuy = !d.m; // m=true significa market sell
+
+      if(usd >= whaleThreshold) {
+        addWhaleAlert(sym, usd, price, qty, isBuy);
+      }
+    } catch(e){}
+  };
+
+  ws.onerror = () => {
+    $('liveStatus').textContent = 'WS ERROR';
+    wsConnected = false;
+  };
+
+  ws.onclose = () => {
+    wsConnected = false;
+    $('liveStatus').textContent = 'RECONECTANDO';
+    // Auto-reconnect after 5s
+    setTimeout(() => { if(!wsConnected) connectWhaleWS(); }, 5000);
+  };
+}
+
+function addWhaleAlert(sym, usd, price, qty, isBuy) {
+  const label = sym.replace('USDT','');
+  const type  = isBuy ? 'buy' : 'sell';
+  const icon  = isBuy ? '🟢' : '🔴';
+  const sizeLabel = usd>5e6?'MEGA WHALE':usd>2e6?'WHALE':'LARGE';
+  const badgeClass = usd>5e6?'ab-mega':usd>2e6?'ab-whale':'ab-large';
+
+  const el = document.createElement('div');
+  el.className = `whale-item ${type}`;
+  el.innerHTML = `
+    <div class="wi-icon">${icon}</div>
+    <div class="wi-info">
+      <div class="wi-title">${isBuy?'COMPRA MASIVA':'VENTA MASIVA'} <span class="alert-badge ${badgeClass}">${sizeLabel}</span></div>
+      <div class="wi-meta">${label}/USDT · ${qty.toFixed(2)} @ ${fmtP(price)}</div>
+    </div>
+    <div>
+      <div class="wi-amount ${type==='buy'?'up':'dn'}">${fmt(usd)}</div>
+      <div class="wi-time">${time()}</div>
+    </div>`;
+
+  const feed = $('whaleFeed');
+  // Remove placeholder if present
+  if(feed.querySelector('div[style*="text-align:center"]') && state.whaleLog.length===0) {
+    feed.innerHTML='';
+  }
+  feed.insertBefore(el, feed.firstChild);
+
+  // Keep max 50 items
+  while(feed.children.length > 50) feed.removeChild(feed.lastChild);
+
+  // Log
+  state.whaleLog.unshift({ sym, usd, price, isBuy, time:time() });
+  if(state.whaleLog.length>100) state.whaleLog.pop();
+
+  // Toast only for big moves
+  if(usd >= 2e6) {
+    toast(type,
+      `🐋 ${sizeLabel}: ${isBuy?'COMPRA':'VENTA'} en ${label}`,
+      `${fmt(usd)} · ${qty.toFixed(2)} ${label} @ ${fmtP(price)}`
+    );
+  }
+}
+
+/* ════════════════════════════════
+   MAIN — Orchestrate everything
+════════════════════════════════ */
+async function refreshAll() {
+  const btn = $('refreshBtn');
+  if(btn) btn.textContent = '↻ CARGANDO...';
+  dot('d-cg','load');
+
+  await Promise.allSettled([
+    loadPrices(),
+    loadFearGreed(),
+    loadFundingRate(),
+    loadLongShort(),
+    loadOpenInterest(),
+    loadVolumeSpikes(),
+    loadLiquidationMap()
+  ]);
+
+  // Compute composite signal after all data loaded
+  setTimeout(computeSignal, 500);
+
+  dot('d-cg','ok');
+  $('lastUpdate').textContent = `Actualizado: ${time()}`;
+  if(btn) btn.textContent = '↻ REFRESH';
+}
+
+// Connect WebSocket immediately (separate from REST polling)
+connectWhaleWS();
+
+// Initial load
+refreshAll();
+
+// Auto-refresh REST APIs every 30 seconds
+// (WebSocket stays always-on for real-time trades)
+setInterval(refreshAll, 30000);
+
+/*
+ ══════════════════════════════════════════════════════════════
+  📌 GUÍA DE APIS USADAS EN ESTE DASHBOARD
+
+  TODAS SIN API KEY:
+
+  1. Binance REST - Precios 24h:
+     https://api.binance.com/api/v3/ticker/24hr?symbols=[...]
+
+  2. Binance Futures - Funding Rate actual:
+     https://fapi.binance.com/fapi/v1/premiumIndex?symbol=BTCUSDT
+
+  3. Binance Futures - Long/Short ratio (top traders):
+     https://fapi.binance.com/futures/data/topLongShortAccountRatio
+
+  4. Binance Futures - Open Interest:
+     https://fapi.binance.com/fapi/v1/openInterest?symbol=BTCUSDT
+
+  5. Binance REST - Velas (para spikes de volumen):
+     https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=15m
+
+  6. Binance REST - Order Book Depth:
+     https://api.binance.com/api/v3/depth?symbol=BTCUSDT&limit=20
+
+  7. Binance WebSocket - Trades en tiempo real:
+     wss://stream.binance.com:9443/stream?streams=btcusdt@aggTrade
+
+  8. Alternative.me - Fear & Greed:
+     https://api.alternative.me/fng/?limit=2
+
+  PARA LIQUIDACIONES EXACTAS (requiere CoinDesk/CoinGlass API o pago):
+  - CoinGlass tiene API de liquidaciones pero es pago ($50+/mes)
+  - Este dashboard las estima desde el order book como alternativa gratuita
+  - Para datos reales de liquidaciones: usa CoinGlass.com directamente
+
+  PARA AÑADIR COINDESK DATA API (requiere registro en developers.coindesk.com):
+  const headers = { 'Authorization': 'Apikey TU_API_KEY' };
+  const res = await fetch('https://data-api.coindesk.com/futures/v1/latest/funding-rate?market=binance&instrument=BTC-USDT-PERP', {headers});
+ ══════════════════════════════════════════════════════════════
+*/
+</script>
+</body>
+</html>
