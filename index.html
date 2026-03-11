@@ -1650,7 +1650,12 @@ setInterval(refreshAll, 30000);
 ═══════════════════════════════════════════════ */
 function donOpen()  { document.getElementById('donModal').classList.add('show'); }
 function donClose() { document.getElementById('donModal').classList.remove('show'); }
-document.getElementById('donModal').addEventListener('click', function(e){ if(e.target===this) donClose(); });
+
+// Safe: espera a que el DOM esté listo antes de agregar el listener
+window.addEventListener('DOMContentLoaded', function() {
+  var modal = document.getElementById('donModal');
+  if(modal) modal.addEventListener('click', function(e){ if(e.target===this) donClose(); });
+});
 
 function donTab(t) {
   const isPP = t==='pp';
@@ -1675,9 +1680,9 @@ function solCopy() {
 /* ═══════════════════════════════════════════════
    AI SIDE DRAWER
 ═══════════════════════════════════════════════ */
-let _aiOpen = false;
-let _aiHistory = [];
-let _aiTyping = false;
+var _aiOpen = false;    // var en lugar de let para evitar temporal dead zone
+var _aiHistory = [];
+var _aiTyping = false;
 
 function aiOpen() {
   _aiOpen = true;
@@ -1786,17 +1791,18 @@ INSTRUCCIONES:
 - Marca: Lenseterra Crypto Dashboard.`;
 
   try {
-    const res = await fetch('/api/chat', {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
       method:'POST',
       headers:{ 'Content-Type':'application/json' },
       body: JSON.stringify({
-        system:   systemPrompt,
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system: systemPrompt,
         messages: _aiHistory
       })
     });
     const data = await res.json();
-    if(!res.ok) throw new Error(data.error || 'Error del servidor');
-    const reply = data.text || 'Sin respuesta. Intenta de nuevo.';
+    const reply = data.content?.[0]?.text || 'Sin respuesta. Intenta de nuevo.';
 
     document.getElementById('aiTyping')?.remove();
 
