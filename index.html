@@ -388,6 +388,35 @@ body::before {
 .cl-value { font-family:var(--mono); font-size:9px; margin-top:2px; color:var(--t2); }
 .cl-verdict { margin-top:12px; padding:10px 14px; border-radius:8px; font-family:var(--mono); font-size:10px; font-weight:700; line-height:1.6; text-align:center; border:1px solid; }
 
+/* ═══ LENSETERRA BRAND ═══ */
+.lt-name { font-family:var(--mono); font-weight:700; letter-spacing:2.5px; font-size:13px; display:flex; align-items:center; gap:0; }
+.lt-lens  { color:var(--g1); }
+.lt-terra { color:var(--t3); }
+.lt-slash { color:var(--border); margin:0 5px; font-weight:300; }
+.lt-sub   { color:var(--t2); font-size:8px; letter-spacing:1.5px; margin-left:6px; font-weight:400; margin-top:1px; }
+.lt-footer{ font-family:var(--mono); font-size:9px; letter-spacing:2px; color:var(--t2); opacity:.5; }
+.lt-footer b { color:var(--g1); opacity:1; }
+
+/* ═══ TOPBAR BUTTONS ═══ */
+.btn-donate {
+  display:flex; align-items:center; gap:5px;
+  background:rgba(255,215,64,.12); border:1px solid rgba(255,215,64,.3);
+  color:var(--y1); padding:5px 13px; border-radius:7px; cursor:pointer;
+  font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:.5px;
+  transition:all .2s; white-space:nowrap; flex-shrink:0;
+}
+.btn-donate:hover { background:rgba(255,215,64,.22); box-shadow:0 0 12px rgba(255,215,64,.15); }
+.btn-ai {
+  display:flex; align-items:center; gap:6px;
+  background:linear-gradient(135deg,rgba(0,230,118,.14),rgba(0,176,255,.1));
+  border:1px solid rgba(0,230,118,.3);
+  color:var(--g1); padding:5px 13px; border-radius:7px; cursor:pointer;
+  font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:.5px;
+  transition:all .2s; white-space:nowrap; flex-shrink:0;
+}
+.btn-ai:hover { background:linear-gradient(135deg,rgba(0,230,118,.24),rgba(0,176,255,.18)); box-shadow:0 0 14px rgba(0,230,118,.18); }
+.btn-ai-pulse { width:6px; height:6px; border-radius:50%; background:var(--g1); animation:pulse 1.4s infinite; }
+
 /* ═══ LANG TOGGLE ═══ */
 .btn-lang {
   display:flex; align-items:center; gap:5px;
@@ -399,6 +428,138 @@ body::before {
 .btn-lang:hover { background:rgba(160,188,200,.18); border-color:rgba(160,188,200,.35); }
 .lang-flag { font-size:13px; line-height:1; }
 
+/* ═══ DONATION MODAL ═══ */
+.don-overlay {
+  display:none; position:fixed; inset:0; z-index:9999;
+  background:rgba(0,0,0,.72); backdrop-filter:blur(10px);
+  align-items:center; justify-content:center;
+}
+.don-overlay.show { display:flex !important; }
+.don-box {
+  background:#0d1520; border:1px solid rgba(255,255,255,.1);
+  border-radius:18px; padding:28px 26px; max-width:380px; width:92%;
+  position:relative; box-shadow:0 24px 80px rgba(0,0,0,.9);
+  animation:popIn .25s ease;
+}
+@keyframes popIn { from{opacity:0;transform:scale(.94) translateY(10px)} to{opacity:1;transform:scale(1) translateY(0)} }
+.don-close {
+  position:absolute; top:13px; right:15px;
+  background:rgba(255,255,255,.07); border:none; border-radius:50%;
+  color:var(--t2); width:26px; height:26px; font-size:13px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; transition:all .2s;
+}
+.don-close:hover { background:rgba(255,255,255,.14); color:var(--t3); }
+.don-tabs { display:flex; background:rgba(255,255,255,.04); border-radius:9px; padding:3px; gap:3px; margin-bottom:18px; }
+.don-tab {
+  flex:1; padding:8px 6px; border:none; border-radius:7px; cursor:pointer;
+  font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:.5px;
+  background:transparent; color:var(--t2); transition:all .2s;
+}
+.don-tab.active { background:rgba(255,255,255,.09); color:var(--t3); box-shadow:0 1px 6px rgba(0,0,0,.5); }
+.sol-addr {
+  background:rgba(255,255,255,.05); border:1px solid rgba(153,69,255,.25);
+  border-radius:9px; padding:13px 14px; font-family:var(--mono);
+  font-size:10px; color:#b47aff; word-break:break-all; line-height:1.7;
+  cursor:pointer; transition:border-color .2s; text-align:left;
+}
+.sol-addr:hover { border-color:rgba(153,69,255,.5); }
+.sol-copy-btn {
+  width:100%; margin-top:10px;
+  background:rgba(153,69,255,.12); border:1px solid rgba(153,69,255,.3);
+  color:#b47aff; padding:9px; border-radius:8px; cursor:pointer;
+  font-family:var(--mono); font-size:10px; font-weight:700; transition:all .2s;
+}
+.sol-copy-btn:hover { background:rgba(153,69,255,.22); }
+
+/* ═══ AI SIDE DRAWER ═══ */
+#aiDrawer {
+  position:fixed; top:0; right:0; bottom:0; z-index:8888;
+  width:400px; max-width:95vw;
+  background:#070e16;
+  border-left:1px solid rgba(0,230,118,.15);
+  display:flex; flex-direction:column;
+  transform:translateX(100%);
+  transition:transform .35s cubic-bezier(.4,0,.2,1);
+  box-shadow:-8px 0 48px rgba(0,0,0,.7);
+}
+#aiDrawer.open { transform:translateX(0); }
+#aiOverlay {
+  display:none; position:fixed; inset:0; z-index:8887;
+  background:rgba(0,0,0,.4); backdrop-filter:blur(2px);
+}
+#aiOverlay.show { display:block; }
+.ai-drawer-header {
+  display:flex; align-items:center; gap:10px;
+  padding:16px 18px; border-bottom:1px solid rgba(0,230,118,.1);
+  background:rgba(0,230,118,.04); flex-shrink:0;
+}
+.ai-avatar {
+  width:36px; height:36px; border-radius:50%;
+  background:linear-gradient(135deg,#00e676 0%,#00b0ff 100%);
+  display:flex; align-items:center; justify-content:center;
+  font-size:18px; flex-shrink:0; box-shadow:0 0 14px rgba(0,230,118,.3);
+}
+.ai-status-dot { width:7px; height:7px; border-radius:50%; background:var(--g1); animation:pulse 1.5s infinite; }
+#aiMessages {
+  flex:1; overflow-y:auto; padding:16px 14px;
+  display:flex; flex-direction:column; gap:12px; min-height:0;
+}
+#aiMessages::-webkit-scrollbar { width:3px; }
+#aiMessages::-webkit-scrollbar-thumb { background:rgba(0,230,118,.2); border-radius:2px; }
+.msg-row-bot  { display:flex; justify-content:flex-start; }
+.msg-row-user { display:flex; justify-content:flex-end; }
+.bubble-bot {
+  background:#0f1e2e; border:1px solid rgba(255,255,255,.08);
+  border-radius:4px 16px 16px 16px; padding:11px 14px;
+  font-size:.82rem; color:var(--t3); line-height:1.6; max-width:90%;
+}
+.bubble-user {
+  background:linear-gradient(135deg,rgba(0,230,118,.13),rgba(0,176,255,.09));
+  border:1px solid rgba(0,230,118,.22);
+  border-radius:16px 4px 16px 16px; padding:11px 14px;
+  font-size:.82rem; color:var(--t3); line-height:1.6; max-width:90%;
+}
+.typing-ind {
+  display:flex; align-items:center; gap:5px; padding:11px 14px;
+  background:#0f1e2e; border:1px solid rgba(255,255,255,.08);
+  border-radius:4px 16px 16px 16px; width:fit-content;
+}
+.typing-ind span { width:6px; height:6px; border-radius:50%; background:var(--g1); opacity:.4; animation:td 1.2s infinite; }
+.typing-ind span:nth-child(2) { animation-delay:.22s; }
+.typing-ind span:nth-child(3) { animation-delay:.44s; }
+@keyframes td { 0%,100%{opacity:.3;transform:scale(.8)} 50%{opacity:1;transform:scale(1.1)} }
+.ai-quick-btns { padding:10px 12px; display:flex; gap:6px; flex-wrap:wrap; border-top:1px solid rgba(255,255,255,.05); flex-shrink:0; }
+.qb {
+  background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.09);
+  color:var(--t2); padding:6px 10px; border-radius:7px; cursor:pointer;
+  font-size:.72rem; font-family:var(--sans); transition:all .15s; white-space:nowrap;
+}
+.qb:hover { border-color:rgba(0,230,118,.35); color:var(--g1); background:rgba(0,230,118,.08); }
+.ai-input-row {
+  display:flex; gap:8px; padding:12px 14px;
+  border-top:1px solid rgba(255,255,255,.07); flex-shrink:0;
+  background:rgba(0,0,0,.3);
+}
+#aiInput {
+  flex:1; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1);
+  border-radius:10px; padding:10px 14px;
+  font-family:var(--sans); font-size:.83rem; color:var(--t3); outline:none;
+  transition:border-color .2s;
+}
+#aiInput:focus { border-color:rgba(0,230,118,.4); background:rgba(255,255,255,.08); }
+#aiInput::placeholder { color:var(--t2); }
+#aiSendBtn {
+  background:var(--g1); border:none; border-radius:10px;
+  width:40px; height:40px; cursor:pointer; font-size:15px;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  transition:all .2s; color:#020507;
+}
+#aiSendBtn:hover { background:var(--g2); transform:scale(1.05); }
+#aiSendBtn:disabled { background:rgba(255,255,255,.1); cursor:not-allowed; color:var(--t2); transform:none; }
+
+/* ═══ LANG TOGGLE (already defined above, ensure no duplicate) ═══ */
+.lang-flag { font-size:13px; line-height:1; }
+
 </style>
 </head>
 <body>
@@ -406,9 +567,20 @@ body::before {
 <!-- TOPBAR -->
 <div class="topbar z">
   <div class="tb-inner">
-    <div class="logo"><div class="logo-dot"></div>CA<span style="color:#fff">PRO</span> <span style="color:var(--t2);font-weight:400">ADVANCED</span></div>
-    <div class="ticker-wrap"><div class="ticker-track" id="tickerTrack"><div class="t-item"><span class="t-sym">BTC</span><span class="t-px">cargando...</span></div></div></div>
+    <div class="logo">
+      <div class="logo-dot"></div>
+      <div class="lt-name">
+        <span class="lt-lens">LENSE</span><span class="lt-terra">TERRA</span>
+        <span class="lt-slash">/</span>
+        <span style="color:var(--t3);letter-spacing:2px">CRYPTO</span>
+        <span class="lt-sub">PRO</span>
+      </div>
+    </div>
+    <div class="ticker-wrap"><div class="ticker-track" id="tickerTrack"><div class="t-item"><span class="t-sym">BTC</span><span class="t-px">loading...</span></div></div></div>
     <div class="tb-right">
+      <button class="btn-donate" id="donateBtnTop" onclick="donOpen()">☕ Donate</button>
+      <button class="btn-ai" onclick="aiOpen()"><div class="btn-ai-pulse"></div>🤖 Ask AI</button>
+      <button class="btn-lang" id="langBtn" onclick="toggleLang()"><span class="lang-flag">🇺🇸</span><span id="langLabel">ES</span></button>
       <div class="live-badge"><div class="lp"></div><span id="liveStatus">CONNECTING</span></div>
     </div>
   </div>
