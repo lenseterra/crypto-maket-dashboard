@@ -388,167 +388,16 @@ body::before {
 .cl-value { font-family:var(--mono); font-size:9px; margin-top:2px; color:var(--t2); }
 .cl-verdict { margin-top:12px; padding:10px 14px; border-radius:8px; font-family:var(--mono); font-size:10px; font-weight:700; line-height:1.6; text-align:center; border:1px solid; }
 
-/* ═══ LENSETERRA BRAND ═══ */
-.lt-name { font-family:var(--mono); font-weight:700; letter-spacing:2.5px; font-size:13px; display:flex; align-items:center; gap:0; }
-.lt-lens  { color:var(--g1); }
-.lt-terra { color:var(--t3); }
-.lt-slash { color:var(--border); margin:0 5px; font-weight:300; }
-.lt-sub   { color:var(--t2); font-size:8px; letter-spacing:1.5px; margin-left:6px; font-weight:400; margin-top:1px; }
-.lt-footer{ font-family:var(--mono); font-size:9px; letter-spacing:2px; color:var(--t2); opacity:.5; }
-.lt-footer b { color:var(--g1); opacity:1; }
-
-/* ═══ TOPBAR BUTTONS ═══ */
-.btn-donate {
+/* ═══ LANG TOGGLE ═══ */
+.btn-lang {
   display:flex; align-items:center; gap:5px;
-  background:rgba(255,215,64,.12); border:1px solid rgba(255,215,64,.3);
-  color:var(--y1); padding:5px 13px; border-radius:7px; cursor:pointer;
+  background:rgba(160,188,200,.1); border:1px solid rgba(160,188,200,.2);
+  color:var(--t1); padding:5px 11px; border-radius:7px; cursor:pointer;
   font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:.5px;
   transition:all .2s; white-space:nowrap; flex-shrink:0;
 }
-.btn-donate:hover { background:rgba(255,215,64,.22); box-shadow:0 0 12px rgba(255,215,64,.15); }
-.btn-ai {
-  display:flex; align-items:center; gap:6px;
-  background:linear-gradient(135deg,rgba(0,230,118,.14),rgba(0,176,255,.1));
-  border:1px solid rgba(0,230,118,.3);
-  color:var(--g1); padding:5px 13px; border-radius:7px; cursor:pointer;
-  font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:.5px;
-  transition:all .2s; white-space:nowrap; flex-shrink:0;
-}
-.btn-ai:hover { background:linear-gradient(135deg,rgba(0,230,118,.24),rgba(0,176,255,.18)); box-shadow:0 0 14px rgba(0,230,118,.18); }
-.btn-ai-pulse { width:6px; height:6px; border-radius:50%; background:var(--g1); animation:pulse 1.4s infinite; }
-
-/* ═══ DONATION MODAL ═══ */
-.don-overlay {
-  display:none; position:fixed; inset:0; z-index:9999;
-  background:rgba(0,0,0,.72); backdrop-filter:blur(10px);
-  align-items:center; justify-content:center;
-}
-.don-overlay.show { display:flex !important; }
-.don-box {
-  background:#0d1520; border:1px solid rgba(255,255,255,.1);
-  border-radius:18px; padding:28px 26px; max-width:380px; width:92%;
-  position:relative; box-shadow:0 24px 80px rgba(0,0,0,.9);
-  animation:popIn .25s ease;
-}
-@keyframes popIn { from{opacity:0;transform:scale(.94) translateY(10px)} to{opacity:1;transform:scale(1) translateY(0)} }
-.don-close {
-  position:absolute; top:13px; right:15px;
-  background:rgba(255,255,255,.07); border:none; border-radius:50%;
-  color:var(--t2); width:26px; height:26px; font-size:13px; cursor:pointer;
-  display:flex; align-items:center; justify-content:center; transition:all .2s;
-}
-.don-close:hover { background:rgba(255,255,255,.14); color:var(--t3); }
-.don-tabs { display:flex; background:rgba(255,255,255,.04); border-radius:9px; padding:3px; gap:3px; margin-bottom:18px; }
-.don-tab {
-  flex:1; padding:8px 6px; border:none; border-radius:7px; cursor:pointer;
-  font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:.5px;
-  background:transparent; color:var(--t2); transition:all .2s;
-}
-.don-tab.active { background:rgba(255,255,255,.09); color:var(--t3); box-shadow:0 1px 6px rgba(0,0,0,.5); }
-.sol-addr {
-  background:rgba(255,255,255,.05); border:1px solid rgba(153,69,255,.25);
-  border-radius:9px; padding:13px 14px; font-family:var(--mono);
-  font-size:10px; color:#b47aff; word-break:break-all; line-height:1.7;
-  cursor:pointer; transition:border-color .2s; text-align:left;
-}
-.sol-addr:hover { border-color:rgba(153,69,255,.5); }
-.sol-copy-btn {
-  width:100%; margin-top:10px;
-  background:rgba(153,69,255,.12); border:1px solid rgba(153,69,255,.3);
-  color:#b47aff; padding:9px; border-radius:8px; cursor:pointer;
-  font-family:var(--mono); font-size:10px; font-weight:700; transition:all .2s;
-}
-.sol-copy-btn:hover { background:rgba(153,69,255,.22); }
-
-/* ═══ AI SIDE DRAWER ═══ */
-#aiDrawer {
-  position:fixed; top:0; right:0; bottom:0; z-index:8888;
-  width:400px; max-width:95vw;
-  background:#070e16;
-  border-left:1px solid rgba(0,230,118,.15);
-  display:flex; flex-direction:column;
-  transform:translateX(100%);
-  transition:transform .35s cubic-bezier(.4,0,.2,1);
-  box-shadow:-8px 0 48px rgba(0,0,0,.7);
-}
-#aiDrawer.open { transform:translateX(0); }
-#aiOverlay {
-  display:none; position:fixed; inset:0; z-index:8887;
-  background:rgba(0,0,0,.4); backdrop-filter:blur(2px);
-}
-#aiOverlay.show { display:block; }
-.ai-drawer-header {
-  display:flex; align-items:center; gap:10px;
-  padding:16px 18px; border-bottom:1px solid rgba(0,230,118,.1);
-  background:rgba(0,230,118,.04); flex-shrink:0;
-}
-.ai-avatar {
-  width:36px; height:36px; border-radius:50%;
-  background:linear-gradient(135deg,#00e676 0%,#00b0ff 100%);
-  display:flex; align-items:center; justify-content:center;
-  font-size:18px; flex-shrink:0;
-  box-shadow:0 0 14px rgba(0,230,118,.3);
-}
-.ai-status-dot { width:7px; height:7px; border-radius:50%; background:var(--g1); animation:pulse 1.5s infinite; }
-#aiMessages {
-  flex:1; overflow-y:auto; padding:16px 14px;
-  display:flex; flex-direction:column; gap:12px; min-height:0;
-}
-#aiMessages::-webkit-scrollbar { width:3px; }
-#aiMessages::-webkit-scrollbar-thumb { background:rgba(0,230,118,.2); border-radius:2px; }
-.msg-row-bot  { display:flex; justify-content:flex-start; }
-.msg-row-user { display:flex; justify-content:flex-end; }
-.bubble-bot {
-  background:#0f1e2e; border:1px solid rgba(255,255,255,.08);
-  border-radius:4px 16px 16px 16px; padding:11px 14px;
-  font-size:.82rem; color:var(--t3); line-height:1.6; max-width:90%;
-}
-.bubble-user {
-  background:linear-gradient(135deg,rgba(0,230,118,.13),rgba(0,176,255,.09));
-  border:1px solid rgba(0,230,118,.22);
-  border-radius:16px 4px 16px 16px; padding:11px 14px;
-  font-size:.82rem; color:var(--t3); line-height:1.6; max-width:90%;
-}
-.typing-ind {
-  display:flex; align-items:center; gap:5px; padding:11px 14px;
-  background:#0f1e2e; border:1px solid rgba(255,255,255,.08);
-  border-radius:4px 16px 16px 16px; width:fit-content;
-}
-.typing-ind span {
-  width:6px; height:6px; border-radius:50%; background:var(--g1); opacity:.4;
-  animation:td 1.2s infinite;
-}
-.typing-ind span:nth-child(2) { animation-delay:.22s; }
-.typing-ind span:nth-child(3) { animation-delay:.44s; }
-@keyframes td { 0%,100%{opacity:.3;transform:scale(.8)} 50%{opacity:1;transform:scale(1.1)} }
-.ai-quick-btns { padding:10px 12px; display:flex; gap:6px; flex-wrap:wrap; border-top:1px solid rgba(255,255,255,.05); flex-shrink:0; }
-.qb {
-  background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.09);
-  color:var(--t2); padding:6px 10px; border-radius:7px; cursor:pointer;
-  font-size:.72rem; font-family:var(--sans); transition:all .15s; white-space:nowrap;
-}
-.qb:hover { border-color:rgba(0,230,118,.35); color:var(--g1); background:rgba(0,230,118,.08); }
-.ai-input-row {
-  display:flex; gap:8px; padding:12px 14px;
-  border-top:1px solid rgba(255,255,255,.07); flex-shrink:0;
-  background:rgba(0,0,0,.3);
-}
-#aiInput {
-  flex:1; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1);
-  border-radius:10px; padding:10px 14px;
-  font-family:var(--sans); font-size:.83rem; color:var(--t3); outline:none;
-  transition:border-color .2s;
-}
-#aiInput:focus { border-color:rgba(0,230,118,.4); background:rgba(255,255,255,.08); }
-#aiInput::placeholder { color:var(--t2); }
-#aiSendBtn {
-  background:var(--g1); border:none; border-radius:10px;
-  width:40px; height:40px; cursor:pointer; font-size:15px;
-  display:flex; align-items:center; justify-content:center; flex-shrink:0;
-  transition:all .2s; color:#020507;
-}
-#aiSendBtn:hover { background:var(--g2); transform:scale(1.05); }
-#aiSendBtn:disabled { background:rgba(255,255,255,.1); cursor:not-allowed; color:var(--t2); transform:none; }
+.btn-lang:hover { background:rgba(160,188,200,.18); border-color:rgba(160,188,200,.35); }
+.lang-flag { font-size:13px; line-height:1; }
 
 </style>
 </head>
@@ -557,20 +406,10 @@ body::before {
 <!-- TOPBAR -->
 <div class="topbar z">
   <div class="tb-inner">
-    <div class="logo">
-      <div class="logo-dot"></div>
-      <div class="lt-name">
-        <span class="lt-lens">LENSE</span><span class="lt-terra">TERRA</span>
-        <span class="lt-slash">/</span>
-        <span style="color:var(--t3);letter-spacing:2px">CRYPTO</span>
-        <span class="lt-sub">PRO</span>
-      </div>
-    </div>
+    <div class="logo"><div class="logo-dot"></div>CA<span style="color:#fff">PRO</span> <span style="color:var(--t2);font-weight:400">ADVANCED</span></div>
     <div class="ticker-wrap"><div class="ticker-track" id="tickerTrack"><div class="t-item"><span class="t-sym">BTC</span><span class="t-px">cargando...</span></div></div></div>
     <div class="tb-right">
-      <button class="btn-donate" onclick="donOpen()">☕ Donar</button>
-      <button class="btn-ai"     onclick="aiOpen()"><div class="btn-ai-pulse"></div>🤖 Ask AI</button>
-      <div class="live-badge"><div class="lp"></div><span id="liveStatus">CONECTANDO</span></div>
+      <div class="live-badge"><div class="lp"></div><span id="liveStatus">CONNECTING</span></div>
     </div>
   </div>
 </div>
@@ -608,7 +447,7 @@ body::before {
           <div class="sm-label">ÍNDICE DE MERCADO</div>
           <div class="sm-circle" id="smCircle" style="border-color:var(--t2)">
             <div class="sm-val" id="smVal">—</div>
-            <div class="sm-txt" id="smTxt">CARGANDO</div>
+            <div class="sm-txt" id="smTxt">—</div>
           </div>
           <div class="sm-breakdown" id="smBreakdown">
             <div class="sk sk-line sk-full"></div>
@@ -668,7 +507,7 @@ body::before {
         <span class="pbadge" style="background:rgba(213,0,249,.1);color:var(--p1)">PERPETUOS</span>
       </div>
       <div class="pb">
-        <div style="font-family:var(--mono);font-size:9px;color:var(--t2);margin-bottom:10px;letter-spacing:1px">Funding actual — positivo = longs pagan · negativo = shorts pagan</div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--t2);margin-bottom:10px;letter-spacing:1px">${t('fr_note_desc')}</div>
         <div class="fr-grid" id="frGrid">
           <div class="sk sk-line" style="height:70px"></div>
           <div class="sk sk-line" style="height:70px"></div>
@@ -731,8 +570,8 @@ body::before {
         </div>
         <div class="whale-feed" id="whaleFeed">
           <div style="text-align:center;padding:20px;color:var(--t2);font-family:var(--mono);font-size:10px">
-            Conectando WebSocket de trades...<br>
-            <span style="font-size:9px;color:var(--t2)">Detectando movimientos > $500k</span>
+            ${t('whale_connect')}<br>
+            <span style="font-size:9px;color:var(--t2)">${t('whale_detect')}</span>
           </div>
         </div>
       </div>
@@ -770,7 +609,7 @@ body::before {
   <div class="panel" style="margin-bottom:14px">
     <div class="ph">
       <div class="pt"><div class="pdot" style="background:var(--g1)"></div>✅ CHECKLIST DE DECISIÓN — LONG vs SHORT</div>
-      <span class="pbadge" style="background:var(--g3);color:var(--g1)" id="clBadge">CALCULANDO...</span>
+      <span class="pbadge" style="background:var(--g3);color:var(--g1)" id="clBadge">—</span>
     </div>
     <div class="pb">
       <div style="font-family:var(--mono);font-size:9px;color:var(--t2);margin-bottom:14px;line-height:1.6">
@@ -785,16 +624,13 @@ body::before {
 
   <!-- FOOTER -->
   <div class="footer">
-    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-      <div class="lt-footer"><b>LENSE</b>TERRA CRYPTO PRO &nbsp;·&nbsp;</div>
-      <a href="https://binance-docs.github.io/apidocs/" target="_blank" class="f-api">Binance ↗</a>
+    <div class="f-apis">
+      <span style="font-family:var(--mono);font-size:10px;color:var(--t2)">APIs:</span>
+      <a href="https://binance-docs.github.io/apidocs/" target="_blank" class="f-api">Binance Public API ↗</a>
       <a href="https://alternative.me/crypto/fear-and-greed-index/" target="_blank" class="f-api">Alternative.me ↗</a>
       <a href="https://coingecko.com" target="_blank" class="f-api">CoinGecko ↗</a>
     </div>
-    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-      <button class="btn-donate" onclick="donOpen()" style="font-size:9px;padding:4px 10px">☕ Apoya el proyecto</button>
-      <div class="f-disc">⚠️ Solo educativo. No es asesoría financiera.</div>
-    </div>
+    <div class="f-disc">⚠️ Solo educativo. Liquidations estimadas. No es asesoría financiera.</div>
   </div>
 
 </div><!-- /page -->
@@ -804,6 +640,474 @@ body::before {
 ════════════════════════════════════════════════════════ -->
 <script>
 'use strict';
+
+
+/* ════════════════════════════════════════════════
+   i18n — BILINGUAL SYSTEM (EN default / ES toggle)
+   English is the default language.
+   AI always responds in English.
+════════════════════════════════════════════════ */
+var _lang = localStorage.getItem('lt_lang') || 'en';
+
+const T = {
+  en: {
+    /* topbar / status */
+    connecting:       'CONNECTING',
+    live:             'LIVE',
+    wsLive:           'WS LIVE',
+    wsError:          'WS ERROR',
+    reconnecting:     'RECONNECTING',
+    refresh:          '↻ REFRESH',
+    loading:          '↻ LOADING...',
+    updated:          'Updated:',
+    langLabel:        'ES',
+    langFlag:         '🇺🇸',
+    /* api bar */
+    apis_binance:     'Binance API (Prices, OI, FR, Vol)',
+    apis_fg:          'Fear & Greed',
+    apis_cg:          'CoinGecko (Global)',
+    /* panel headers */
+    panel_signal:     'COMPOSITE SIGNAL',
+    panel_fg:         'FEAR & GREED',
+    panel_btc:        'BTC/USDT',
+    panel_eth:        'ETH/USDT',
+    panel_fr:         'FUNDING RATE',
+    panel_ls:         'LONG/SHORT RATIO',
+    panel_oi:         'OPEN INTEREST',
+    panel_whale:      '🐋 MASSIVE MOVES',
+    panel_vol:        'VOLUME — SPIKE DETECTION',
+    panel_liq:        'BTC LIQUIDATION MAP',
+    panel_checklist:  '✅ DECISION CHECKLIST — LONG vs SHORT',
+    badge_live:       'LIVE',
+    badge_daily:      'DAILY',
+    badge_binance:    'BINANCE',
+    badge_perp:       'PERPETUALS',
+    badge_traders:    'TOP TRADERS',
+    badge_futures:    'FUTURES',
+    badge_15m:        '15MIN',
+    badge_est:        'ESTIMATED',
+    badge_calc:       'CALCULATING...',
+    /* signal meter */
+    sm_label:         'MARKET INDEX',
+    sm_loading:       'LOADING',
+    sm_bullish:       'BULLISH',
+    sm_neutralp:      'NEUTRAL+',
+    sm_neutral:       'NEUTRAL',
+    sm_bearish:       'BEARISH',
+    sm_vbearish:      'VERY BEARISH',
+    /* fear & greed */
+    fg_fear:          'FEAR',
+    fg_neutral:       'NEUTRAL',
+    fg_greed:         'GREED',
+    fg_yesterday:     'YESTERDAY',
+    fg_trend:         'TREND',
+    /* funding rate note */
+    fr_note_danger:   'Danger zone: FR > +0.10% = overleveraged market',
+    fr_note_opp:      'Opportunity: very negative FR = possible short squeeze',
+    fr_note_desc:     'Current funding — positive = longs pay · negative = shorts pay',
+    /* whale panel */
+    whale_thresh:     'ALERT IF TICK VOLUME >',
+    whale_apply:      'APPLY',
+    whale_connect:    'Connecting trade WebSocket...',
+    whale_detect:     'Detecting moves > $500k',
+    whale_connected:  '✅ WebSocket connected',
+    whale_monitor:    'Monitoring BTC · ETH · SOL',
+    whale_threshold:  'Threshold:',
+    whale_buy:        'MASSIVE BUY',
+    whale_sell:       'MASSIVE SELL',
+    /* checklist */
+    cl_based:         'Based on current dashboard data — recalculated on each refresh.',
+    cl_disclaimer:    '⚠️ Not financial advice.',
+    cl_long_cond:     'LONG CONDITIONS',
+    cl_short_cond:    'SHORT CONDITIONS',
+    cl_nodata:        'No data',
+    cl_verdict_strong_long:  '🟢 STRONG conditions for long — consider entry with defined stop',
+    cl_verdict_strong_short: '🔴 STRONG conditions for short — consider entry with defined stop',
+    cl_verdict_partial: '⚠️ PARTIAL conditions ({n}/{t}) — wait for more confluence',
+    cl_verdict_weak:    '⛔ WEAK conditions ({n}/{t}) — not the time for {side}',
+    cl_l1_label:  'Funding Rate neutral or negative (≤ +0.02%)',
+    cl_l1_desc:   'Longs not overpaying — market not overleveraged long',
+    cl_l2_label:  'Fear & Greed not in euphoria (< 75)',
+    cl_l2_desc:   'Sentiment not overextended — room to move up',
+    cl_l3_label:  'Top traders NOT massively long (< 60%)',
+    cl_l3_desc:   'No long excess — market not flush-vulnerable',
+    cl_l4_label:  'BTC price positive in 24h',
+    cl_l4_desc:   'Bullish momentum — price in favorable trend',
+    cl_l5_label:  'More SHORT liquidity above price',
+    cl_l5_desc:   'Market incentive to move up and sweep shorts',
+    cl_l6_label:  'OI positive with rising price',
+    cl_l6_desc:   'New money entering in bullish direction',
+    cl_s1_label:  'Funding Rate very positive (> +0.05%)',
+    cl_s1_desc:   'Longs overpaying — overleveraged, flush risk',
+    cl_s2_label:  'Fear & Greed in euphoria (> 75)',
+    cl_s2_desc:   'Extreme greed — contrarian bearish signal',
+    cl_s3_label:  'Top traders massively long (> 65%)',
+    cl_s3_desc:   'Long excess — cascade liquidation vulnerable',
+    cl_s4_label:  'BTC price negative in 24h',
+    cl_s4_desc:   'Bearish momentum — favorable short trend',
+    cl_s5_label:  'More LONG liquidity below price',
+    cl_s5_desc:   'Market incentive to move down and liquidate longs',
+    cl_s6_label:  'High volume with falling price',
+    cl_s6_desc:   'Real selling pressure with institutional participation',
+    cl_shorts_dom: 'Shorts dominate ✓',
+    cl_longs_dom:  'Longs dominate ✓',
+    cl_shorts_dom2:'Shorts dominate',
+    cl_longs_dom2: 'Longs dominate',
+    /* liq panel */
+    liq_total_shorts:  '💥 TOTAL SHORTS',
+    liq_short_sub:     '% of total · liquidated if price RISES',
+    liq_total_longs:   '💥 TOTAL LONGS',
+    liq_long_sub:      '% of total · liquidated if price FALLS',
+    liq_bias_label:    '🎯 LIQUIDITY BIAS:',
+    liq_bias_short:    'There is {r}x more SHORT liquidity above price. Market has incentive to rise and sweep those stops → possible short squeeze.',
+    liq_bias_long:     'There is {r}x more LONG liquidity below price. Market has incentive to fall and liquidate those longs → possible long squeeze.',
+    liq_levels:        'ESTIMATED LIQUIDATION LEVELS',
+    liq_note:          '▲ CURRENT PRICE ▲ — Red bars (SHORTS) liquidated if price RISES · Green (LONGS) if price FALLS',
+    liq_disclaimer:    '⚠️ Estimated amounts. For exact data use CoinGlass.com',
+    liq_err:           'Error building map.',
+    /* OI panel */
+    oi_header:         'OPEN POSITIONS — PERPETUAL FUTURES',
+    oi_total:          'TOTAL:',
+    oi_err:            'OI data not available.',
+    oi_note_bull:      '📈 CONFIRMED BULLISH TREND: BTC up {c} with OI at {o}. New money entering leveraged market — trend has real conviction.',
+    oi_note_bear:      '📉 CONFIRMED BEARISH TREND: BTC down {c} with OI at {o}. Shorts entering hard or longs capitulating. If OI drops too = mass liquidations.',
+    oi_note_range:     '⚖️ RANGE-BOUND MARKET: OI of {o} with flat price ({c}). Loaded market but no direction — wait for volume breakout before leveraging.',
+    oi_note_watch:     '👀 WATCH: Total OI {o}. Monitor whether OI rises or falls with the next price move — that will confirm if the trend has real strength.',
+    /* L/S panel */
+    ls_err:            'Long/Short data not available.',
+    ls_many_longs:     '⚠️ Too many longs',
+    ls_many_shorts:    '⚠️ Too many shorts',
+    ls_note_flush:     '🚨 CONTRARIAN BEARISH SIGNAL: {l}% of top traders are LONG. When the majority bets one way, the market tends to move against them to liquidate. Smart money may be preparing a long flush.',
+    ls_note_caution:   '⚠️ LONG BIAS — CAUTION: {l}% are long. Market loaded in one direction. An adverse move can trigger cascade liquidations. Not ideal zone to add leveraged longs.',
+    ls_note_squeeze:   '✅ CONTRARIAN BULLISH SIGNAL: {s}% are short. Too many shorts = fuel for a short squeeze. If price rises, forced short closures (buys) accelerate the bullish move.',
+    ls_note_balanced:  '⚖️ BALANCED MARKET: L:{l}% / S:{s}% — no extreme bias. Ratio doesn\'t generate clear contrarian signal. Complement with Funding Rate and volume to decide direction.',
+    /* Volume panel */
+    vol_spike_toast:   '🚨 BTC VOLUME SPIKE — {dir}',
+    vol_header:        'BTCUSDT — 15M CANDLES',
+    vol_avg:           'Avg:',
+    vol_spike_if:      'Spike if >',
+    vol_bull:          'Bullish candle',
+    vol_bear:          'Bearish candle',
+    vol_spike:         '⚡ Spike (+2.5x avg)',
+    vol_err:           'Error loading volume data.',
+    /* FR labels */
+    fr_longs_pay:      '⚠️ LONGS PAY',
+    fr_shorts_pay:     '✅ SHORTS PAY',
+    fr_neutral:        'NEUTRAL',
+    /* toast labels */
+    toast_threshold:   'Threshold updated',
+    toast_thresh_msg:  'Alerts for moves > {v}',
+    toast_buy:         'MASSIVE BUY',
+    toast_sell:        'MASSIVE SELL',
+    /* misc */
+    retry:             '↻ Retry',
+    donate_btn:        '☕ Donate',
+    donate_footer:     '☕ Support the project',
+    support_title:     'SUPPORT LENSETERRA',
+    support_desc:      'This dashboard is 100% free.<br>Your support keeps it alive and improving.',
+    pp_scan:           'SCAN WITH YOUR CAMERA OR PAYPAL APP',
+    pp_link:           'Or go to',
+    sol_label:         'SOLANA ADDRESS — MAINNET',
+    sol_copy:          '📋 Copy SOL address',
+    sol_copied:        '✅ Address copied!',
+    sol_note:          'Send <strong style="color:#b47aff">SOL</strong> or SPL tokens · Network: <strong style="color:var(--t3)">Solana Mainnet</strong>',
+    thanks:            '🙏 Thank you for your support',
+    footer_disc:       '⚠️ Educational only. Not financial advice.',
+    /* AI drawer */
+    ai_status_ready:   'Connected to dashboard in real time',
+    ai_status_thinking:'Analyzing market data...',
+    ai_status_error:   '● Error',
+    ai_welcome:        '👋 Hi, I\'m the <strong style="color:var(--g1)">Lenseterra</strong> assistant.<br><br>I have real-time access to all dashboard indicators — funding rate, liquidations, Long/Short ratio, Fear & Greed, Open Interest and prices.<br><br>Ask me anything about the current market.',
+    ai_cleared:        '🔄 Conversation cleared. What can I help you with on the current market?',
+    ai_placeholder:    'Ask about the current market...',
+    ai_q1: '🔭 Full analysis',
+    ai_q2: '🟢 Long now?',
+    ai_q3: '💸 Funding rate',
+    ai_q4: '😱 Fear & Greed',
+    ai_q5: '⚖️ L/S Ratio',
+    ai_q1_msg: 'Give me a complete market analysis with all the current dashboard data',
+    ai_q2_msg: 'Is it a good time to open a long on BTC right now? Base your answer on the current data',
+    ai_q3_msg: 'What does the current funding rate say and what signal does it give for the market?',
+    ai_q4_msg: 'Explain the current Fear & Greed and what it implies for the market',
+    ai_q5_msg: 'Analyze the current Long/Short ratio and tell me what contrarian signal it generates',
+    ai_err:    '⚠️ AI connection error.<br><small style="color:var(--t2)">Make sure the Anthropic API key is configured on the server.</small>',
+    /* AI system prompt language */
+    ai_system_lang: 'English',
+    /* FR context labels */
+    fr_negative_ctx: '[NEGATIVE — shorts pay, bullish signal]',
+    fr_high_ctx:     '[VERY HIGH — bearish flush risk]',
+    fr_pos_ctx:      '[HIGH POSITIVE]',
+    fg_extreme_fear: 'Extreme Fear',
+    fg_fear_lbl:     'Fear',
+    fg_neutral_lbl:  'Neutral',
+    fg_greed_lbl:    'Greed',
+    fg_extreme_greed:'Extreme Greed',
+    ls_excess_long:  '[⚠️ LONG EXCESS — contrarian bearish signal]',
+    ls_excess_short: '[⚠️ SHORT EXCESS — possible bullish squeeze]',
+    liq_short_heavy: 'More shorts above price → bullish incentive (possible short squeeze)',
+    liq_long_heavy:  'More longs below price → bearish incentive (possible long squeeze)',
+  },
+  es: {
+    connecting:       'CONECTANDO',
+    live:             'LIVE',
+    wsLive:           'WS LIVE',
+    wsError:          'WS ERROR',
+    reconnecting:     'RECONECTANDO',
+    refresh:          '↻ REFRESH',
+    loading:          '↻ CARGANDO...',
+    updated:          'Actualizado:',
+    langLabel:        'EN',
+    langFlag:         '🇨🇴',
+    apis_binance:     'Binance API (Prices, OI, FR, Vol)',
+    apis_fg:          'Fear & Greed',
+    apis_cg:          'CoinGecko (Global)',
+    panel_signal:     'SEÑAL COMPUESTA',
+    panel_fg:         'FEAR & GREED',
+    panel_btc:        'BTC/USDT',
+    panel_eth:        'ETH/USDT',
+    panel_fr:         'FUNDING RATE',
+    panel_ls:         'LONG/SHORT RATIO',
+    panel_oi:         'OPEN INTEREST',
+    panel_whale:      '🐋 MOVIMIENTOS MASIVOS',
+    panel_vol:        'VOLUMEN — DETECCIÓN SPIKES',
+    panel_liq:        'MAPA LIQUIDACIONES BTC',
+    panel_checklist:  '✅ CHECKLIST DE DECISIÓN — LONG vs SHORT',
+    badge_live:       'LIVE',
+    badge_daily:      'DIARIO',
+    badge_binance:    'BINANCE',
+    badge_perp:       'PERPETUOS',
+    badge_traders:    'TOP TRADERS',
+    badge_futures:    'FUTUROS',
+    badge_15m:        '15MIN',
+    badge_est:        'ESTIMADO',
+    badge_calc:       'CALCULANDO...',
+    sm_label:         'ÍNDICE DE MERCADO',
+    sm_loading:       'CARGANDO',
+    sm_bullish:       'ALCISTA',
+    sm_neutralp:      'NEUTRAL+',
+    sm_neutral:       'NEUTRAL',
+    sm_bearish:       'BAJISTA',
+    sm_vbearish:      'MUY BAJISTA',
+    fg_fear:          'MIEDO',
+    fg_neutral:       'NEUTRAL',
+    fg_greed:         'EUFORIA',
+    fg_yesterday:     'AYER',
+    fg_trend:         'TENDENCIA',
+    fr_note_danger:   'Danger zone: FR > +0.10% = mercado sobreapalancado',
+    fr_note_opp:      'Oportunidad: FR muy negativo = posible short squeeze',
+    fr_note_desc:     'Funding actual — positivo = longs pagan · negativo = shorts pagan',
+    whale_thresh:     'ALERTA SI VOLUMEN TICK >',
+    whale_apply:      'APLICAR',
+    whale_connect:    'Conectando WebSocket de trades...',
+    whale_detect:     'Detectando movimientos > $500k',
+    whale_connected:  '✅ WebSocket conectado',
+    whale_monitor:    'Monitoreando BTC · ETH · SOL',
+    whale_threshold:  'Umbral:',
+    whale_buy:        'COMPRA MASIVA',
+    whale_sell:       'VENTA MASIVA',
+    cl_based:         'Basado en los datos actuales del dashboard — se recalcula en cada refresh.',
+    cl_disclaimer:    '⚠️ No es asesoría financiera.',
+    cl_long_cond:     'CONDICIONES LONG',
+    cl_short_cond:    'CONDICIONES SHORT',
+    cl_nodata:        'Sin datos',
+    cl_verdict_strong_long:  '🟢 Condiciones FUERTES para long — considera entrada con stop definido',
+    cl_verdict_strong_short: '🔴 Condiciones FUERTES para short — considera entrada con stop definido',
+    cl_verdict_partial: '⚠️ Condiciones PARCIALES ({n}/{t}) — espera más confluencia antes de actuar',
+    cl_verdict_weak:    '⛔ Condiciones DÉBILES ({n}/{t}) — no es el momento para {side}',
+    cl_l1_label:  'Funding Rate neutro o negativo (≤ +0.02%)',
+    cl_l1_desc:   'Longs no sobrepagan — mercado no sobreapalancado al alza',
+    cl_l2_label:  'Fear & Greed no en euforia (< 75)',
+    cl_l2_desc:   'Sentimiento no sobreextendido — hay espacio para subir',
+    cl_l3_label:  'Top traders NO masivamente long (< 60%)',
+    cl_l3_desc:   'Sin exceso de longs — mercado no vulnerable a flush',
+    cl_l4_label:  'Precio BTC positivo en 24h',
+    cl_l4_desc:   'Momentum alcista — precio en tendencia favorable',
+    cl_l5_label:  'Más liquidez SHORT arriba del precio',
+    cl_l5_desc:   'Incentivo del mercado de subir para barrer shorts',
+    cl_l6_label:  'OI positivo con precio subiendo',
+    cl_l6_desc:   'Dinero nuevo entrando en dirección alcista',
+    cl_s1_label:  'Funding Rate muy positivo (> +0.05%)',
+    cl_s1_desc:   'Longs sobrepagan — mercado sobreapalancado, riesgo de flush',
+    cl_s2_label:  'Fear & Greed en euforia (> 75)',
+    cl_s2_desc:   'Sentimiento extremo de codicia — señal contrarian bajista',
+    cl_s3_label:  'Top traders masivamente long (> 65%)',
+    cl_s3_desc:   'Exceso de longs — mercado vulnerable a liquidación en cascada',
+    cl_s4_label:  'Precio BTC negativo en 24h',
+    cl_s4_desc:   'Momentum bajista — precio en tendencia favorable al short',
+    cl_s5_label:  'Más liquidez LONG abajo del precio',
+    cl_s5_desc:   'Incentivo del mercado de bajar para liquidar longs',
+    cl_s6_label:  'Volumen alto con precio bajando',
+    cl_s6_desc:   'Presión vendedora real con participación institucional',
+    cl_shorts_dom: 'Shorts dominan ✓',
+    cl_longs_dom:  'Longs dominan ✓',
+    cl_shorts_dom2:'Shorts dominan',
+    cl_longs_dom2: 'Longs dominan',
+    liq_total_shorts:  '💥 TOTAL SHORTS',
+    liq_short_sub:     '% del total · se liquidan si precio SUBE',
+    liq_total_longs:   '💥 TOTAL LONGS',
+    liq_long_sub:      '% del total · se liquidan si precio BAJA',
+    liq_bias_label:    '🎯 SESGO DE LIQUIDEZ:',
+    liq_bias_short:    'Hay {r}x más liquidez SHORT arriba del precio actual. El mercado tiene incentivo de subir para barrer esos stops → posible short squeeze.',
+    liq_bias_long:     'Hay {r}x más liquidez LONG abajo del precio actual. El mercado tiene incentivo de bajar para liquidar esos longs → posible long squeeze.',
+    liq_levels:        'NIVELES DE LIQUIDACIÓN ESTIMADOS',
+    liq_note:          '▲ PRECIO ACTUAL ▲ — Rojos (SHORTS) se liquidan si SUBE · Verdes (LONGS) se liquidan si BAJA',
+    liq_disclaimer:    '⚠️ Montos estimados. Para datos exactos usar CoinGlass.com',
+    liq_err:           'Error construyendo mapa.',
+    oi_header:         'POSICIONES ABIERTAS — FUTUROS PERPETUOS',
+    oi_total:          'TOTAL:',
+    oi_err:            'Datos de OI no disponibles.',
+    oi_note_bull:      '📈 TENDENCIA ALCISTA CONFIRMADA: BTC sube {c} con OI en {o}. Dinero nuevo entrando al mercado apalancado — la tendencia tiene convicción real.',
+    oi_note_bear:      '📉 TENDENCIA BAJISTA CONFIRMADA: BTC cae {c} con OI en {o}. Shorts entrando fuerte o longs capitulando. Si el OI también baja = liquidaciones masivas en curso.',
+    oi_note_range:     '⚖️ MERCADO EN RANGO: OI de {o} con precio flat ({c}). Mercado cargado pero sin dirección — espera un breakout con volumen antes de posicionarte apalancado.',
+    oi_note_watch:     '👀 OBSERVAR: OI total {o}. Monitorea si el OI sube o baja junto con el próximo movimiento de precio — eso confirmará si la tendencia tiene fuerza real.',
+    ls_err:            'Datos de Long/Short no disponibles en este momento.',
+    ls_many_longs:     '⚠️ Muchos longs',
+    ls_many_shorts:    '⚠️ Muchos shorts',
+    ls_note_flush:     '🚨 SEÑAL BAJISTA CONTRARIAN: El {l}% de los top traders está LONG. Cuando la mayoría apuesta al mismo lado, el mercado tiende a moverse en contra para liquidarlos. Smart money puede estar preparando un flush de longs.',
+    ls_note_caution:   '⚠️ SESGO ALCISTA — PRECAUCIÓN: El {l}% está long. Mercado cargado en una dirección. Un movimiento adverso puede desencadenar liquidaciones en cascada. No es zona ideal para apalancar longs adicionales.',
+    ls_note_squeeze:   '✅ SEÑAL ALCISTA CONTRARIAN: El {s}% está short. Demasiados shorts = combustible para un short squeeze. Si el precio sube, los shorts forzados a cerrar (comprar) aceleran el movimiento alcista.',
+    ls_note_balanced:  '⚖️ MERCADO EQUILIBRADO: L:{l}% / S:{s}% — sin sesgo extremo. El ratio no genera señal contrarian clara. Complementa con Funding Rate y volumen para decidir dirección.',
+    vol_spike_toast:   '🚨 SPIKE DE VOLUMEN BTC — {dir}',
+    vol_header:        'BTCUSDT — VELAS 15M',
+    vol_avg:           'Avg:',
+    vol_spike_if:      'Spike si >',
+    vol_bull:          'Vela alcista',
+    vol_bear:          'Vela bajista',
+    vol_spike:         '⚡ Spike (+2.5x promedio)',
+    vol_err:           'Error cargando datos de volumen.',
+    fr_longs_pay:      '⚠️ LONGS PAGAN',
+    fr_shorts_pay:     '✅ SHORTS PAGAN',
+    fr_neutral:        'NEUTRAL',
+    toast_threshold:   'Umbral actualizado',
+    toast_thresh_msg:  'Alertas de movimientos masivos > {v}',
+    toast_buy:         'COMPRA',
+    toast_sell:        'VENTA',
+    retry:             '↻ Reintentar',
+    donate_btn:        '☕ Donar',
+    donate_footer:     '☕ Apoya el proyecto',
+    support_title:     'APOYA LENSETERRA',
+    support_desc:      'Este dashboard es 100% gratuito.<br>Tu apoyo mantiene el proyecto vivo y mejorándose.',
+    pp_scan:           'ESCANEA CON TU CÁMARA O APP PAYPAL',
+    pp_link:           'O ingresa a',
+    sol_label:         'DIRECCIÓN SOLANA — MAINNET',
+    sol_copy:          '📋 Copiar dirección SOL',
+    sol_copied:        '✅ ¡Dirección copiada!',
+    sol_note:          'Envía <strong style="color:#b47aff">SOL</strong> o tokens SPL · Red: <strong style="color:var(--t3)">Solana Mainnet</strong>',
+    thanks:            '🙏 Gracias por apoyar',
+    footer_disc:       '⚠️ Solo educativo. No es asesoría financiera.',
+    ai_status_ready:   'Conectado al dashboard en tiempo real',
+    ai_status_thinking:'Analizando datos del mercado...',
+    ai_status_error:   '● Error',
+    ai_welcome:        '👋 Hola, soy el asistente de <strong style="color:var(--g1)">Lenseterra</strong>.<br><br>Tengo acceso en tiempo real a todos los indicadores del dashboard — funding rate, liquidaciones, Long/Short ratio, Fear &amp; Greed, Open Interest y precios.<br><br>Pregúntame lo que quieras sobre el estado actual del mercado.',
+    ai_cleared:        '🔄 Conversación reiniciada. ¿En qué puedo ayudarte con el mercado actual?',
+    ai_placeholder:    'Pregunta sobre el mercado actual...',
+    ai_q1: '🔭 Análisis completo',
+    ai_q2: '🟢 ¿Long ahora?',
+    ai_q3: '💸 Funding rate',
+    ai_q4: '😱 Fear & Greed',
+    ai_q5: '⚖️ L/S Ratio',
+    ai_q1_msg: 'Dame un análisis completo del mercado con todos los datos actuales del dashboard',
+    ai_q2_msg: '¿Es buen momento para abrir un long en BTC ahora mismo? Basa tu respuesta en los datos actuales',
+    ai_q3_msg: '¿Qué dice el funding rate actual y qué señal da para el mercado?',
+    ai_q4_msg: 'Explícame el Fear & Greed actual y qué implica para el mercado',
+    ai_q5_msg: 'Analiza el Long/Short ratio actual y dime qué señal contrarian genera',
+    ai_err:    '⚠️ Error de conexión con la IA.<br><small style="color:var(--t2)">Asegúrate de que la API key de Anthropic está configurada en el servidor.</small>',
+    ai_system_lang: 'Spanish (Latin American)',
+    fr_negative_ctx: '[NEGATIVO — shorts pagan, señal alcista]',
+    fr_high_ctx:     '[MUY ALTO — riesgo de flush bajista]',
+    fr_pos_ctx:      '[POSITIVO ALTO]',
+    fg_extreme_fear: 'Miedo Extremo',
+    fg_fear_lbl:     'Miedo',
+    fg_neutral_lbl:  'Neutral',
+    fg_greed_lbl:    'Codicia',
+    fg_extreme_greed:'Codicia Extrema',
+    ls_excess_long:  '[⚠️ EXCESO LONGS — señal bajista contrarian]',
+    ls_excess_short: '[⚠️ EXCESO SHORTS — posible squeeze alcista]',
+    liq_short_heavy: 'Más shorts sobre precio → incentivo alcista (posible short squeeze)',
+    liq_long_heavy:  'Más longs bajo precio → incentivo bajista (posible long squeeze)',
+  }
+};
+
+function t(key) { return (T[_lang] && T[_lang][key]) || (T['en'] && T['en'][key]) || key; }
+
+function toggleLang() {
+  _lang = _lang === 'en' ? 'es' : 'en';
+  localStorage.setItem('lt_lang', _lang);
+  applyLang();
+  // re-render all panels so translated strings appear immediately
+  renderBigCards();
+  renderTicker();
+  renderFundingRate();
+  renderLongShort();
+  renderOI();
+  computeSignal();
+  // re-render static UI strings
+  updateStaticUI();
+}
+
+function applyLang() {
+  const btn = document.getElementById('langBtn');
+  const lbl = document.getElementById('langLabel');
+  if(btn) btn.querySelector('.lang-flag').textContent = t('langFlag');
+  if(lbl) lbl.textContent = t('langLabel');
+  updateStaticUI();
+}
+
+function updateStaticUI() {
+  // topbar / status
+  const ls = document.getElementById('liveStatus');
+  if(ls && ls.textContent !== t('live') && ls.textContent !== t('wsError') && ls.textContent !== t('reconnecting')) {
+    if(ls.textContent.includes('LIVE') || ls.textContent.includes('live') || ls.textContent === 'LIVE') ls.textContent = t('live');
+  }
+  const rb = document.getElementById('refreshBtn');
+  if(rb && rb.textContent !== t('loading')) rb.textContent = t('refresh');
+  // donate buttons
+  document.querySelectorAll('.btn-donate').forEach(b => {
+    if(!b.textContent.includes('project') && !b.textContent.includes('proyecto')) {
+      b.innerHTML = t('donate_btn');
+    } else {
+      b.innerHTML = t('donate_footer');
+    }
+  });
+  // AI drawer
+  const inp = document.getElementById('aiInput');
+  if(inp) inp.placeholder = t('ai_placeholder');
+  const stl = document.getElementById('aiStatusLbl');
+  if(stl && !stl.style.color.includes('255')) stl.textContent = t('ai_status_ready');
+  // Quick btns
+  document.querySelectorAll('.qb[data-i18n]').forEach(b => {
+    b.textContent = t(b.getAttribute('data-i18n'));
+  });
+  // Donation modal
+  const stitle = document.querySelector('.don-box [style*="letter-spacing:3px"]');
+  if(stitle) stitle.textContent = t('support_title');
+  const sdesc = document.querySelector('.don-box [style*="line-height:1.6"]');
+  if(sdesc) sdesc.innerHTML = t('support_desc');
+  const spp = document.querySelector('#donPP [style*="letter-spacing:1px"]');
+  if(spp) spp.textContent = t('pp_scan');
+  const ssolLabel = document.querySelector('#donSOL [style*="letter-spacing:1.5px"]');
+  if(ssolLabel) ssolLabel.textContent = t('sol_label');
+  const sCopyBtn = document.getElementById('solCopyBtn');
+  if(sCopyBtn && !sCopyBtn.textContent.includes('✅')) sCopyBtn.textContent = t('sol_copy');
+  const sthanks = document.querySelector('.don-box [style*="margin-top:16px"]');
+  if(sthanks) sthanks.textContent = t('thanks');
+  const solNote = document.querySelector('#donSOL [style*="line-height:1.5"]');
+  if(solNote) solNote.innerHTML = t('sol_note');
+  // footer
+  const fdesc = document.querySelector('.f-disc');
+  if(fdesc) fdesc.textContent = t('footer_disc');
+  // checklist static text
+  const clDesc = document.querySelector('#checklistGrid')?.previousElementSibling;
+  if(clDesc) clDesc.innerHTML = t('cl_based') + ' <span style="color:var(--y1)">' + t('cl_disclaimer') + '</span>';
+  // FR note
+  const frNote = document.querySelector('#frGrid + div');
+  if(frNote) frNote.innerHTML = `⚠️ <span style="color:var(--r1)">${t('fr_note_danger').split(':')[0]}:</span>${t('fr_note_danger').split(':').slice(1).join(':')}<br>✅ <span style="color:var(--g1)">${t('fr_note_opp').split(':')[0]}:</span>${t('fr_note_opp').split(':').slice(1).join(':')}`;
+  // whale threshold label
+  const whaleLbl = document.querySelector('#whaleFeed')?.previousElementSibling?.querySelector('span');
+  if(whaleLbl && whaleLbl.style.fontSize === '9px') whaleLbl.textContent = t('whale_thresh');
+  const whaleApply = document.querySelector('[onclick="applyWhaleThreshold()"]');
+  if(whaleApply) whaleApply.textContent = t('whale_apply');
+}
 
 /* ─── HELPERS ─── */
 const $  = id => document.getElementById(id);
@@ -824,7 +1128,7 @@ const fmtP = n => {
 };
 const pct = (n,digits=2) => { if(n==null) return '—'; const s=n>=0?'+':''; return s+n.toFixed(digits)+'%'; };
 const cls = n => n>=0?'up':'dn';
-const time = () => new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+const time = () => new Date().toLocaleTimeString(_lang==='es'?'es-CO':'en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
 
 /* ─── STATE ─── */
 const state = {
@@ -958,7 +1262,7 @@ function renderFundingRate() {
       <div class="fr-item" title="Funding Rate: ${fr.toFixed(4)}%">
         <div class="fr-sym">${sym.replace('USDT','')}</div>
         <div class="fr-val" style="color:${color}">${fr>0?'+':''}${fr.toFixed(4)}%</div>
-        <div class="fr-tag">${fr>0.05?'⚠️ LONGS PAGAN':fr<-0.05?'✅ SHORTS PAGAN':'NEUTRAL'}</div>
+        <div class="fr-tag">${fr>0.05?t('fr_longs_pay'):fr<-0.05?t('fr_shorts_pay'):t('fr_neutral')}</div>
         <div class="fr-bar" style="width:${barWidth}%;background:${barColor};margin:0 auto"></div>
       </div>`;
   }).join('');
@@ -996,8 +1300,8 @@ function renderLongShort() {
     const d = state.ls[sym];
     if(!d) return '';
     const l = d.long.toFixed(1), s = d.short.toFixed(1);
-    const signal = d.long>65?'<span class="up" style="font-size:9px">⚠️ Muchos longs</span>':
-                   d.short>65?'<span class="dn" style="font-size:9px">⚠️ Muchos shorts</span>':'';
+    const signal = d.long>65?`<span class="up" style="font-size:9px">${t('ls_many_longs')}</span>`:
+                   d.short>65?`<span class="dn" style="font-size:9px">${t('ls_many_shorts')}</span>`:'';
     return `
       <div class="ls-item">
         <div class="ls-sym">
@@ -1020,22 +1324,22 @@ function renderLongShort() {
     let nc, nb, nbd, ni, nt;
     if(l >= 70) {
       nc='var(--r1)'; nb='rgba(255,23,68,.07)'; nbd='rgba(255,23,68,.2)'; ni='🚨';
-      nt=`<strong style="color:var(--r1)">SEÑAL BAJISTA CONTRARIAN:</strong> El ${l.toFixed(0)}% de los top traders está LONG. Cuando la mayoría apuesta al mismo lado, el mercado tiende a moverse en contra para liquidarlos. Smart money puede estar preparando un flush de longs.`;
+      nt=t('ls_note_flush').replace('{l}',l.toFixed(0));
     } else if(l >= 60) {
       nc='var(--o1)'; nb='rgba(255,109,0,.07)'; nbd='rgba(255,109,0,.2)'; ni='⚠️';
-      nt=`<strong style="color:var(--o1)">SESGO ALCISTA — PRECAUCIÓN:</strong> El ${l.toFixed(0)}% está long. Mercado cargado en una dirección. Un movimiento adverso puede desencadenar liquidaciones en cascada. No es zona ideal para apalancar longs adicionales.`;
+      nt=t('ls_note_caution').replace('{l}',l.toFixed(0));
     } else if(s >= 60) {
       nc='var(--g1)'; nb='rgba(0,230,118,.07)'; nbd='rgba(0,230,118,.2)'; ni='✅';
-      nt=`<strong style="color:var(--g1)">SEÑAL ALCISTA CONTRARIAN:</strong> El ${s.toFixed(0)}% está short. Demasiados shorts = combustible para un short squeeze. Si el precio sube, los shorts forzados a cerrar (comprar) aceleran el movimiento alcista.`;
+      nt=t('ls_note_squeeze').replace('{s}',s.toFixed(0));
     } else {
       nc='var(--y1)'; nb='rgba(255,215,64,.07)'; nbd='rgba(255,215,64,.2)'; ni='⚖️';
-      nt=`<strong style="color:var(--y1)">MERCADO EQUILIBRADO:</strong> L:${l.toFixed(0)}% / S:${s.toFixed(0)}% — sin sesgo extremo. El ratio no genera señal contrarian clara. Complementa con Funding Rate y volumen para decidir dirección.`;
+      nt=t('ls_note_balanced').replace('{l}',l.toFixed(0)).replace('{s}',s.toFixed(0));
     }
     noteHtml = `<div class="ctx-note" style="color:${nc};background:${nb};border-color:${nbd}">${ni} ${nt}</div>`;
   }
 
   $('lsPanel').innerHTML = (items ||
-    `<div class="err-box"><div class="err-icon">⚠️</div><div class="err-msg">Datos de Long/Short no disponibles en este momento.</div><button class="retry-btn" onclick="loadLongShort()">↻ Reintentar</button></div>`) + noteHtml;
+    `<div class="err-box"><div class="err-icon">⚠️</div><div class="err-msg">${t('ls_err')}</div><button class="retry-btn" onclick="loadLongShort()">${t('retry')}</button></div>`) + noteHtml;
 }
 
 /* ════════════════════════════════
@@ -1065,7 +1369,7 @@ async function loadOpenInterest() {
 function renderOI() {
   const vals = Object.values(state.oi).filter(v=>v>0);
   if(!vals.length) {
-    $('oiPanel').innerHTML = `<div class="err-box"><div class="err-msg">Datos de OI no disponibles.</div><button class="retry-btn" onclick="loadOpenInterest()">↻ Reintentar</button></div>`;
+    $('oiPanel').innerHTML = `<div class="err-box"><div class="err-msg">${t('oi_err')}</div><button class="retry-btn" onclick="loadOpenInterest()">${t('retry')}</button></div>`;
     return;
   }
   const maxOI = Math.max(...vals);
@@ -1093,24 +1397,24 @@ function renderOI() {
     let nc, nb, nbd, ni, nt;
     if(btcChg > 1) {
       nc='var(--g1)'; nb='rgba(0,230,118,.07)'; nbd='rgba(0,230,118,.2)'; ni='📈';
-      nt=`<strong style="color:var(--g1)">TENDENCIA ALCISTA CONFIRMADA:</strong> BTC sube ${pct(btcChg,1)} con OI en ${fmt(btcOI)}. Dinero nuevo entrando al mercado apalancado — la tendencia tiene convicción real, no es solo un rebote técnico.`;
+      nt=t('oi_note_bull').replace('{c}',pct(btcChg,1)).replace('{o}',fmt(btcOI));
     } else if(btcChg < -1) {
       nc='var(--r1)'; nb='rgba(255,23,68,.07)'; nbd='rgba(255,23,68,.2)'; ni='📉';
-      nt=`<strong style="color:var(--r1)">TENDENCIA BAJISTA CONFIRMADA:</strong> BTC cae ${pct(btcChg,1)} con OI en ${fmt(btcOI)}. Shorts entrando fuerte o longs capitulando. Si el OI también baja = liquidaciones masivas en curso.`;
+      nt=t('oi_note_bear').replace('{c}',pct(btcChg,1)).replace('{o}',fmt(btcOI));
     } else if(Math.abs(btcChg) < 0.5) {
       nc='var(--y1)'; nb='rgba(255,215,64,.07)'; nbd='rgba(255,215,64,.2)'; ni='⚖️';
-      nt=`<strong style="color:var(--y1)">MERCADO EN RANGO:</strong> OI de ${fmt(btcOI)} con precio flat (${pct(btcChg,1)}). Mercado cargado pero sin dirección — espera un breakout con volumen antes de posicionarte apalancado.`;
+      nt=t('oi_note_range').replace('{c}',pct(btcChg,1)).replace('{o}',fmt(btcOI));
     } else {
       nc='var(--b1)'; nb='rgba(0,176,255,.07)'; nbd='rgba(0,176,255,.2)'; ni='👀';
-      nt=`<strong style="color:var(--b1)">OBSERVAR:</strong> OI total ${fmt(totalOI)}. Monitorea si el OI sube o baja junto con el próximo movimiento de precio — eso confirmará si la tendencia tiene fuerza real.`;
+      nt=t('oi_note_watch').replace('{o}',fmt(totalOI));
     }
     noteHtml = `<div class="ctx-note" style="color:${nc};background:${nb};border-color:${nbd}">${ni} ${nt}</div>`;
   }
 
   $('oiPanel').innerHTML =
     `<div style="font-family:var(--mono);font-size:9px;color:var(--t2);margin-bottom:10px;display:flex;justify-content:space-between;letter-spacing:1px">
-       <span>POSICIONES ABIERTAS — FUTUROS PERPETUOS</span>
-       <span>TOTAL: <strong style="color:var(--t3)">${fmt(totalOI)}</strong></span>
+       <span>${t('oi_header')}</span>
+       <span>${t('oi_total')} <strong style="color:var(--t3)">${fmt(totalOI)}</strong></span>
      </div>
      ${items}${noteHtml}`;
 }
@@ -1144,7 +1448,7 @@ async function loadVolumeSpikes() {
     if(lastBar.vol > spikeThreshold) {
       const dir = lastBar.close > lastBar.open ? 'BUY' : 'SELL';
       toast(dir==='BUY'?'buy':'sell',
-        `🚨 SPIKE DE VOLUMEN BTC — ${dir}`,
+        t('vol_spike_toast').replace('{dir}',dir),
         `Volumen ${fmt(lastBar.vol)} (${(lastBar.vol/avgVol).toFixed(1)}x promedio) a las ${lastBar.t}`
       );
     }
@@ -1166,17 +1470,17 @@ async function loadVolumeSpikes() {
 
     $('volPanel').innerHTML = `
       <div style="font-family:var(--mono);font-size:9px;color:var(--t2);margin-bottom:8px;display:flex;justify-content:space-between">
-        <span>BTCUSDT — VELAS 15M</span>
-        <span>Avg: <span style="color:var(--t1)">${fmt(avgVol)}</span> · Spike si > <span style="color:var(--y1)">${fmt(spikeThreshold)}</span></span>
+        <span>${t('vol_header')}</span>
+        <span>${t('vol_avg')} <span style="color:var(--t1)">${fmt(avgVol)}</span> · ${t('vol_spike_if')} <span style="color:var(--y1)">${fmt(spikeThreshold)}</span></span>
       </div>
       <div class="vol-bars">${barsHtml}</div>
       <div class="vol-legend">
-        <div class="vl-item"><div class="vl-dot" style="background:var(--g1)"></div>Vela alcista</div>
-        <div class="vl-item"><div class="vl-dot" style="background:var(--r1)"></div>Vela bajista</div>
-        <div class="vl-item"><div class="vl-dot" style="background:var(--y1)"></div>⚡ Spike (+2.5x promedio)</div>
+        <div class="vl-item"><div class="vl-dot" style="background:var(--g1)"></div>${t('vol_bull')}</div>
+        <div class="vl-item"><div class="vl-dot" style="background:var(--r1)"></div>${t('vol_bear')}</div>
+        <div class="vl-item"><div class="vl-dot" style="background:var(--y1)"></div>${t('vol_spike')}</div>
       </div>`;
   } catch(e) {
-    $('volPanel').innerHTML = `<div class="err-box"><div class="err-msg">Error cargando datos de volumen.</div><button class="retry-btn" onclick="loadVolumeSpikes()">↻ Reintentar</button></div>`;
+    $('volPanel').innerHTML = `<div class="err-box"><div class="err-msg">${t('vol_err')}</div><button class="retry-btn" onclick="loadVolumeSpikes()">${t('retry')}</button></div>`;
   }
 }
 
@@ -1227,8 +1531,8 @@ async function loadLiquidationMap() {
     const bNB = biasToShorts ? 'rgba(255,23,68,.07)' : 'rgba(0,230,118,.07)';
     const bNBD= biasToShorts ? 'rgba(255,23,68,.2)'  : 'rgba(0,230,118,.2)';
     const biasText = biasToShorts
-      ? `Hay <strong style="color:var(--r1)">${biasRatio}x más liquidez SHORT</strong> arriba del precio actual. El mercado tiene incentivo de subir para barrer esos stops → posible <strong style="color:var(--r1)">short squeeze</strong>.`
-      : `Hay <strong style="color:var(--g1)">${biasRatio}x más liquidez LONG</strong> abajo del precio actual. El mercado tiene incentivo de bajar para liquidar esos longs → posible <strong style="color:var(--g1)">long squeeze</strong>.`;
+      ? t('liq_bias_short').replace('{r}',biasRatio)
+      : t('liq_bias_long').replace('{r}',biasRatio);
 
     const rows = liqLevels.map(l => {
       const barW = (l.amount/maxLiq*100).toFixed(0);
@@ -1250,34 +1554,34 @@ async function loadLiquidationMap() {
       <!-- TOTALES -->
       <div class="liq-totals">
         <div class="liq-total-box" style="border-color:rgba(255,23,68,.25);background:rgba(255,23,68,.06)">
-          <div class="liq-total-label" style="color:var(--r1)">💥 TOTAL SHORTS</div>
+          <div class="liq-total-label" style="color:var(--r1)">${t('liq_total_shorts')}</div>
           <div class="liq-total-val"   style="color:var(--r1)">${fmt(totalShorts)}</div>
-          <div class="liq-total-sub"   style="color:var(--r2)">${shortsPct}% del total · se liquidan si precio SUBE</div>
+          <div class="liq-total-sub"   style="color:var(--r2)">${shortsPct}${t('liq_short_sub')}</div>
         </div>
         <div class="liq-total-box" style="border-color:rgba(0,230,118,.25);background:rgba(0,230,118,.06)">
-          <div class="liq-total-label" style="color:var(--g1)">💥 TOTAL LONGS</div>
+          <div class="liq-total-label" style="color:var(--g1)">${t('liq_total_longs')}</div>
           <div class="liq-total-val"   style="color:var(--g1)">${fmt(totalLongs)}</div>
-          <div class="liq-total-sub"   style="color:var(--g2)">${longsPct}% del total · se liquidan si precio BAJA</div>
+          <div class="liq-total-sub"   style="color:var(--g2)">${longsPct}${t('liq_long_sub')}</div>
         </div>
       </div>
       <!-- BIAS -->
       <div class="liq-bias" style="color:${bNC};background:${bNB};border-color:${bNBD}">
-        🎯 <strong>SESGO DE LIQUIDEZ:</strong> ${biasText}
+        ${t('liq_bias_label')} ${biasText}
       </div>
       <!-- HEADER -->
       <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-family:var(--mono);font-size:9px;color:var(--t2)">
-        <span>NIVELES DE LIQUIDACIÓN ESTIMADOS</span>
+        <span>${t('liq_levels')}</span>
         <span>BTC: <span style="color:var(--y1)">$${currentPrice.toLocaleString('en',{maximumFractionDigits:0})}</span></span>
       </div>
       <div style="padding:5px 10px;background:rgba(255,215,64,.06);border:1px solid rgba(255,215,64,.12);border-radius:6px;font-family:var(--mono);font-size:8.5px;color:var(--y1);margin-bottom:8px">
-        ▲ PRECIO ACTUAL ▲ — Rojos (SHORTS) se liquidan si SUBE · Verdes (LONGS) se liquidan si BAJA
+        ${t('liq_note')}
       </div>
       <div class="liq-levels">${rows}</div>
       <div style="font-family:var(--mono);font-size:9px;color:var(--t2);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
-        ⚠️ Montos estimados. Para datos exactos usar CoinGlass.com
+        ${t('liq_disclaimer')}
       </div>`;
   } catch(e) {
-    $('liqPanel').innerHTML = `<div class="err-box"><div class="err-msg">Error construyendo mapa.</div><button class="retry-btn" onclick="loadLiquidationMap()">↻ Reintentar</button></div>`;
+    $('liqPanel').innerHTML = `<div class="err-box"><div class="err-msg">${t('liq_err')}</div><button class="retry-btn" onclick="loadLiquidationMap()">${t('retry')}</button></div>`;
   }
 }
 
@@ -1293,7 +1597,7 @@ async function loadFearGreed() {
     const data = await res.json();
     const cur = data.data[0], prev = data.data[1];
     const val = parseInt(cur.value);
-    const lbl = cur.value_classification;
+    const lbl = cur.value_classification; // raw from API, used as-is
     state.fg = val;
 
     const color = val<=25?'var(--r1)':val<=45?'var(--o1)':val<=55?'var(--y1)':val<=75?'var(--g2)':'var(--g1)';
@@ -1309,22 +1613,22 @@ async function loadFearGreed() {
           <div style="position:absolute;top:-4px;left:${val}%;transform:translateX(-50%);width:12px;height:14px;background:white;border-radius:2px;border:2px solid ${color}"></div>
         </div>
         <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:8px;color:var(--t2);margin-bottom:14px">
-          <span>MIEDO</span><span>NEUTRAL</span><span>EUFORIA</span>
+          <span>${t('fg_fear')}</span><span>${t('fg_neutral')}</span><span>${t('fg_greed')}</span>
         </div>
         <div style="display:flex;justify-content:space-around;padding-top:10px;border-top:1px solid var(--border)">
           <div style="text-align:center">
-            <div style="font-family:var(--mono);font-size:9px;color:var(--t2)">AYER</div>
+            <div style="font-family:var(--mono);font-size:9px;color:var(--t2)">${t('fg_yesterday')}</div>
             <div style="font-family:var(--mono);font-size:1rem;font-weight:700;color:var(--t3)">${prev.value}</div>
           </div>
           <div style="text-align:center">
-            <div style="font-family:var(--mono);font-size:9px;color:var(--t2)">TENDENCIA</div>
+            <div style="font-family:var(--mono);font-size:9px;color:var(--t2)">${t('fg_trend')}</div>
             <div style="font-family:var(--mono);font-size:1rem;font-weight:700;color:${trendColor}">${trend} ${Math.abs(val-parseInt(prev.value))} pts</div>
           </div>
         </div>
       </div>`;
     dot('d-fg','ok');
   } catch(e) {
-    $('fgPanel').innerHTML = `<div class="err-box"><div class="err-msg">Error cargando F&G.</div><button class="retry-btn" onclick="loadFearGreed()">↻ Reintentar</button></div>`;
+    $('fgPanel').innerHTML = `<div class="err-box"><div class="err-msg">Error loading F&G.</div><button class="retry-btn" onclick="loadFearGreed()">${t('retry')}</button></div>`;
     dot('d-fg','err');
   }
 }
@@ -1354,7 +1658,7 @@ function computeSignal() {
 
   score = Math.max(0, Math.min(100, Math.round(score)));
   const color = score>=65?'var(--g1)':score>=50?'var(--g2)':score>=35?'var(--y1)':score>=20?'var(--o1)':'var(--r1)';
-  const txt   = score>=65?'ALCISTA':score>=50?'NEUTRAL+':score>=35?'NEUTRAL':score>=20?'BAJISTA':'MUY BAJISTA';
+  const txt   = score>=65?t('sm_bullish'):score>=50?t('sm_neutralp'):score>=35?t('sm_neutral'):score>=20?t('sm_bearish'):t('sm_vbearish');
 
   $('smCircle').style.borderColor = color;
   $('smVal').style.color = color;
@@ -1392,51 +1696,39 @@ function renderChecklist() {
 
   // Helper: evalúa condición → {status, val}
   const chk = (pass, warn, valStr) => {
-    if(pass === null || pass === undefined) return { status:'warn', val:'Sin datos' };
+    if(pass === null || pass === undefined) return { status:'warn', val:t('cl_nodata') };
     return pass ? { status:'pass', val:valStr } : (warn ? { status:'warn', val:valStr } : { status:'fail', val:valStr });
   };
 
   // ── Condiciones LONG ──
   const longC = [
-    { label:'Funding Rate neutro o negativo (≤ +0.02%)',
-      desc: 'Longs no sobrepagan — mercado no sobreapalancado al alza',
+    { label:t('cl_l1_label'), desc:t('cl_l1_desc'),
       ...chk(fr!==null && fr<=0.02, fr!==null && fr<=0.05, fr!==null?`${fr>0?'+':''}${fr.toFixed(4)}%`:null) },
-    { label:'Fear & Greed no en euforia (< 75)',
-      desc: 'Sentimiento no sobreextendido — hay espacio para subir',
+    { label:t('cl_l2_label'), desc:t('cl_l2_desc'),
       ...chk(fg!==null && fg<75, fg!==null && fg<85, fg!==null?`${fg}/100`:null) },
-    { label:'Top traders NO masivamente long (< 60%)',
-      desc: 'Sin exceso de longs — mercado no vulnerable a flush',
+    { label:t('cl_l3_label'), desc:t('cl_l3_desc'),
       ...chk(ls&&ls.long<60, ls&&ls.long<68, ls?`L:${ls.long.toFixed(0)}% S:${ls.short.toFixed(0)}%`:null) },
-    { label:'Precio BTC positivo en 24h',
-      desc: 'Momentum alcista — precio en tendencia favorable',
+    { label:t('cl_l4_label'), desc:t('cl_l4_desc'),
       ...chk(btcChg!==null&&btcChg>0, btcChg!==null&&btcChg>-1, btcChg!==null?`${pct(btcChg,2)} 24h`:null) },
-    { label:'Más liquidez SHORT arriba del precio',
-      desc: 'Incentivo del mercado de subir para barrer shorts',
+    { label:t('cl_l5_label'), desc:t('cl_l5_desc'),
       ...chk(liqB==='SHORT_HEAVY', null, liqB?(liqB==='SHORT_HEAVY'?'Shorts dominan ✓':'Longs dominan'):null) },
-    { label:'OI positivo con precio subiendo',
-      desc: 'Dinero nuevo entrando en dirección alcista',
+    { label:t('cl_l6_label'), desc:t('cl_l6_desc'),
       ...chk(oi&&oi>0&&btcChg>0, oi&&oi>0, oi?`OI: ${fmt(oi)}`:null) },
   ];
 
   // ── Condiciones SHORT ──
   const shortC = [
-    { label:'Funding Rate muy positivo (> +0.05%)',
-      desc: 'Longs sobrepagan — mercado sobreapalancado, riesgo de flush',
+    { label:t('cl_s1_label'), desc:t('cl_s1_desc'),
       ...chk(fr!==null&&fr>0.05, fr!==null&&fr>0.03, fr!==null?`${fr>0?'+':''}${fr.toFixed(4)}%`:null) },
-    { label:'Fear & Greed en euforia (> 75)',
-      desc: 'Sentimiento extremo de codicia — señal contrarian bajista',
+    { label:t('cl_s2_label'), desc:t('cl_s2_desc'),
       ...chk(fg!==null&&fg>75, fg!==null&&fg>65, fg!==null?`${fg}/100`:null) },
-    { label:'Top traders masivamente long (> 65%)',
-      desc: 'Exceso de longs — mercado vulnerable a liquidación en cascada',
+    { label:t('cl_s3_label'), desc:t('cl_s3_desc'),
       ...chk(ls&&ls.long>65, ls&&ls.long>58, ls?`L:${ls.long.toFixed(0)}% S:${ls.short.toFixed(0)}%`:null) },
-    { label:'Precio BTC negativo en 24h',
-      desc: 'Momentum bajista — precio en tendencia favorable al short',
+    { label:t('cl_s4_label'), desc:t('cl_s4_desc'),
       ...chk(btcChg!==null&&btcChg<0, btcChg!==null&&btcChg<1, btcChg!==null?`${pct(btcChg,2)} 24h`:null) },
-    { label:'Más liquidez LONG abajo del precio',
-      desc: 'Incentivo del mercado de bajar para liquidar longs',
-      ...chk(liqB==='LONG_HEAVY', null, liqB?(liqB==='LONG_HEAVY'?'Longs dominan ✓':'Shorts dominan'):null) },
-    { label:'Volumen alto con precio bajando',
-      desc: 'Presión vendedora real con participación institucional',
+    { label:t('cl_s5_label'), desc:t('cl_s5_desc'),
+      ...chk(liqB==='LONG_HEAVY', null, liqB?(liqB==='LONG_HEAVY'?t('cl_longs_dom'):t('cl_shorts_dom2')):null) },
+    { label:t('cl_s6_label'), desc:t('cl_s6_desc'),
       ...chk(btcChg!==null&&btcChg<-0.5&&btcVol>0, btcChg!==null&&btcChg<0, btcVol?`Vol: ${fmt(btcVol)}`:null) },
   ];
 
@@ -1463,10 +1755,10 @@ function renderChecklist() {
     const scoreC = passes>=5?cc:passes>=3?'var(--y1)':'var(--t2)';
 
     const verdict = passes>=5
-      ? (isLong?'🟢 Condiciones FUERTES para long — considera entrada con stop definido':'🔴 Condiciones FUERTES para short — considera entrada con stop definido')
+      ? (isLong?t('cl_verdict_strong_long'):t('cl_verdict_strong_short'))
       : passes>=3
-      ? `⚠️ Condiciones PARCIALES (${passes}/${tot}) — espera más confluencia antes de actuar`
-      : `⛔ Condiciones DÉBILES (${passes}/${tot}) — no es el momento para ${side}`;
+      ? t('cl_verdict_partial').replace('{n}',passes).replace('{t}',tot)
+      : t('cl_verdict_weak').replace('{n}',passes).replace('{t}',tot).replace('{side}',side);
     const vC = passes>=5?cc:passes>=3?'var(--y1)':'var(--t2)';
     const vBG= passes>=5?cb:passes>=3?'rgba(255,215,64,.07)':'rgba(255,255,255,.03)';
     const vBO= passes>=5?cbo:passes>=3?'rgba(255,215,64,.2)':'rgba(255,255,255,.08)';
@@ -1483,7 +1775,7 @@ function renderChecklist() {
     return `
       <div>
         <div class="cl-col-header">
-          <div class="cl-col-title" style="color:${cc}">${isLong?'🟢':'🔴'} CONDICIONES ${side}</div>
+          <div class="cl-col-title" style="color:${cc}">${isLong?'🟢':'🔴'} ${isLong?t('cl_long_cond'):t('cl_short_cond')}</div>
           <div class="cl-score" style="background:${cb};color:${scoreC}">${passes}/${tot} ✓</div>
         </div>
         ${rows}
@@ -1507,7 +1799,7 @@ function applyWhaleThreshold() {
   const val = parseInt($('whaleThreshold').value);
   if(val>0) {
     whaleThreshold = val;
-    toast('info','Umbral actualizado',`Alertas de movimientos masivos > ${fmt(val)}`);
+    toast('info',t('toast_threshold'),t('toast_thresh_msg').replace('{v}',fmt(val)));
   }
 }
 
@@ -1525,12 +1817,12 @@ function connectWhaleWS() {
 
   ws.onopen = () => {
     wsConnected = true;
-    $('liveStatus').textContent = 'LIVE';
-    $('whaleBadge').textContent = 'WS LIVE';
+    $('liveStatus').textContent = t('live');
+    $('whaleBadge').textContent = t('wsLive');
     $('whaleFeed').innerHTML = `
       <div style="text-align:center;padding:12px;color:var(--g1);font-family:var(--mono);font-size:10px">
-        ✅ WebSocket conectado<br>
-        <span style="color:var(--t2)">Monitoreando BTC · ETH · SOL<br>Umbral: ${fmt(whaleThreshold)}</span>
+        ${t('whale_connected')}<br>
+        <span style="color:var(--t2)">${t('whale_monitor')}<br>${t('whale_threshold')} ${fmt(whaleThreshold)}</span>
       </div>`;
   };
 
@@ -1553,13 +1845,13 @@ function connectWhaleWS() {
   };
 
   ws.onerror = () => {
-    $('liveStatus').textContent = 'WS ERROR';
+    $('liveStatus').textContent = t('wsError');
     wsConnected = false;
   };
 
   ws.onclose = () => {
     wsConnected = false;
-    $('liveStatus').textContent = 'RECONECTANDO';
+    $('liveStatus').textContent = t('reconnecting');
     // Auto-reconnect after 5s
     setTimeout(() => { if(!wsConnected) connectWhaleWS(); }, 5000);
   };
@@ -1577,7 +1869,7 @@ function addWhaleAlert(sym, usd, price, qty, isBuy) {
   el.innerHTML = `
     <div class="wi-icon">${icon}</div>
     <div class="wi-info">
-      <div class="wi-title">${isBuy?'COMPRA MASIVA':'VENTA MASIVA'} <span class="alert-badge ${badgeClass}">${sizeLabel}</span></div>
+      <div class="wi-title">${isBuy?t('whale_buy'):t('whale_sell')} <span class="alert-badge ${badgeClass}">${sizeLabel}</span></div>
       <div class="wi-meta">${label}/USDT · ${qty.toFixed(2)} @ ${fmtP(price)}</div>
     </div>
     <div>
@@ -1602,7 +1894,7 @@ function addWhaleAlert(sym, usd, price, qty, isBuy) {
   // Toast only for big moves
   if(usd >= 2e6) {
     toast(type,
-      `🐋 ${sizeLabel}: ${isBuy?'COMPRA':'VENTA'} en ${label}`,
+      `🐋 ${sizeLabel}: ${isBuy?t('toast_buy'):t('toast_sell')} ${label}`,
       `${fmt(usd)} · ${qty.toFixed(2)} ${label} @ ${fmtP(price)}`
     );
   }
@@ -1613,7 +1905,7 @@ function addWhaleAlert(sym, usd, price, qty, isBuy) {
 ════════════════════════════════ */
 async function refreshAll() {
   const btn = $('refreshBtn');
-  if(btn) btn.textContent = '↻ CARGANDO...';
+  if(btn) btn.textContent = t('loading');
   dot('d-cg','load');
 
   await Promise.allSettled([
@@ -1630,20 +1922,20 @@ async function refreshAll() {
   setTimeout(computeSignal, 500);
 
   dot('d-cg','ok');
-  $('lastUpdate').textContent = `Actualizado: ${time()}`;
-  if(btn) btn.textContent = '↻ REFRESH';
+  $('lastUpdate').textContent = t('updated') + ' ' + time();
+  if(btn) btn.textContent = t('refresh');
 }
 
 // Connect WebSocket immediately (separate from REST polling)
 connectWhaleWS();
 
 // Initial load
+applyLang();
 refreshAll();
 
 // Auto-refresh REST APIs every 30 seconds
 // (WebSocket stays always-on for real-time trades)
 setInterval(refreshAll, 30000);
-
 
 /* ═══════════════════════════════════════════════
    DONATION MODAL
@@ -1657,8 +1949,8 @@ window.addEventListener('DOMContentLoaded', function() {
   if(modal) modal.addEventListener('click', function(e){ if(e.target===this) donClose(); });
 });
 
-function donTab(t) {
-  const isPP = t==='pp';
+function donTab(tab) {
+  const isPP = tab==='pp';
   document.getElementById('donPP').style.display  = isPP ? 'block' : 'none';
   document.getElementById('donSOL').style.display = isPP ? 'none'  : 'block';
   document.getElementById('dtPP').classList.toggle('active',  isPP);
@@ -1670,7 +1962,7 @@ function solCopy() {
   navigator.clipboard.writeText(addr).then(() => {
     const btn = document.getElementById('solCopyBtn');
     const prev = btn.textContent;
-    btn.textContent = '✅ ¡Dirección copiada!';
+    btn.textContent = t('sol_copied');
     btn.style.color = 'var(--g1)';
     btn.style.borderColor = 'rgba(0,230,118,.4)';
     setTimeout(() => { btn.textContent = prev; btn.style.color = ''; btn.style.borderColor = ''; }, 2500);
@@ -1701,7 +1993,7 @@ function clearAI() {
   _aiHistory = [];
   document.getElementById('aiMessages').innerHTML = `
     <div class="msg-row-bot">
-      <div class="bubble-bot">🔄 Conversación reiniciada. ¿En qué puedo ayudarte con el mercado actual?</div>
+      <div class="bubble-bot">${t('ai_cleared')}</div>
     </div>`;
 }
 
@@ -1729,22 +2021,22 @@ function _aiCtx() {
   }
   if(eth) lines.push('ETH/USDT: $' + parseFloat(eth.lastPrice).toLocaleString('en') + ' (' + (parseFloat(eth.priceChangePercent)>=0?'+':'') + parseFloat(eth.priceChangePercent).toFixed(2) + '% 24h)');
   if(s.fg!==null) {
-    const lbl = s.fg<=25?'Miedo Extremo':s.fg<=45?'Miedo':s.fg<=55?'Neutral':s.fg<=75?'Codicia':'Codicia Extrema';
+    const lbl = s.fg<=25?t('fg_extreme_fear'):s.fg<=45?t('fg_fear_lbl'):s.fg<=55?t('fg_neutral_lbl'):s.fg<=75?t('fg_greed_lbl'):t('fg_extreme_greed');
     lines.push('Fear & Greed Index: ' + s.fg + '/100 (' + lbl + ')');
   }
   ['BTCUSDT','ETHUSDT','SOLUSDT'].forEach(sym => {
     const fr = s.fr[sym];
-    if(fr!==undefined) lines.push('Funding Rate ' + sym.replace('USDT','') + ': ' + (fr>0?'+':'') + fr.toFixed(4) + '%' + (fr<-0.01?' [NEGATIVO — shorts pagan, señal alcista]':fr>0.08?' [MUY ALTO — riesgo de flush bajista]':fr>0.04?' [POSITIVO ALTO]':''));
+    if(fr!==undefined) lines.push('Funding Rate ' + sym.replace('USDT','') + ': ' + (fr>0?'+':'') + fr.toFixed(4) + '%' + (fr<-0.01?' '+t('fr_negative_ctx'):fr>0.08?' '+t('fr_high_ctx'):fr>0.04?' '+t('fr_pos_ctx'):''));
   });
   ['BTCUSDT','ETHUSDT','SOLUSDT'].forEach(sym => {
     const ls = s.ls[sym];
-    if(ls) lines.push('L/S Ratio ' + sym.replace('USDT','') + ': ' + ls.long.toFixed(1) + '% LONG / ' + ls.short.toFixed(1) + '% SHORT' + (ls.long>65?' [⚠️ EXCESO LONGS — señal bajista contrarian]':ls.short>60?' [⚠️ EXCESO SHORTS — posible squeeze alcista]':''));
+    if(ls) lines.push('L/S Ratio ' + sym.replace('USDT','') + ': ' + ls.long.toFixed(1) + '% LONG / ' + ls.short.toFixed(1) + '% SHORT' + (ls.long>65?' '+t('ls_excess_long'):ls.short>60?' '+t('ls_excess_short'):''));
   });
   ['BTCUSDT','ETHUSDT'].forEach(sym => {
     const oi = s.oi[sym];
     if(oi) lines.push('Open Interest ' + sym.replace('USDT','') + ': ' + fmt(oi));
   });
-  if(s.liqBias) lines.push('Sesgo liquidaciones BTC: ' + (s.liqBias==='SHORT_HEAVY'?'Más shorts sobre precio → incentivo alcista (posible short squeeze)':'Más longs bajo precio → incentivo bajista (posible long squeeze)'));
+  if(s.liqBias) lines.push('Sesgo liquidaciones BTC: ' + (s.liqBias==='SHORT_HEAVY'?t('liq_short_heavy'):t('liq_long_heavy')));
   return lines.join('\n') || 'Datos del dashboard cargando...';
 }
 
@@ -1754,7 +2046,7 @@ async function _aiDoSend(userMsg) {
   const sendBtn = document.getElementById('aiSendBtn');
   const statusLbl = document.getElementById('aiStatusLbl');
   sendBtn.disabled = true;
-  statusLbl.textContent = 'Analizando datos del mercado...';
+  statusLbl.textContent = t('ai_status_thinking');
   statusLbl.style.color = 'var(--y1)';
 
   const msgs = document.getElementById('aiMessages');
@@ -1783,8 +2075,8 @@ ${_aiCtx()}
 ════════════════════════════
 
 INSTRUCCIONES:
-- Eres experto cripto, directo y preciso. Usas los datos reales para fundamentar cada respuesta.
-- Respondes en español latinoamericano, de forma concisa (máx 220 palabras).
+- You are a precise expert crypto analyst. Use real data to back every answer.
+- You always respond in ${t('ai_system_lang')}, concisely (max 220 words).
 - Usas emojis estratégicamente. Destacas lo más importante en negrita (**texto**).
 - Nunca das recomendaciones financieras directas, pero sí análisis objetivo basado en datos.
 - Siempre mencioanas riesgo y gestión de capital cuando hablas de trades.
@@ -1811,7 +2103,7 @@ INSTRUCCIONES:
     msgs.appendChild(botDiv);
 
     _aiHistory.push({ role:'assistant', content: reply });
-    statusLbl.textContent = 'Conectado al dashboard en tiempo real';
+    statusLbl.textContent = t('ai_status_ready');
     statusLbl.style.color = 'var(--g1)';
 
   } catch(e) {
@@ -1820,7 +2112,7 @@ INSTRUCCIONES:
     errDiv.className = 'msg-row-bot';
     errDiv.innerHTML = '<div class="bubble-bot" style="color:var(--r1)">⚠️ Error de conexión con la IA.<br><small style="color:var(--t2)">Asegúrate de que la API key de Anthropic está configurada en el servidor.</small></div>';
     msgs.appendChild(errDiv);
-    statusLbl.textContent = '● Error';
+    statusLbl.textContent = t('ai_status_error');
     statusLbl.style.color = 'var(--r1)';
   }
 
@@ -1924,7 +2216,7 @@ function _aiFormat(t) {
       <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--t3);letter-spacing:1.5px">LENSETERRA AI</div>
       <div style="display:flex;align-items:center;gap:6px;margin-top:3px">
         <div class="ai-status-dot"></div>
-        <span style="font-family:var(--mono);font-size:9px;color:var(--g1)" id="aiStatusLbl">Conectado al dashboard en tiempo real</span>
+        <span style="font-family:var(--mono);font-size:9px;color:var(--g1)" id="aiStatusLbl">Connected to dashboard in real time</span>
       </div>
     </div>
     <button onclick="clearAI()" title="Limpiar chat" style="background:rgba(255,255,255,.06);border:none;border-radius:6px;color:var(--t2);width:28px;height:28px;cursor:pointer;font-size:13px;transition:all .2s;display:flex;align-items:center;justify-content:center" onmouseover="this.style.color='var(--t3)'" onmouseout="this.style.color='var(--t2)'">🗑</button>
@@ -1935,25 +2227,23 @@ function _aiFormat(t) {
   <div id="aiMessages">
     <div class="msg-row-bot">
       <div class="bubble-bot">
-        👋 Hola, soy el asistente de <strong style="color:var(--g1)">Lenseterra</strong>.<br><br>
-        Tengo acceso en tiempo real a todos los indicadores del dashboard — funding rate, liquidaciones, Long/Short ratio, Fear &amp; Greed, Open Interest y precios.<br><br>
-        Pregúntame lo que quieras sobre el estado actual del mercado.
+        👋 Hi, I'm the <strong style="color:var(--g1)">Lenseterra</strong> assistant.<br><br>I have real-time access to all dashboard indicators — funding rate, liquidations, Long/Short ratio, Fear &amp; Greed, Open Interest and prices.<br><br>Ask me anything about the current market.
       </div>
     </div>
   </div>
 
   <!-- Quick prompts -->
   <div class="ai-quick-btns">
-    <button class="qb" onclick="aiQuick('Dame un análisis completo del mercado con todos los datos actuales del dashboard')">🔭 Análisis completo</button>
-    <button class="qb" onclick="aiQuick('¿Es buen momento para abrir un long en BTC ahora mismo? Basa tu respuesta en los datos actuales')">🟢 ¿Long ahora?</button>
-    <button class="qb" onclick="aiQuick('¿Qué dice el funding rate actual y qué señal da para el mercado?')">💸 Funding rate</button>
-    <button class="qb" onclick="aiQuick('Explícame el Fear & Greed actual y qué implica para el mercado')">😱 Fear &amp; Greed</button>
-    <button class="qb" onclick="aiQuick('Analiza el Long/Short ratio actual y dime qué señal contrarian genera')">⚖️ L/S Ratio</button>
+    <button class="qb" onclick="aiQuick(t('ai_q1_msg'))" data-i18n="ai_q1">🔭 Full analysis</button>
+    <button class="qb" onclick="aiQuick(t('ai_q2_msg'))" data-i18n="ai_q2">🟢 Long now?</button>
+    <button class="qb" onclick="aiQuick(t('ai_q3_msg'))" data-i18n="ai_q3">💸 Funding rate</button>
+    <button class="qb" onclick="aiQuick('Explícame el Fear & Greed actual y qué implica para el mercado')" data-i18n="ai_q4">😱 Fear &amp; Greed</button>
+    <button class="qb" onclick="aiQuick(t('ai_q5_msg'))" data-i18n="ai_q5">⚖️ L/S Ratio</button>
   </div>
 
   <!-- Input -->
   <div class="ai-input-row">
-    <input id="aiInput" type="text" placeholder="Pregunta sobre el mercado actual..."
+    <input id="aiInput" type="text" placeholder="Ask about the current market..."
       onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();aiSend()}">
     <button id="aiSendBtn" onclick="aiSend()">➤</button>
   </div>
