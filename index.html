@@ -560,6 +560,69 @@ body::before {
 /* ═══ LANG TOGGLE (already defined above, ensure no duplicate) ═══ */
 .lang-flag { font-size:13px; line-height:1; }
 
+
+/* ═══ TPI — TREND PROBABILITY INDICATOR ═══ */
+.tpi-panel-wrap { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
+@media(max-width:900px){ .tpi-panel-wrap{ grid-template-columns:1fr; } }
+
+/* ── Main layout inside panel ── */
+.tpi-body { display:grid; grid-template-columns:140px 1fr; gap:14px; align-items:start; }
+@media(max-width:600px){ .tpi-body{ grid-template-columns:1fr; } }
+
+/* ── Mini gauge (compact) ── */
+.tpi-gauge-col { display:flex; flex-direction:column; align-items:center; gap:6px; padding-top:4px; }
+.tpi-gauge-svg { overflow:visible; display:block; }
+.tpi-score-num { font-family:var(--mono); font-size:1.45rem; font-weight:700; line-height:1; letter-spacing:-0.5px; }
+.tpi-score-sub { font-family:var(--mono); font-size:8px; letter-spacing:2px; color:var(--t2); margin-top:1px; }
+.tpi-state-pill {
+  display:inline-flex; align-items:center; gap:4px;
+  padding:3px 10px; border-radius:20px;
+  font-family:var(--mono); font-size:9px; font-weight:700; letter-spacing:1.5px;
+  white-space:nowrap;
+}
+.tpi-state-long   { background:rgba(0,230,118,.1);  color:var(--g1); border:1px solid rgba(0,230,118,.25); }
+.tpi-state-short  { background:rgba(255,23,68,.1);   color:var(--r1); border:1px solid rgba(255,23,68,.25); }
+.tpi-state-neutral{ background:rgba(255,215,64,.08); color:var(--y1); border:1px solid rgba(255,215,64,.2); }
+
+/* ── Right column ── */
+.tpi-right { display:flex; flex-direction:column; gap:8px; }
+
+/* ── 3 metric pills in a row ── */
+.tpi-kpis { display:flex; gap:6px; }
+.tpi-kpi {
+  flex:1; background:var(--p2); border:1px solid var(--border);
+  border-radius:7px; padding:7px 8px; min-width:0;
+}
+.tpi-kpi-lbl { font-family:var(--mono); font-size:7.5px; letter-spacing:1.5px; color:var(--t2); text-transform:uppercase; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.tpi-kpi-val { font-family:var(--mono); font-size:.95rem; font-weight:700; line-height:1; }
+.tpi-kpi-sub { font-family:var(--mono); font-size:7.5px; color:var(--t2); margin-top:2px; }
+
+/* ── Signal grid (compact 2-col) ── */
+.tpi-signals { display:grid; grid-template-columns:1fr 1fr; gap:3px; }
+.tpi-sig {
+  display:flex; align-items:center; gap:6px;
+  padding:5px 7px; border-radius:5px;
+  background:rgba(255,255,255,.025); border:1px solid rgba(255,255,255,.04);
+}
+.tpi-sig.pass { border-color:rgba(0,230,118,.15); }
+.tpi-sig.warn { border-color:rgba(255,215,64,.15); }
+.tpi-sig.fail { border-color:rgba(255,23,68,.12); opacity:.7; }
+.tpi-sig-dot  { width:5px; height:5px; border-radius:50%; flex-shrink:0; }
+.tpi-sig-name { font-family:var(--mono); font-size:8px; color:var(--t2); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tpi-sig-val  { font-family:var(--mono); font-size:8px; font-weight:700; flex-shrink:0; }
+
+/* ── Action box ── */
+.tpi-action {
+  padding:8px 10px; border-radius:7px; font-family:var(--mono);
+  font-size:8.5px; line-height:1.65; border:1px solid;
+}
+
+/* ── Disclaimer ── */
+.tpi-disc { font-family:var(--mono); font-size:7.5px; color:var(--t2); opacity:.5; text-align:center; margin-top:4px; }
+
+/* ── Timeframe tag ── */
+.tpi-tf { font-family:var(--mono); font-size:7.5px; color:var(--t2); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:10px; }
+
 </style>
 </head>
 <body>
@@ -770,6 +833,37 @@ body::before {
       <div class="pb" id="liqPanel">
         <div class="sk sk-line sk-full" style="margin-bottom:6px"></div>
         <div class="sk sk-line sk-full" style="margin-bottom:6px"></div>
+        <div class="sk sk-line sk-full" style="margin-bottom:6px"></div>
+        <div class="sk sk-line sk-full"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- TPI — TREND PROBABILITY INDICATORS -->
+  <div class="tpi-panel-wrap" id="tpiWrap">
+
+    <!-- LTPI -->
+    <div class="panel">
+      <div class="ph">
+        <div class="pt"><div class="pdot" style="background:var(--b1)"></div><span id="ltpi-title">LTPI — LONG-TERM TREND</span></div>
+        <span class="pbadge" style="background:var(--b3);color:var(--b1)" id="ltpi-badge">WEEKLY</span>
+      </div>
+      <div class="pb" id="ltpiPanel">
+        <div class="sk sk-line" style="height:160px;margin-bottom:10px"></div>
+        <div class="sk sk-line sk-full" style="margin-bottom:6px"></div>
+        <div class="sk sk-line sk-full"></div>
+      </div>
+    </div>
+
+    <!-- MTPI -->
+    <div class="panel">
+      <div class="ph">
+        <div class="pt"><div class="pdot" style="background:var(--o1)"></div><span id="mtpi-title">MTPI — MID-TERM TREND</span></div>
+        <span class="pbadge" style="background:var(--o3);color:var(--o1)" id="mtpi-badge">DAILY</span>
+      </div>
+      <div class="pb" id="mtpiPanel">
+        <div class="sk sk-line" style="height:160px;margin-bottom:10px"></div>
         <div class="sk sk-line sk-full" style="margin-bottom:6px"></div>
         <div class="sk sk-line sk-full"></div>
       </div>
@@ -1005,6 +1099,39 @@ const T = {
     ai_err:    '⚠️ AI connection error.<br><small style="color:var(--t2)">Make sure the Anthropic API key is configured on the server.</small>',
     /* AI system prompt language */
     ai_system_lang: 'English',
+    /* TPI */
+    tpi_ltpi_title:   'LTPI — LONG-TERM TREND',
+    tpi_mtpi_title:   'MTPI — MID-TERM TREND',
+    tpi_ltpi_badge:   'WEEKLY',
+    tpi_mtpi_badge:   'DAILY',
+    tpi_state:        'STATE',
+    tpi_roc:          'RATE OF CHANGE',
+    tpi_strength:     'STRENGTH',
+    tpi_long:         '▲ LONG',
+    tpi_short:        '▼ SHORT',
+    tpi_neutral:      '◆ NEUTRAL',
+    tpi_rising:       '↑ RISING',
+    tpi_falling:      '↓ FALLING',
+    tpi_flat:         '→ FLAT',
+    tpi_action_long_strong:  '✅ Above zero and rising → Consider increasing exposure. Trend has conviction.',
+    tpi_action_long_weak:    '⚠️ Above zero but falling → Be cautious. Prepare to reduce exposure if it breaks below zero.',
+    tpi_action_short_strong: '🔴 Below zero and falling → Trend is bearish. Reduce or hedge exposure.',
+    tpi_action_short_weak:   '⚡ Below zero but rising → Cover shorts. Prepare to buy on break above zero.',
+    tpi_action_neutral:      '◆ Near zero — No clear trend. Avoid leverage. Wait for directional confirmation.',
+    tpi_signal_price_trend:  'Price trend',
+    tpi_signal_ma_cross:     'MA alignment',
+    tpi_signal_momentum:     'Momentum',
+    tpi_signal_volume:       'Volume',
+    tpi_signal_funding:      'Funding Rate',
+    tpi_signal_ls:           'L/S Ratio',
+    tpi_signal_oi:           'Open Interest',
+    tpi_signal_fg:           'Fear & Greed',
+    tpi_signal_rsi:          'RSI proxy',
+    tpi_signal_bb:           'Price vs MA20',
+    tpi_note_extreme_long:   '⚠️ Extreme LONG reading — market may have exhausted trend alpha. Watch for weakening as early sell warning.',
+    tpi_note_extreme_short:  '⚠️ Extreme SHORT reading — if it starts to strengthen, treat as early buy warning.',
+    tpi_disclaimer:          'Trend indicator only. Most incorrect at turning points. Not financial advice.',
+
     /* FR context labels */
     fr_negative_ctx: '[NEGATIVE — shorts pay, bullish signal]',
     fr_high_ctx:     '[VERY HIGH — bearish flush risk]',
@@ -1185,6 +1312,38 @@ const T = {
     ai_q5_msg: 'Analiza el Long/Short ratio actual y dime qué señal contrarian genera',
     ai_err:    '⚠️ Error de conexión con la IA.<br><small style="color:var(--t2)">Asegúrate de que la API key de Anthropic está configurada en el servidor.</small>',
     ai_system_lang: 'Spanish (Latin American)',
+    /* TPI */
+    tpi_ltpi_title:   'LTPI — TENDENCIA LARGO PLAZO',
+    tpi_mtpi_title:   'MTPI — TENDENCIA MEDIANO PLAZO',
+    tpi_ltpi_badge:   'SEMANAL',
+    tpi_mtpi_badge:   'DIARIO',
+    tpi_state:        'ESTADO',
+    tpi_roc:          'TASA DE CAMBIO',
+    tpi_strength:     'FUERZA',
+    tpi_long:         '▲ LARGO',
+    tpi_short:        '▼ CORTO',
+    tpi_neutral:      '◆ NEUTRAL',
+    tpi_rising:       '↑ SUBIENDO',
+    tpi_falling:      '↓ BAJANDO',
+    tpi_flat:         '→ PLANO',
+    tpi_action_long_strong:  '✅ Sobre cero y subiendo → Considera aumentar exposición. La tendencia tiene convicción.',
+    tpi_action_long_weak:    '⚠️ Sobre cero pero bajando → Precaución. Prepárate para reducir exposición si rompe debajo de cero.',
+    tpi_action_short_strong: '🔴 Bajo cero y bajando → Tendencia bajista. Reduce o cubre exposición.',
+    tpi_action_short_weak:   '⚡ Bajo cero pero subiendo → Cubre shorts. Prepárate para comprar al romper sobre cero.',
+    tpi_action_neutral:      '◆ Cerca de cero — Sin tendencia clara. Evita apalancamiento. Espera confirmación.',
+    tpi_signal_price_trend:  'Tendencia precio',
+    tpi_signal_ma_cross:     'Alineación MAs',
+    tpi_signal_momentum:     'Momentum',
+    tpi_signal_volume:       'Volumen',
+    tpi_signal_funding:      'Funding Rate',
+    tpi_signal_ls:           'Ratio L/S',
+    tpi_signal_oi:           'Open Interest',
+    tpi_signal_fg:           'Fear & Greed',
+    tpi_signal_rsi:          'RSI proxy',
+    tpi_signal_bb:           'Precio vs MA20',
+    tpi_note_extreme_long:   '⚠️ Lectura LONG extrema — el mercado puede haber agotado el alpha de tendencia. Si empieza a debilitarse, es señal de venta temprana.',
+    tpi_note_extreme_short:  '⚠️ Lectura SHORT extrema — si empieza a fortalecerse, trátalo como señal de compra temprana.',
+    tpi_disclaimer:          'Solo indicador de tendencia. Más incorrecto en puntos de giro. No es asesoría financiera.',
     fr_negative_ctx: '[NEGATIVO — shorts pagan, señal alcista]',
     fr_high_ctx:     '[MUY ALTO — riesgo de flush bajista]',
     fr_pos_ctx:      '[POSITIVO ALTO]',
@@ -2087,7 +2246,8 @@ async function refreshAll() {
     loadLongShort(),
     loadOpenInterest(),
     loadVolumeSpikes(),
-    loadLiquidationMap()
+    loadLiquidationMap(),
+    loadTPI()
   ]);
 
   // Compute composite signal after all data loaded
@@ -2108,6 +2268,459 @@ refreshAll();
 // Auto-refresh REST APIs every 30 seconds
 // (WebSocket stays always-on for real-time trades)
 setInterval(refreshAll, 30000);
+
+
+/* ════════════════════════════════════════════════════
+   TPI — TREND PROBABILITY INDICATOR ENGINE
+   LTPI: Long-Term  (weekly timeframe, 30d klines data)
+   MTPI: Mid-Term   (daily timeframe, current dashboard data)
+
+   Score range: -1.0 to +1.0
+   State:       above 0 = LONG, below 0 = SHORT
+   ROC:         speed of change (rising/falling/flat)
+   Strength:    absolute magnitude (consensus, NOT probability)
+════════════════════════════════════════════════════ */
+
+/* ── TPI State storage ── */
+const tpiState = {
+  ltpi: { score: null, prev: null, history: [], signals: [] },
+  mtpi: { score: null, prev: null, history: [], signals: [] },
+};
+
+/* ── Color helper ── */
+function tpiColor(score) {
+  if(score === null) return 'var(--t2)';
+  if(score > 0.5)  return 'var(--g1)';
+  if(score > 0.15) return 'var(--g2)';
+  if(score > -0.15) return 'var(--y1)';
+  if(score > -0.5) return '#ff8a50';
+  return 'var(--r1)';
+}
+
+/* ── Gauge SVG renderer ── */
+function tpiGaugeSVG(score, color, size=120) {
+  const capped = Math.max(-1, Math.min(1, score || 0));
+  const cx = size/2, cy = size*0.52, r = size*0.38;
+
+  function polar(val) {
+    const ang = Math.PI - ((val + 1) / 2) * Math.PI;
+    return { x: cx + r * Math.cos(ang), y: cy - r * Math.sin(ang) };
+  }
+  function arc(from, to, radius) {
+    const p1 = polar(from), p2 = polar(to);
+    return `M${p1.x.toFixed(1)},${p1.y.toFixed(1)} A${radius},${radius} 0 0 0 ${p2.x.toFixed(1)},${p2.y.toFixed(1)}`;
+  }
+
+  const zones = [
+    [-1.0,-0.5,'rgba(255,23,68,.75)'],
+    [-0.5,-0.15,'rgba(255,109,0,.65)'],
+    [-0.15,0.15,'rgba(255,215,64,.6)'],
+    [0.15,0.5,'rgba(105,240,174,.6)'],
+    [0.5,1.0,'rgba(0,230,118,.75)'],
+  ];
+  const zArcs = zones.map(([f,t,c]) =>
+    `<path d="${arc(f,t,r)}" stroke="${c}" stroke-width="${size*0.07}" fill="none" stroke-linecap="butt"/>`
+  ).join('');
+
+  // Needle
+  const ang  = Math.PI - ((capped+1)/2)*Math.PI;
+  const nLen = r * 0.82;
+  const nx   = cx + nLen * Math.cos(ang);
+  const ny   = cy - nLen * Math.sin(ang);
+
+  // Ticks at -1, -0.5, 0, 0.5, +1
+  const ticks = [-1,-0.5,0,0.5,1].map(v => {
+    const pa = polar(v);
+    const a2 = Math.PI - ((v+1)/2)*Math.PI;
+    const ox = Math.cos(a2)*size*0.06, oy = -Math.sin(a2)*size*0.06;
+    return `<line x1="${pa.x.toFixed(1)}" y1="${pa.y.toFixed(1)}" x2="${(pa.x+ox).toFixed(1)}" y2="${(pa.y+oy).toFixed(1)}" stroke="rgba(255,255,255,.2)" stroke-width="1.5"/>`;
+  }).join('');
+
+  const h = (cy + r*0.25).toFixed(0);
+  return `<svg viewBox="0 0 ${size} ${h}" width="${size}" height="${h}" style="display:block">
+    <path d="${arc(-1,1,r)}" stroke="rgba(255,255,255,.06)" stroke-width="${size*0.07}" fill="none"/>
+    ${zArcs}
+    ${ticks}
+    <line x1="${cx.toFixed(1)}" y1="${cy.toFixed(1)}" x2="${nx.toFixed(2)}" y2="${ny.toFixed(2)}" stroke="${color}" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="${cx}" cy="${cy}" r="${size*0.045}" fill="${color}" opacity=".85"/>
+    <circle cx="${cx}" cy="${cy}" r="${size*0.02}" fill="var(--bg)"/>
+  </svg>`;
+}
+
+/* ── Render TPI panel (compact layout) ── */
+function renderTPI(id, data) {
+  const { score, prev, signals, timeframe } = data;
+  if(score === null) return;
+
+  const color  = tpiColor(score);
+  const isLong = score > 0.15, isShort = score < -0.15;
+  const abs    = Math.abs(score);
+  const roc    = prev !== null ? (score - prev) : 0;
+  const rocLbl = Math.abs(roc) < 0.02 ? t('tpi_flat') : roc > 0 ? t('tpi_rising') : t('tpi_falling');
+  const rocClr = Math.abs(roc) < 0.02 ? 'var(--t2)' : roc > 0 ? 'var(--g1)' : 'var(--r1)';
+
+  const stateLbl   = isLong ? t('tpi_long') : isShort ? t('tpi_short') : t('tpi_neutral');
+  const stateClass = isLong ? 'tpi-state-long' : isShort ? 'tpi-state-short' : 'tpi-state-neutral';
+  const stateIcon  = isLong ? '▲' : isShort ? '▼' : '◆';
+
+  // Action guidance
+  let action, aBG, aBD;
+  if (isLong  && roc >= 0)  { action=t('tpi_action_long_strong');  aBG='rgba(0,230,118,.06)';  aBD='rgba(0,230,118,.18)'; }
+  else if(isLong  && roc < 0)   { action=t('tpi_action_long_weak');    aBG='rgba(255,215,64,.06)'; aBD='rgba(255,215,64,.18)'; }
+  else if(isShort && roc < 0)   { action=t('tpi_action_short_strong'); aBG='rgba(255,23,68,.06)';  aBD='rgba(255,23,68,.18)'; }
+  else if(isShort && roc > 0)   { action=t('tpi_action_short_weak');   aBG='rgba(0,176,255,.06)';  aBD='rgba(0,176,255,.18)'; }
+  else                           { action=t('tpi_action_neutral');      aBG='rgba(255,215,64,.06)'; aBD='rgba(255,215,64,.18)'; }
+
+  // Extreme note
+  let extreme = '';
+  if(abs > 0.75 && roc < -0.03)
+    extreme = `<div style="padding:6px 8px;background:rgba(255,215,64,.06);border:1px solid rgba(255,215,64,.2);border-radius:5px;font-family:var(--mono);font-size:7.5px;color:var(--y1);line-height:1.55">${t(isLong?'tpi_note_extreme_long':'tpi_note_extreme_short')}</div>`;
+  if(abs > 0.75 && roc > 0.03 && isShort)
+    extreme = `<div style="padding:6px 8px;background:rgba(0,176,255,.06);border:1px solid rgba(0,176,255,.2);border-radius:5px;font-family:var(--mono);font-size:7.5px;color:var(--b1);line-height:1.55">${t('tpi_note_extreme_short')}</div>`;
+
+  // Signal rows (2-col compact grid)
+  const sigGrid = signals.map(s => {
+    const cls  = s.v > 0.1 ? 'pass' : s.v < -0.1 ? 'fail' : 'warn';
+    const dotC = s.v > 0.1 ? 'var(--g1)' : s.v < -0.1 ? 'var(--r1)' : 'var(--y1)';
+    const valC = s.v > 0 ? 'var(--g2)' : s.v < 0 ? 'var(--r2)' : 'var(--t2)';
+    return `<div class="tpi-sig ${cls}">
+      <div class="tpi-sig-dot" style="background:${dotC}"></div>
+      <div class="tpi-sig-name" title="${s.name}">${s.name}</div>
+      <div class="tpi-sig-val" style="color:${valC}">${s.label}</div>
+    </div>`;
+  }).join('');
+
+  const gauge = tpiGaugeSVG(score, color, 120);
+  const scoreTxt = (score >= 0 ? '+' : '') + score.toFixed(3);
+  const strengthPct = (abs*100).toFixed(0) + '%';
+  const strengthLbl = abs > 0.7 ? 'HIGH' : abs > 0.35 ? 'MED' : 'LOW';
+
+  $(id).innerHTML = `
+<div class="tpi-tf">${timeframe}</div>
+<div class="tpi-body">
+  <!-- LEFT: mini gauge + score -->
+  <div class="tpi-gauge-col">
+    ${gauge}
+    <div class="tpi-score-num" style="color:${color}">${scoreTxt}</div>
+    <div class="tpi-score-sub">SCORE</div>
+    <div class="tpi-state-pill ${stateClass}">${stateIcon} ${isLong?'LONG':isShort?'SHORT':'NEUTRAL'}</div>
+  </div>
+  <!-- RIGHT: kpis + signals + action -->
+  <div class="tpi-right">
+    <!-- 3 KPIs -->
+    <div class="tpi-kpis">
+      <div class="tpi-kpi">
+        <div class="tpi-kpi-lbl">${t('tpi_state')}</div>
+        <div class="tpi-kpi-val" style="color:${color}">${stateIcon}</div>
+        <div class="tpi-kpi-sub">${isLong?'LONG':isShort?'SHORT':'NEUTRAL'}</div>
+      </div>
+      <div class="tpi-kpi">
+        <div class="tpi-kpi-lbl">${t('tpi_roc')}</div>
+        <div class="tpi-kpi-val" style="color:${rocClr}">${roc>=0?'+':''}${roc.toFixed(3)}</div>
+        <div class="tpi-kpi-sub" style="color:${rocClr}">${rocLbl}</div>
+      </div>
+      <div class="tpi-kpi">
+        <div class="tpi-kpi-lbl">${t('tpi_strength')}</div>
+        <div class="tpi-kpi-val" style="color:${color}">${strengthPct}</div>
+        <div class="tpi-kpi-sub">${strengthLbl}</div>
+      </div>
+    </div>
+    <!-- Signals compact grid -->
+    <div class="tpi-signals">${sigGrid}</div>
+    <!-- Action -->
+    <div class="tpi-action" style="background:${aBG};border-color:${aBD};color:${color}">${action}</div>
+    ${extreme}
+    <div class="tpi-disc">${t('tpi_disclaimer')}</div>
+  </div>
+</div>`;
+}
+
+/* ═════════════════════════════════════════════════
+   LTPI CALCULATION
+   Long-Term Trend Probability (Weekly frame)
+   Data: 90-day daily klines from Binance
+   Signals used:
+     1. Price vs 90DMA  (momentum long-term)
+     2. Price vs 30DMA  (medium envelope)
+     3. 30DMA slope     (trend direction)
+     4. 90DMA slope     (macro trend)
+     5. Price vs 52w high proximity
+     6. Weekly body direction (last 7d net)
+     7. Open Interest alignment
+     8. Fear & Greed (smoothed)
+════════════════════════════════════════════════ */
+async function loadLTPI() {
+  try {
+    // Fetch 90 daily candles for BTC
+    const res = await fetch('https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1d&limit=100');
+    if(!res.ok) throw new Error(res.status);
+    const raw = await res.json();
+    const closes = raw.map(k => parseFloat(k[4]));
+    const volumes = raw.map(k => parseFloat(k[7])); // quote volume
+    const n = closes.length;
+    if(n < 30) throw new Error('insufficient data');
+
+    const ma = (arr, period, endIdx) => {
+      const start = Math.max(0, endIdx - period + 1);
+      const slice = arr.slice(start, endIdx + 1);
+      return slice.reduce((a,b) => a+b, 0) / slice.length;
+    };
+
+    const last = n - 1;
+    const price = closes[last];
+
+    // MA calculations
+    const ma30  = ma(closes, 30, last);
+    const ma90  = ma(closes, 90, last);
+    const ma7   = ma(closes, 7,  last);
+    const ma30_3ago = ma(closes, 30, last-3);
+    const ma90_7ago = ma(closes, 90, last-7);
+
+    // Volume comparison
+    const avgVol30 = ma(volumes, 30, last);
+    const recentVol = ma(volumes, 5, last);
+    const volRatio  = recentVol / avgVol30;
+
+    // 52-week proximity (100 days proxy)
+    const window100 = closes.slice(Math.max(0, last-100));
+    const high100   = Math.max(...window100);
+    const low100    = Math.min(...window100);
+    const range100  = high100 - low100;
+    const pricePos  = range100 > 0 ? (price - low100) / range100 : 0.5; // 0=bottom, 1=top
+
+    // Signal scores (each returns -1 to +1)
+    const signals = [];
+
+    // 1. Price vs 90DMA
+    const pVsMA90 = Math.max(-1, Math.min(1, (price - ma90) / ma90 * 8));
+    signals.push({ name: t('tpi_signal_ma_cross'), v: pVsMA90,
+      label: `${price>ma90?'+':''}${((price/ma90-1)*100).toFixed(1)}% vs MA90` });
+
+    // 2. Price vs 30DMA
+    const pVsMA30 = Math.max(-1, Math.min(1, (price - ma30) / ma30 * 10));
+    signals.push({ name: t('tpi_signal_price_trend'), v: pVsMA30,
+      label: `${price>ma30?'+':''}${((price/ma30-1)*100).toFixed(1)}% vs MA30` });
+
+    // 3. 30DMA slope (is it rising?)
+    const slope30 = Math.max(-1, Math.min(1, (ma30 - ma30_3ago) / ma30_3ago * 30));
+    signals.push({ name: `MA30 ${t('tpi_roc')}`, v: slope30,
+      label: slope30>0.05?t('tpi_rising'):slope30<-0.05?t('tpi_falling'):t('tpi_flat') });
+
+    // 4. 90DMA slope
+    const slope90 = Math.max(-1, Math.min(1, (ma90 - ma90_7ago) / ma90_7ago * 50));
+    signals.push({ name: `MA90 ${t('tpi_roc')}`, v: slope90,
+      label: slope90>0.05?t('tpi_rising'):slope90<-0.05?t('tpi_falling'):t('tpi_flat') });
+
+    // 5. Price position in 100d range → above 60% = bullish, below 40% = bearish
+    const rangeSignal = Math.max(-1, Math.min(1, (pricePos - 0.5) * 2));
+    signals.push({ name: '100d Range Position', v: rangeSignal,
+      label: `${(pricePos*100).toFixed(0)}th %ile` });
+
+    // 6. Volume alignment with direction
+    const priceDir = (price - closes[last-7]) / closes[last-7]; // 7d return
+    const volSignal = priceDir > 0 ? Math.min(1, (volRatio-1)*2) : Math.max(-1, -(volRatio-1)*2);
+    signals.push({ name: t('tpi_signal_volume'), v: volSignal,
+      label: `${(volRatio*100).toFixed(0)}% avg` });
+
+    // 7. OI alignment (from state)
+    const oiBtc = state.oi['BTCUSDT'];
+    const btcChg7d = priceDir;
+    let oiSig = 0;
+    if(oiBtc && btcChg7d > 0.02) oiSig = 0.5;
+    else if(oiBtc && btcChg7d < -0.02) oiSig = -0.5;
+    signals.push({ name: t('tpi_signal_oi'), v: oiSig,
+      label: oiBtc ? fmt(oiBtc) : '—' });
+
+    // 8. F&G smoothed (weekly bias)
+    let fgSig = 0;
+    if(state.fg !== null) fgSig = Math.max(-1, Math.min(1, (state.fg - 50) / 40));
+    signals.push({ name: t('tpi_signal_fg'), v: fgSig,
+      label: state.fg !== null ? `${state.fg}/100` : '—' });
+
+    // Weighted composite LTPI
+    const weights = [0.20, 0.18, 0.15, 0.12, 0.12, 0.08, 0.08, 0.07];
+    const raw_score = signals.reduce((sum, s, i) => sum + s.v * weights[i], 0);
+    const ltpiScore = Math.max(-1, Math.min(1, parseFloat(raw_score.toFixed(4))));
+
+    // Save & update ROC
+    tpiState.ltpi.prev = tpiState.ltpi.score;
+    tpiState.ltpi.score = ltpiScore;
+    tpiState.ltpi.signals = signals;
+    tpiState.ltpi.history.push(ltpiScore);
+    if(tpiState.ltpi.history.length > 20) tpiState.ltpi.history.shift();
+
+    renderTPI('ltpiPanel', {
+      score: ltpiScore,
+      prev:  tpiState.ltpi.prev,
+      signals,
+      timeframe: 'Long-Term · Weekly Frame · 90-Day Data'
+    });
+
+    // Update badges
+    const ltBadge = $('ltpi-badge');
+    if(ltBadge) {
+      const s = ltpiScore > 0.15 ? 'LONG' : ltpiScore < -0.15 ? 'SHORT' : 'NEUTRAL';
+      const c = ltpiScore > 0.15 ? 'var(--g1)' : ltpiScore < -0.15 ? 'var(--r1)' : 'var(--y1)';
+      const b = ltpiScore > 0.15 ? 'var(--g3)' : ltpiScore < -0.15 ? 'var(--r3)' : 'rgba(255,215,64,.1)';
+      ltBadge.textContent = s; ltBadge.style.color = c; ltBadge.style.background = b;
+    }
+
+  } catch(e) {
+    $('ltpiPanel').innerHTML = `<div class="err-box"><div class="err-msg">Error loading LTPI data.</div><button class="retry-btn" onclick="loadLTPI()">${t('retry')}</button></div>`;
+  }
+}
+
+/* ═════════════════════════════════════════════════
+   MTPI CALCULATION
+   Mid-Term Trend Probability (Daily frame)
+   Data: 30-day 4h klines + current dashboard state
+   Signals used:
+     1. Funding Rate consensus
+     2. Long/Short Ratio contrarian
+     3. Price momentum (7d)
+     4. Open Interest trend
+     5. RSI proxy (from 4h closes)
+     6. Price vs MA20 (4h)
+     7. Volume spike bias
+     8. Fear & Greed
+════════════════════════════════════════════════ */
+async function loadMTPI() {
+  try {
+    // Fetch 4h candles (120 = 20 days)
+    const res = await fetch('https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=4h&limit=120');
+    if(!res.ok) throw new Error(res.status);
+    const raw = await res.json();
+    const closes  = raw.map(k => parseFloat(k[4]));
+    const volumes = raw.map(k => parseFloat(k[7]));
+    const n = closes.length;
+    if(n < 20) throw new Error('insufficient data');
+
+    const ma = (arr, period, endIdx) => {
+      const start = Math.max(0, endIdx - period + 1);
+      return arr.slice(start, endIdx+1).reduce((a,b)=>a+b,0) / (endIdx - start + 1);
+    };
+
+    const last = n-1;
+    const price = closes[last];
+
+    // MA20 on 4h
+    const ma20 = ma(closes, 20, last);
+    const ma20_prev = ma(closes, 20, last-6);
+
+    // RSI proxy (14-period on 4h)
+    let gains = 0, losses = 0;
+    for(let i = last-13; i <= last; i++) {
+      const diff = closes[i] - closes[i-1];
+      if(diff > 0) gains += diff; else losses -= diff;
+    }
+    const rs = losses === 0 ? 100 : gains / losses;
+    const rsi = 100 - (100 / (1 + rs));
+
+    // Volume
+    const avgVol = ma(volumes, 20, last);
+    const recentVol = ma(volumes, 3, last);
+    const volRatio = recentVol / avgVol;
+
+    // Price momentum 24h (6 candles of 4h)
+    const mom24h = (price - closes[last-6]) / closes[last-6];
+    // Price momentum 48h
+    const mom48h = (price - closes[last-12]) / closes[last-12];
+
+    const signals = [];
+
+    // 1. Funding Rate (BTC + ETH + SOL consensus)
+    const frBtc = state.fr['BTCUSDT'];
+    const frEth = state.fr['ETHUSDT'];
+    const frSol = state.fr['SOLUSDT'];
+    let frSig = 0;
+    if(frBtc !== undefined) {
+      // Negative FR → bullish, high positive FR → bearish (contrarian)
+      const frAvg = [frBtc, frEth||0, frSol||0].reduce((a,b)=>a+b,0) / 3;
+      frSig = Math.max(-1, Math.min(1, frAvg < 0 ? 0.7 : frAvg > 0.08 ? -0.8 : frAvg > 0.04 ? -0.4 : -frAvg * 5));
+    }
+    signals.push({ name: t('tpi_signal_funding'), v: frSig,
+      label: frBtc!==undefined ? `${frBtc>0?'+':''}${frBtc.toFixed(4)}%` : '—' });
+
+    // 2. L/S Ratio (contrarian)
+    const lsBtc = state.ls['BTCUSDT'];
+    let lsSig = 0;
+    if(lsBtc) {
+      // >65% long → bearish signal, >60% short → bullish signal
+      lsSig = lsBtc.long > 65 ? -0.8 : lsBtc.long > 58 ? -0.3 :
+              lsBtc.short > 60 ? 0.8 : lsBtc.short > 55 ? 0.3 : 0;
+    }
+    signals.push({ name: t('tpi_signal_ls'), v: lsSig,
+      label: lsBtc ? `L:${lsBtc.long.toFixed(1)}%` : '—' });
+
+    // 3. RSI proxy
+    const rsiSig = Math.max(-1, Math.min(1, (rsi - 50) / 30));
+    signals.push({ name: t('tpi_signal_rsi'), v: rsiSig,
+      label: `RSI ${rsi.toFixed(1)}` });
+
+    // 4. Price vs MA20 (4h)
+    const pVsMA20 = Math.max(-1, Math.min(1, (price - ma20) / ma20 * 15));
+    signals.push({ name: t('tpi_signal_bb'), v: pVsMA20,
+      label: `${price>ma20?'+':''}${((price/ma20-1)*100).toFixed(2)}%` });
+
+    // 5. Price momentum 24h
+    const momSig = Math.max(-1, Math.min(1, mom24h * 20));
+    signals.push({ name: t('tpi_signal_momentum'), v: momSig,
+      label: `${mom24h>=0?'+':''}${(mom24h*100).toFixed(2)}% 24h` });
+
+    // 6. MA20 slope (4h trend direction)
+    const ma20slope = Math.max(-1, Math.min(1, (ma20 - ma20_prev) / ma20_prev * 40));
+    signals.push({ name: `MA20 ${t('tpi_roc')}`, v: ma20slope,
+      label: ma20slope>0.05?t('tpi_rising'):ma20slope<-0.05?t('tpi_falling'):t('tpi_flat') });
+
+    // 7. OI direction
+    const oiBtc = state.oi['BTCUSDT'];
+    let oiSig2 = 0;
+    if(oiBtc && mom24h > 0.01) oiSig2 = 0.6;
+    else if(oiBtc && mom24h < -0.01) oiSig2 = -0.6;
+    signals.push({ name: t('tpi_signal_oi'), v: oiSig2,
+      label: oiBtc ? fmt(oiBtc) : '—' });
+
+    // 8. F&G
+    let fgSig = 0;
+    if(state.fg !== null) fgSig = Math.max(-1, Math.min(1, (state.fg - 50) / 35));
+    signals.push({ name: t('tpi_signal_fg'), v: fgSig,
+      label: state.fg !== null ? `${state.fg}/100` : '—' });
+
+    // Weighted composite MTPI
+    const weights = [0.18, 0.16, 0.14, 0.13, 0.13, 0.10, 0.09, 0.07];
+    const raw_score = signals.reduce((sum, s, i) => sum + s.v * weights[i], 0);
+    const mtpiScore = Math.max(-1, Math.min(1, parseFloat(raw_score.toFixed(4))));
+
+    tpiState.mtpi.prev = tpiState.mtpi.score;
+    tpiState.mtpi.score = mtpiScore;
+    tpiState.mtpi.signals = signals;
+    tpiState.mtpi.history.push(mtpiScore);
+    if(tpiState.mtpi.history.length > 20) tpiState.mtpi.history.shift();
+
+    renderTPI('mtpiPanel', {
+      score: mtpiScore,
+      prev:  tpiState.mtpi.prev,
+      signals,
+      timeframe: 'Mid-Term · Daily Frame · 4H Candles'
+    });
+
+    // Update badge
+    const mtBadge = $('mtpi-badge');
+    if(mtBadge) {
+      const s = mtpiScore > 0.15 ? 'LONG' : mtpiScore < -0.15 ? 'SHORT' : 'NEUTRAL';
+      const c = mtpiScore > 0.15 ? 'var(--g1)' : mtpiScore < -0.15 ? 'var(--r1)' : 'var(--y1)';
+      const b = mtpiScore > 0.15 ? 'var(--g3)' : mtpiScore < -0.15 ? 'var(--r3)' : 'rgba(255,215,64,.1)';
+      mtBadge.textContent = s; mtBadge.style.color = c; mtBadge.style.background = b;
+    }
+
+  } catch(e) {
+    $('mtpiPanel').innerHTML = `<div class="err-box"><div class="err-msg">Error loading MTPI data.</div><button class="retry-btn" onclick="loadMTPI()">${t('retry')}</button></div>`;
+  }
+}
+
+async function loadTPI() {
+  await Promise.allSettled([loadLTPI(), loadMTPI()]);
+}
 
 /* ═══════════════════════════════════════════════
    DONATION MODAL
