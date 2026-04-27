@@ -2330,8 +2330,7 @@ async function refreshAll() {
     loadOpenInterest(),
     loadVolumeSpikes(),
     loadLiquidationMap(),
-    loadTPI(),
-    loadMVRV()
+    loadTPI()
   ]);
 
   // Compute composite signal after all data loaded
@@ -2348,6 +2347,8 @@ connectWhaleWS();
 // Initial load
 applyLang();
 refreshAll();
+// MVRV loads independently — does NOT block main dashboard
+setTimeout(() => { try { loadMVRV(); } catch(e) {} }, 2000);
 
 // Auto-refresh REST APIs every 30 seconds
 // (WebSocket stays always-on for real-time trades)
@@ -2802,9 +2803,7 @@ async function loadMTPI() {
   }
 }
 
-async function loadTPI() {
-  await Promise.allSettled([loadLTPI(), loadMTPI()]);
-}
+
 
 
 /* ════════════════════════════════════════════════════
@@ -2903,32 +2902,7 @@ function sparklineSVG(values, color, w=280, h=44) {
      - bitcoin/puell-multiple      (Puell Multiple)
 ════════════════════════════════════════════════════ */
 
-async function loadMVRV() {
-  // Run all 3 fetches in parallel
-  const [rainbowRes, piRes, puellRes] = await Promise.allSettled([
-    fetch('/api/coinglass?endpoint=bitcoin/rainbow-price-chart'),
-    fetch('/api/coinglass?endpoint=bitcoin/pi-cycle-top'),
-    fetch('/api/coinglass?endpoint=bitcoin/puell-multiple'),
-  ]);
 
-  // Helper to safely parse
-  const parse = async (res) => {
-    try {
-      if(res.status === 'fulfilled' && res.value.ok) {
-        return await res.value.json();
-      }
-    } catch(e) {}
-    return null;
-  };
-
-  const rainbowData = await parse(rainbowRes);
-  const piData      = await parse(piRes);
-  const puellData   = await parse(puellRes);
-
-  renderMvrvRatio(rainbowData);
-  renderMvrvZ(piData);
-  renderMvrvRealized(puellData);
-}
 
 /* ── Panel 1: Rainbow Chart → approximate cycle position ── */
 function renderMvrvRatio(json) {
@@ -3246,37 +3220,20 @@ function sparklineSVG(values, color, w=280, h=44) {
 /* ── Main MVRV loader ── */
 async function loadMVRV() {
   try {
-    const res = await fetch('/api/coinglass?endpoint=bitcoin/rainbow-price-chart');
-    if(!res.ok) throw new Error('API error ' + res.status);
-    const json = await res.json();
-
-    // CoinGlass MVRV response structure
-    const data = json.data || json;
-
-    // Extract current values
-    const mvrv     = parseFloat(data.mvrvRatio  || data.mvrv      || data.value      || 0);
-    const mvrvZ    = parseFloat(data.mvrvZScore  || data.zscore    || data.z_score    || 0);
-    const realized = parseFloat(data.realizedPrice|| data.realized || 0);
-    const history  = Array.isArray(data.list) ? data.list.map(d => parseFloat(d.value||d.mvrv||0)) : [];
-
-    renderMvrvRatio(mvrv, history);
-    renderMvrvZ(mvrvZ);
-    renderMvrvRealized(realized, mvrv);
-
+    const [r1, r2, r3] = await Promise.allSettled([
+      fetch('/api/coinglass?endpoint=bitcoin/rainbow-price-chart'),
+      fetch('/api/coinglass?endpoint=bitcoin/pi-cycle-top'),
+      fetch('/api/coinglass?endpoint=bitcoin/puell-multiple'),
+    ]);
+    const safeJson = async (r) => {
+      try { if(r.status==='fulfilled'&&r.value.ok) return await r.value.json(); } catch(e){}
+      return null;
+    };
+    renderMvrvRatio(await safeJson(r1));
+    renderMvrvZ(await safeJson(r2));
+    renderMvrvRealized(await safeJson(r3));
   } catch(e) {
-    // Show error state in all 3 panels
-    ['mvrvRatioPanel','mvrvZPanel','mvrvRealizedPanel'].forEach(id => {
-      $(id).innerHTML = `<div class="err-box">
-        <div class="err-icon">⛓</div>
-        <div class="err-msg" style="font-size:.78rem">
-          ${e.message.includes('API') ? 
-            'CoinGlass API key not configured.<br>Add <strong>COINGLASS_API_KEY</strong> to Vercel Environment Variables.' :
-            'MVRV data unavailable. Check API key.'
-          }
-        </div>
-        <button class="retry-btn" onclick="loadMVRV()">↻ ${t('retry')}</button>
-      </div>`;
-    });
+    console.warn('MVRV:', e.message);
   }
 }
 
