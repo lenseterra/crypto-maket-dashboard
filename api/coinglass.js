@@ -1,69 +1,62 @@
 // ═══════════════════════════════════════════════════════
-//  Lenseterra — CoinGlass Proxy
+//  Lenseterra — CoinGlass Proxy (API v4)
 //  Route: /api/coinglass
-//  Forwards requests to CoinGlass API using the key
-//  stored as COINGLASS_API_KEY env variable in Vercel.
 // ═══════════════════════════════════════════════════════
 
 export default async function handler(req, res) {
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+  if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const apiKey = process.env.COINGLASS_API_KEY;
   if (!apiKey) {
     return res.status(500).json({
-      error: 'CoinGlass API key not configured. Add COINGLASS_API_KEY to Vercel Environment Variables.'
+      error: 'COINGLASS_API_KEY not configured in Vercel Environment Variables.'
     });
   }
 
-  // Which endpoint to call — passed as ?endpoint=xxx
   const { endpoint } = req.query;
-  if (!endpoint) {
-    return res.status(400).json({ error: 'Missing endpoint param' });
-  }
+  if (!endpoint) return res.status(400).json({ error: 'Missing endpoint param' });
 
-  // Whitelist of allowed CoinGlass endpoints
+  // Whitelist — v4 endpoints available on free/starter plan
   const allowed = [
-    'indicator/bitcoin-profitable-days',
+    'bitcoin/rainbow-price-chart',
+    'bitcoin/puell-multiple',
+    'bitcoin/ahr999',
+    'bitcoin/pi-cycle-top',
     'index/fear-greed-history',
-    'indicator/mvrv',
-    'bitcoin/indicators/mvrv',
-    'indicator/nupl',
-    'indicator/puell-multiple',
+    'futures/coins-markets',
+    'futures/openInterest/ohlc-history',
+    'bitcoin/stats',
   ];
 
   if (!allowed.some(e => endpoint.startsWith(e))) {
-    return res.status(403).json({ error: 'Endpoint not allowed: ' + endpoint });
+    return res.status(403).json({ error: 'Endpoint not in allowlist: ' + endpoint });
   }
 
   try {
-    const url = `https://open-api-v3.coinglass.com/api/${endpoint}`;
+    // Build URL with any extra query params forwarded
+    const params = new URLSearchParams(req.query);
+    params.delete('endpoint');
+    const qs = params.toString();
+    const url = `https://open-api-v4.coinglass.com/api/${endpoint}${qs ? '?' + qs : ''}`;
+
     const response = await fetch(url, {
       headers: {
         'CG-API-KEY': apiKey,
-        'Content-Type': 'application/json',
+        'Accept': 'application/json',
       },
     });
 
-    if (!response.ok) {
-      const text = await response.text();
-      return res.status(response.status).json({
-        error: `CoinGlass API error ${response.status}`,
-        detail: text.slice(0, 200)
-      });
-    }
+    const text = await response.text();
+    let data;
+    try { data = JSON.parse(text); } catch { data = { raw: text }; }
 
-    const data = await response.json();
-    // Cache for 15 minutes (MVRV doesn't change by the second)
     res.setHeader('Cache-Control', 's-maxage=900, stale-while-revalidate=1800');
-    return res.status(200).json(data);
+    return res.status(response.status).json(data);
 
   } catch (err) {
     return res.status(500).json({ error: 'Proxy error: ' + err.message });
