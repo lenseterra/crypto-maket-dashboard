@@ -885,8 +885,8 @@ body::before {
     <!-- MVRV Ratio -->
     <div class="panel">
       <div class="ph">
-        <div class="pt"><div class="pdot" style="background:#9c27b0"></div>MVRV RATIO</div>
-        <span class="pbadge" style="background:rgba(156,39,176,.1);color:#ce93d8" id="mvrvBadge">LOADING</span>
+        <div class="pt"><div class="pdot" style="background:#9c27b0"></div>RAINBOW CHART</div>
+        <span class="pbadge" style="background:rgba(156,39,176,.1);color:#ce93d8" id="mvrvBadge">BAND</span>
       </div>
       <div class="pb" id="mvrvRatioPanel">
         <div class="sk sk-line" style="height:120px;margin-bottom:10px"></div>
@@ -898,8 +898,8 @@ body::before {
     <!-- MVRV Z-Score -->
     <div class="panel">
       <div class="ph">
-        <div class="pt"><div class="pdot" style="background:#e91e63"></div>MVRV Z-SCORE</div>
-        <span class="pbadge" style="background:rgba(233,30,99,.1);color:#f48fb1" id="mvrvZBadge">LOADING</span>
+        <div class="pt"><div class="pdot" style="background:#e91e63"></div>PI CYCLE TOP</div>
+        <span class="pbadge" style="background:rgba(233,30,99,.1);color:#f48fb1" id="mvrvZBadge">STATE</span>
       </div>
       <div class="pb" id="mvrvZPanel">
         <div class="sk sk-line" style="height:120px;margin-bottom:10px"></div>
@@ -911,7 +911,7 @@ body::before {
     <!-- Realized Price -->
     <div class="panel">
       <div class="ph">
-        <div class="pt"><div class="pdot" style="background:#00bcd4"></div>REALIZED PRICE</div>
+        <div class="pt"><div class="pdot" style="background:#00bcd4"></div>PUELL MULTIPLE</div>
         <span class="pbadge" style="background:rgba(0,188,212,.1);color:#80deea">ON-CHAIN</span>
       </div>
       <div class="pb" id="mvrvRealizedPanel">
@@ -2894,10 +2894,359 @@ function sparklineSVG(values, color, w=280, h=44) {
   </svg>`;
 }
 
+/* ════════════════════════════════════════════════════
+   MARKET CYCLE INDICATORS
+   Uses CoinGlass API v4 via /api/coinglass proxy
+   Free plan endpoints:
+     - bitcoin/rainbow-price-chart (Rainbow + approximate MVRV)
+     - bitcoin/pi-cycle-top        (Pi Cycle moving averages)
+     - bitcoin/puell-multiple      (Puell Multiple)
+════════════════════════════════════════════════════ */
+
+async function loadMVRV() {
+  // Run all 3 fetches in parallel
+  const [rainbowRes, piRes, puellRes] = await Promise.allSettled([
+    fetch('/api/coinglass?endpoint=bitcoin/rainbow-price-chart'),
+    fetch('/api/coinglass?endpoint=bitcoin/pi-cycle-top'),
+    fetch('/api/coinglass?endpoint=bitcoin/puell-multiple'),
+  ]);
+
+  // Helper to safely parse
+  const parse = async (res) => {
+    try {
+      if(res.status === 'fulfilled' && res.value.ok) {
+        return await res.value.json();
+      }
+    } catch(e) {}
+    return null;
+  };
+
+  const rainbowData = await parse(rainbowRes);
+  const piData      = await parse(piRes);
+  const puellData   = await parse(puellRes);
+
+  renderMvrvRatio(rainbowData);
+  renderMvrvZ(piData);
+  renderMvrvRealized(puellData);
+}
+
+/* ── Panel 1: Rainbow Chart → approximate cycle position ── */
+function renderMvrvRatio(json) {
+  const panel = $('mvrvRatioPanel');
+  const badge = $('mvrvBadge');
+
+  if(!json || json.code !== '0' || !json.data) {
+    // Show helpful message if API key works but data unavailable
+    panel.innerHTML = `<div class="err-box">
+      <div class="err-icon" style="font-size:1.5rem">🌈</div>
+      <div class="err-msg">Rainbow Chart data requires CoinGlass Starter plan.<br>
+      <small style="color:var(--t2)">Upgrade at coinglass.com/pricing</small></div>
+      <button class="retry-btn" onclick="loadMVRV()">↻ ${t('retry')}</button>
+    </div>`;
+    if(badge) { badge.textContent='N/A'; badge.style.color='var(--t2)'; }
+    return;
+  }
+
+  // Extract latest data point
+  const list = Array.isArray(json.data) ? json.data : (json.data.list || []);
+  const latest = list[list.length - 1] || {};
+  const price   = parseFloat(state.prices['BTCUSDT']?.lastPrice || latest.price || 0);
+  const band    = latest.band || latest.bandName || latest.level || '';
+  const ratio   = latest.ratio || latest.mvrvRatio || latest.value || null;
+
+  // Rainbow bands → cycle zones
+  const bandMap = {
+    'Maximum bubble territory': { label:'EXTREME TOP',  color:'#ff1744', desc:'Historically marks cycle tops.' },
+    'Sell. Seriously, SELL!':   { label:'SELL ZONE',    color:'#ff6d00', desc:'Strong sell signal historically.' },
+    'FOMO intensifies':         { label:'EUPHORIA',     color:'#ffd740', desc:'Late cycle — reduce exposure.' },
+    'Is this a bubble?':        { label:'LATE BULL',    color:'#a5d6a7', desc:'Bull market — manage risk.' },
+    'Still cheap':              { label:'FAIR VALUE',   color:'#00b0ff', desc:'Reasonable valuation.' },
+    'Accumulate':               { label:'ACCUMULATE',   color:'#00e676', desc:'Historically good entry zone.' },
+    'BUY!':                     { label:'STRONG BUY',   color:'#00e676', desc:'Near cycle bottom historically.' },
+    'Basically a Fire Sale':    { label:'FIRE SALE',    color:'#00e676', desc:'Extreme undervaluation.' },
+  };
+  const zone = bandMap[band] || { label: band || 'LOADING', color:'var(--t2)', desc:'Cycle position data.' };
+
+  if(badge) { badge.textContent=zone.label; badge.style.color=zone.color; badge.style.background=zone.color+'18'; }
+
+  // Sparkline from history
+  const vals = list.slice(-60).map(d => parseFloat(d.ratio || d.value || d.price || 0)).filter(Boolean);
+  const spark = vals.length > 5 ? sparklineSVG(vals, zone.color) : '';
+
+  panel.innerHTML = `
+    <div style="text-align:center;margin-bottom:12px">
+      <div style="font-size:2rem;margin-bottom:4px">🌈</div>
+      <div class="mvrv-val-big" style="color:${zone.color};font-size:1.5rem">${zone.label}</div>
+      <div class="mvrv-val-lbl" style="margin-top:3px">RAINBOW CHART BAND</div>
+      <div class="mvrv-zone-pill" style="color:${zone.color};background:${zone.color}18;border:1px solid ${zone.color}35;margin-top:8px">
+        ${band || zone.label}
+      </div>
+    </div>
+    <div class="mvrv-stats">
+      <div class="mvrv-stat-row">
+        <span class="mvrv-stat-lbl">SPOT PRICE</span>
+        <span class="mvrv-stat-val" style="color:var(--t3)">$${price > 0 ? price.toLocaleString('en',{maximumFractionDigits:0}) : '—'}</span>
+      </div>
+      ${ratio ? `<div class="mvrv-stat-row">
+        <span class="mvrv-stat-lbl">RAINBOW CHART</span>
+        <span class="mvrv-stat-val" style="color:${zone.color}">${parseFloat(ratio).toFixed(2)}x</span>
+      </div>` : ''}
+    </div>
+    <div class="mvrv-signal" style="color:${zone.color};background:${zone.color}0d;border-color:${zone.color}30">
+      ${zone.desc}
+    </div>
+    ${spark ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+      <div style="font-family:var(--mono);font-size:7.5px;color:var(--t2);margin-bottom:4px;letter-spacing:1px">HISTORY</div>
+      ${spark}
+    </div>` : ''}
+  `;
+}
+
+/* ── Panel 2: Pi Cycle Top → MA crossover cycle signal ── */
+function renderMvrvZ(json) {
+  const panel = $('mvrvZPanel');
+  const badge = $('mvrvZBadge');
+
+  if(!json || json.code !== '0' || !json.data) {
+    panel.innerHTML = `<div class="err-box">
+      <div class="err-icon" style="font-size:1.5rem">π</div>
+      <div class="err-msg">Pi Cycle data requires CoinGlass Starter plan.<br>
+      <small style="color:var(--t2)">Upgrade at coinglass.com/pricing</small></div>
+      <button class="retry-btn" onclick="loadMVRV()">↻ ${t('retry')}</button>
+    </div>`;
+    if(badge) { badge.textContent='N/A'; badge.style.color='var(--t2)'; }
+    return;
+  }
+
+  const list    = Array.isArray(json.data) ? json.data : (json.data.list || []);
+  const latest  = list[list.length - 1] || {};
+  const ma111   = parseFloat(latest.ma111 || latest.fast || 0);
+  const ma350x2 = parseFloat(latest.ma350x2 || latest.slow || 0);
+  const price   = parseFloat(state.prices['BTCUSDT']?.lastPrice || 0);
+
+  // Pi Cycle: when 111DMA crosses above 350DMAx2 → cycle top signal
+  const gap = ma350x2 > 0 ? ((ma111 - ma350x2) / ma350x2 * 100) : null;
+  const isCrossed = ma111 > ma350x2;
+  const color = isCrossed ? '#ff1744' : gap !== null && gap > -5 ? '#ffd740' : '#00e676';
+  const stateLabel = isCrossed ? 'TOP SIGNAL' : gap !== null && gap > -5 ? 'APPROACHING' : 'SAFE ZONE';
+
+  if(badge) { badge.textContent=stateLabel; badge.style.color=color; badge.style.background=color+'18'; }
+
+  // Bar showing gap between MAs
+  const gapPct = gap !== null ? Math.max(0, Math.min(100, (gap + 20) / 40 * 100)) : 50;
+
+  panel.innerHTML = `
+    <div style="text-align:center;margin-bottom:12px">
+      <div style="font-size:2rem;margin-bottom:4px">π</div>
+      <div class="mvrv-val-big" style="color:${color};font-size:1.5rem">${stateLabel}</div>
+      <div class="mvrv-val-lbl">PI CYCLE TOP INDICATOR</div>
+      <div class="mvrv-zone-pill" style="color:${color};background:${color}18;border:1px solid ${color}35;margin-top:8px">
+        ${isCrossed ? '⚠️ CROSSED' : 'NOT CROSSED'}
+      </div>
+    </div>
+    <div style="padding:0 4px;margin-bottom:10px">
+      <div style="font-family:var(--mono);font-size:7.5px;color:var(--t2);margin-bottom:6px;letter-spacing:1px">MA CONVERGENCE</div>
+      <div style="height:6px;background:var(--bg2);border-radius:3px;overflow:hidden">
+        <div style="height:100%;width:${gapPct.toFixed(1)}%;background:${color};border-radius:3px;transition:width .5s"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:7.5px;color:var(--t2);margin-top:3px">
+        <span>Diverged</span><span>Crossing</span>
+      </div>
+    </div>
+    <div class="mvrv-stats">
+      ${ma111 > 0 ? `<div class="mvrv-stat-row">
+        <span class="mvrv-stat-lbl">111 DMA</span>
+        <span class="mvrv-stat-val" style="color:var(--b1)">$${ma111.toLocaleString('en',{maximumFractionDigits:0})}</span>
+      </div>` : ''}
+      ${ma350x2 > 0 ? `<div class="mvrv-stat-row">
+        <span class="mvrv-stat-lbl">350 DMA × 2</span>
+        <span class="mvrv-stat-val" style="color:var(--r2)">$${ma350x2.toLocaleString('en',{maximumFractionDigits:0})}</span>
+      </div>` : ''}
+      ${gap !== null ? `<div class="mvrv-stat-row">
+        <span class="mvrv-stat-lbl">GAP</span>
+        <span class="mvrv-stat-val" style="color:${color}">${gap >= 0?'+':''}${gap.toFixed(1)}%</span>
+      </div>` : ''}
+    </div>
+    <div class="mvrv-signal" style="color:${color};background:${color}0d;border-color:${color}30">
+      ${isCrossed ? 'Pi Cycle crossover detected — historically marks cycle tops within days/weeks.' :
+        gap !== null && gap > -5 ? 'MAs converging rapidly. Watch closely — potential top signal forming.' :
+        'MAs well separated. Pi Cycle not signaling a top. Trend likely intact.'}
+    </div>
+  `;
+}
+
+/* ── Panel 3: Puell Multiple → miner revenue cycle indicator ── */
+function renderMvrvRealized(json) {
+  const panel = $('mvrvRealizedPanel');
+  const badge = $('mvrvRealizedPanel')?.previousElementSibling?.querySelector('.pbadge');
+
+  if(!json || json.code !== '0' || !json.data) {
+    panel.innerHTML = `<div class="err-box">
+      <div class="err-icon" style="font-size:1.5rem">⛏</div>
+      <div class="err-msg">Puell Multiple data requires CoinGlass Starter plan.<br>
+      <small style="color:var(--t2)">Upgrade at coinglass.com/pricing</small></div>
+      <button class="retry-btn" onclick="loadMVRV()">↻ ${t('retry')}</button>
+    </div>`;
+    return;
+  }
+
+  const list   = Array.isArray(json.data) ? json.data : (json.data.list || []);
+  const latest = list[list.length - 1] || {};
+  const puell  = parseFloat(latest.value || latest.puell || latest.multiple || 0);
+
+  // Puell zones: <0.5 = accumulation, 0.5-1 = fair, 1-4 = bull, >4 = danger
+  const zone = puell < 0.5  ? { label:'MINER STRESS',  color:'#00e676', desc:'Miners selling at a loss. Historically strong accumulation zone.' } :
+               puell < 1.0  ? { label:'FAIR VALUE',     color:'#00b0ff', desc:'Miner revenue near yearly average. Balanced conditions.' } :
+               puell < 4.0  ? { label:'BULL MARKET',    color:'#ffd740', desc:'Miner revenue elevated. Bullish cycle conditions.' } :
+                              { label:'DANGER ZONE',    color:'#ff1744', desc:'Extreme miner revenue. Historically near cycle tops.' };
+
+  const vals = list.slice(-60).map(d => parseFloat(d.value || d.puell || 0)).filter(Boolean);
+  const spark = vals.length > 5 ? sparklineSVG(vals, zone.color) : '';
+
+  // Zone bar (log scale 0 → 8+)
+  const barPct = Math.min(100, (puell / 8) * 100);
+  const barColors = ['#00e676','#00b0ff','#ffd740','#ff1744'];
+
+  panel.innerHTML = `
+    <div style="text-align:center;margin-bottom:12px">
+      <div style="font-size:2rem;margin-bottom:4px">⛏</div>
+      <div class="mvrv-val-big" style="color:${zone.color}">${puell > 0 ? puell.toFixed(3) : '—'}</div>
+      <div class="mvrv-val-lbl">PUELL MULTIPLE</div>
+      <div class="mvrv-zone-pill" style="color:${zone.color};background:${zone.color}18;border:1px solid ${zone.color}35;margin-top:8px">
+        ${zone.label}
+      </div>
+    </div>
+    <div style="padding:0 4px;margin-bottom:10px">
+      <div class="mvrv-zonebar">
+        ${barColors.map(c => `<div class="mvrv-zone-seg" style="background:${c};opacity:.7"></div>`).join('')}
+      </div>
+      <div class="mvrv-zone-marker-wrap">
+        <div class="mvrv-zone-marker" style="left:${barPct.toFixed(1)}%"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:7.5px;color:var(--t2)">
+        <span>0</span><span>0.5</span><span>1</span><span>4</span><span>8+</span>
+      </div>
+    </div>
+    <div class="mvrv-stats">
+      <div class="mvrv-stat-row">
+        <span class="mvrv-stat-lbl">CURRENT</span>
+        <span class="mvrv-stat-val" style="color:${zone.color}">${puell > 0 ? puell.toFixed(3) : '—'}</span>
+      </div>
+      <div class="mvrv-stat-row">
+        <span class="mvrv-stat-lbl">ZONE</span>
+        <span class="mvrv-stat-val" style="color:${zone.color}">${zone.label}</span>
+      </div>
+    </div>
+    <div class="mvrv-signal" style="color:${zone.color};background:${zone.color}0d;border-color:${zone.color}30">
+      ${zone.desc}
+    </div>
+    ${spark ? `<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+      <div style="font-family:var(--mono);font-size:7.5px;color:var(--t2);margin-bottom:4px;letter-spacing:1px">60-DAY HISTORY</div>
+      ${spark}
+    </div>` : ''}
+    <div style="margin-top:6px;font-family:var(--mono);font-size:7.5px;color:var(--t2);opacity:.6">
+      Puell = Daily miner revenue / 365-day MA. Measures miner stress vs profitability.
+    </div>
+  `;
+}
+
+
+async function loadTPI() {
+  await Promise.allSettled([loadLTPI(), loadMTPI()]);
+}
+
+
+/* ════════════════════════════════════════════════════
+   MVRV — Market Value to Realized Value
+   Data: CoinGlass API via /api/coinglass proxy
+   Updates: every 30 minutes (server-side cache)
+════════════════════════════════════════════════════ */
+
+/* MVRV zone definitions */
+const MVRV_ZONES = [
+  { min:-99,  max:1,    label:'ACCUMULATION', color:'#00e676', bg:'rgba(0,230,118,.08)',  border:'rgba(0,230,118,.2)',  desc:'Price below realized cost basis. Historically strongest buy zone.', pct:0 },
+  { min:1,    max:2,    label:'FAIR VALUE',   color:'#00b0ff', bg:'rgba(0,176,255,.08)',  border:'rgba(0,176,255,.2)',  desc:'Market near equilibrium. Healthy accumulation still viable.', pct:25 },
+  { min:2,    max:3.5,  label:'BULL MARKET',  color:'#ffd740', bg:'rgba(255,215,64,.08)', border:'rgba(255,215,64,.2)', desc:'Holders in profit. Bullish trend confirmed. Consider reducing leverage.', pct:50 },
+  { min:3.5,  max:7,    label:'EUPHORIA',     color:'#ff6d00', bg:'rgba(255,109,0,.08)',  border:'rgba(255,109,0,.2)',  desc:'Historically near cycle tops. High risk. Consider taking profits.', pct:75 },
+  { min:7,    max:999,  label:'EXTREME TOP',  color:'#ff1744', bg:'rgba(255,23,68,.08)',  border:'rgba(255,23,68,.2)',  desc:'Extreme overvaluation. Every historical cycle topped in this zone.', pct:100 },
+];
+
+function getMvrvZone(ratio) {
+  return MVRV_ZONES.find(z => ratio >= z.min && ratio < z.max) || MVRV_ZONES[0];
+}
+
+/* Mini arc gauge for MVRV (0 to 7+ scale) */
+function mvrvGaugeSVG(ratio, color, maxVal=7) {
+  const capped = Math.min(ratio, maxVal);
+  const pct    = Math.max(0, Math.min(1, capped / maxVal));
+  const cx=90, cy=78, r=64;
+
+  function polar(p) {
+    const ang = Math.PI - p * Math.PI;
+    return { x: cx + r * Math.cos(ang), y: cy - r * Math.sin(ang) };
+  }
+  function arc(from, to, rr) {
+    const p1 = polar(from), p2 = polar(to);
+    return `M${p1.x.toFixed(1)},${p1.y.toFixed(1)} A${rr},${rr} 0 0 0 ${p2.x.toFixed(1)},${p2.y.toFixed(1)}`;
+  }
+
+  // 5 colored zones on the arc (proportional to log scale)
+  const zoneBreaks = [0, 1/7, 2/7, 3.5/7, 1];
+  const zoneColors = ['#00e676','#00b0ff','#ffd740','#ff6d00','#ff1744'];
+  const zoneArcs = zoneColors.map((c,i) =>
+    `<path d="${arc(zoneBreaks[i], zoneBreaks[i+1]||1, r)}" stroke="${c}" stroke-width="10" fill="none" opacity=".75" stroke-linecap="butt"/>`
+  ).join('');
+
+  // Ticks
+  const tickVals = [0,1,2,3.5,7];
+  const ticks = tickVals.map(v => {
+    const p = v/maxVal; const pa = polar(p);
+    const ang = Math.PI - p * Math.PI;
+    const ox = Math.cos(ang)*8, oy = -Math.sin(ang)*8;
+    return `<line x1="${pa.x.toFixed(1)}" y1="${pa.y.toFixed(1)}" x2="${(pa.x+ox).toFixed(1)}" y2="${(pa.y+oy).toFixed(1)}" stroke="rgba(255,255,255,.3)" stroke-width="1.5"/>
+    <text x="${(pa.x+ox*1.8).toFixed(0)}" y="${(pa.y+oy*1.8+3).toFixed(0)}" font-family="monospace" font-size="7" fill="rgba(255,255,255,.4)" text-anchor="middle">${v}</text>`;
+  }).join('');
+
+  // Needle
+  const needleAng = Math.PI - pct * Math.PI;
+  const nLen = r * 0.80;
+  const nx = cx + nLen * Math.cos(needleAng);
+  const ny = cy - nLen * Math.sin(needleAng);
+
+  return `<svg viewBox="0 0 180 88" width="180" height="88" style="display:block;margin:0 auto">
+    <path d="${arc(0,1,r)}" stroke="rgba(255,255,255,.06)" stroke-width="10" fill="none"/>
+    ${zoneArcs}
+    ${ticks}
+    <line x1="${cx}" y1="${cy}" x2="${nx.toFixed(1)}" y2="${ny.toFixed(1)}" stroke="${color}" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="${cx}" cy="${cy}" r="5" fill="${color}" opacity=".9"/>
+    <circle cx="${cx}" cy="${cy}" r="2" fill="var(--bg)"/>
+  </svg>`;
+}
+
+/* Sparkline SVG from array of values */
+function sparklineSVG(values, color, w=280, h=44) {
+  if(!values || values.length < 2) return '';
+  const mn = Math.min(...values), mx = Math.max(...values);
+  const rng = mx - mn || 1;
+  const pts = values.map((v,i) => {
+    const x = (i/(values.length-1)) * w;
+    const y = h - ((v-mn)/rng) * (h-4) - 2;
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(' ');
+  // Color gradient based on direction
+  const last  = values[values.length-1];
+  const first = values[0];
+  const trending = last > first ? color : '#ff1744';
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}" style="display:block">
+    <polyline points="${pts}" fill="none" stroke="${trending}" stroke-width="1.5" opacity=".8" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="${(w).toFixed(1)}" cy="${(h - ((last-mn)/rng) * (h-4) - 2).toFixed(1)}" r="3" fill="${trending}"/>
+  </svg>`;
+}
+
 /* ── Main MVRV loader ── */
 async function loadMVRV() {
   try {
-    const res = await fetch('/api/coinglass?endpoint=indicator/mvrv');
+    const res = await fetch('/api/coinglass?endpoint=bitcoin/rainbow-price-chart');
     if(!res.ok) throw new Error('API error ' + res.status);
     const json = await res.json();
 
@@ -2952,7 +3301,7 @@ function renderMvrvRatio(mvrv, history) {
     <div style="text-align:center;margin-bottom:10px">
       ${gauge}
       <div class="mvrv-val-big" style="color:${zone.color}">${mvrv.toFixed(2)}</div>
-      <div class="mvrv-val-lbl">MVRV RATIO</div>
+      <div class="mvrv-val-lbl">RAINBOW CHART</div>
       <div class="mvrv-zone-pill" style="color:${zone.color};background:${zone.bg};border:1px solid ${zone.border};margin-top:6px">
         ${zone.label}
       </div>
@@ -3051,7 +3400,7 @@ function renderMvrvRealized(realized, mvrv) {
 
   $('mvrvRealizedPanel').innerHTML = `
     <div style="text-align:center;margin-bottom:14px">
-      <div style="font-family:var(--mono);font-size:8.5px;color:var(--t2);letter-spacing:1.5px;margin-bottom:6px">REALIZED PRICE</div>
+      <div style="font-family:var(--mono);font-size:8.5px;color:var(--t2);letter-spacing:1.5px;margin-bottom:6px">PUELL MULTIPLE</div>
       <div class="mvrv-val-big" style="color:var(--b1);font-size:1.6rem">
         ${realized > 0 ? '$' + realized.toLocaleString('en', {maximumFractionDigits:0}) : '—'}
       </div>
@@ -3067,7 +3416,7 @@ function renderMvrvRealized(realized, mvrv) {
         <span class="mvrv-stat-val" style="color:${color}">${premium >= 0?'+':''}${premium.toFixed(1)}%</span>
       </div>` : ''}
       <div class="mvrv-stat-row">
-        <span class="mvrv-stat-lbl">MVRV RATIO</span>
+        <span class="mvrv-stat-lbl">RAINBOW CHART</span>
         <span class="mvrv-stat-val" style="color:var(--t1)">${mvrv > 0 ? mvrv.toFixed(2) + 'x' : '—'}</span>
       </div>
     </div>
