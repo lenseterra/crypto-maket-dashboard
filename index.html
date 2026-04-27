@@ -2813,86 +2813,10 @@ async function loadMTPI() {
 ════════════════════════════════════════════════════ */
 
 /* MVRV zone definitions */
-const MVRV_ZONES = [
-  { min:-99,  max:1,    label:'ACCUMULATION', color:'#00e676', bg:'rgba(0,230,118,.08)',  border:'rgba(0,230,118,.2)',  desc:'Price below realized cost basis. Historically strongest buy zone.', pct:0 },
-  { min:1,    max:2,    label:'FAIR VALUE',   color:'#00b0ff', bg:'rgba(0,176,255,.08)',  border:'rgba(0,176,255,.2)',  desc:'Market near equilibrium. Healthy accumulation still viable.', pct:25 },
-  { min:2,    max:3.5,  label:'BULL MARKET',  color:'#ffd740', bg:'rgba(255,215,64,.08)', border:'rgba(255,215,64,.2)', desc:'Holders in profit. Bullish trend confirmed. Consider reducing leverage.', pct:50 },
-  { min:3.5,  max:7,    label:'EUPHORIA',     color:'#ff6d00', bg:'rgba(255,109,0,.08)',  border:'rgba(255,109,0,.2)',  desc:'Historically near cycle tops. High risk. Consider taking profits.', pct:75 },
-  { min:7,    max:999,  label:'EXTREME TOP',  color:'#ff1744', bg:'rgba(255,23,68,.08)',  border:'rgba(255,23,68,.2)',  desc:'Extreme overvaluation. Every historical cycle topped in this zone.', pct:100 },
-];
-
-function getMvrvZone(ratio) {
-  return MVRV_ZONES.find(z => ratio >= z.min && ratio < z.max) || MVRV_ZONES[0];
-}
+;
 
 /* Mini arc gauge for MVRV (0 to 7+ scale) */
-function mvrvGaugeSVG(ratio, color, maxVal=7) {
-  const capped = Math.min(ratio, maxVal);
-  const pct    = Math.max(0, Math.min(1, capped / maxVal));
-  const cx=90, cy=78, r=64;
-
-  function polar(p) {
-    const ang = Math.PI - p * Math.PI;
-    return { x: cx + r * Math.cos(ang), y: cy - r * Math.sin(ang) };
-  }
-  function arc(from, to, rr) {
-    const p1 = polar(from), p2 = polar(to);
-    return `M${p1.x.toFixed(1)},${p1.y.toFixed(1)} A${rr},${rr} 0 0 0 ${p2.x.toFixed(1)},${p2.y.toFixed(1)}`;
-  }
-
-  // 5 colored zones on the arc (proportional to log scale)
-  const zoneBreaks = [0, 1/7, 2/7, 3.5/7, 1];
-  const zoneColors = ['#00e676','#00b0ff','#ffd740','#ff6d00','#ff1744'];
-  const zoneArcs = zoneColors.map((c,i) =>
-    `<path d="${arc(zoneBreaks[i], zoneBreaks[i+1]||1, r)}" stroke="${c}" stroke-width="10" fill="none" opacity=".75" stroke-linecap="butt"/>`
-  ).join('');
-
-  // Ticks
-  const tickVals = [0,1,2,3.5,7];
-  const ticks = tickVals.map(v => {
-    const p = v/maxVal; const pa = polar(p);
-    const ang = Math.PI - p * Math.PI;
-    const ox = Math.cos(ang)*8, oy = -Math.sin(ang)*8;
-    return `<line x1="${pa.x.toFixed(1)}" y1="${pa.y.toFixed(1)}" x2="${(pa.x+ox).toFixed(1)}" y2="${(pa.y+oy).toFixed(1)}" stroke="rgba(255,255,255,.3)" stroke-width="1.5"/>
-    <text x="${(pa.x+ox*1.8).toFixed(0)}" y="${(pa.y+oy*1.8+3).toFixed(0)}" font-family="monospace" font-size="7" fill="rgba(255,255,255,.4)" text-anchor="middle">${v}</text>`;
-  }).join('');
-
-  // Needle
-  const needleAng = Math.PI - pct * Math.PI;
-  const nLen = r * 0.80;
-  const nx = cx + nLen * Math.cos(needleAng);
-  const ny = cy - nLen * Math.sin(needleAng);
-
-  return `<svg viewBox="0 0 180 88" width="180" height="88" style="display:block;margin:0 auto">
-    <path d="${arc(0,1,r)}" stroke="rgba(255,255,255,.06)" stroke-width="10" fill="none"/>
-    ${zoneArcs}
-    ${ticks}
-    <line x1="${cx}" y1="${cy}" x2="${nx.toFixed(1)}" y2="${ny.toFixed(1)}" stroke="${color}" stroke-width="2.5" stroke-linecap="round"/>
-    <circle cx="${cx}" cy="${cy}" r="5" fill="${color}" opacity=".9"/>
-    <circle cx="${cx}" cy="${cy}" r="2" fill="var(--bg)"/>
-  </svg>`;
-}
-
 /* Sparkline SVG from array of values */
-function sparklineSVG(values, color, w=280, h=44) {
-  if(!values || values.length < 2) return '';
-  const mn = Math.min(...values), mx = Math.max(...values);
-  const rng = mx - mn || 1;
-  const pts = values.map((v,i) => {
-    const x = (i/(values.length-1)) * w;
-    const y = h - ((v-mn)/rng) * (h-4) - 2;
-    return `${x.toFixed(1)},${y.toFixed(1)}`;
-  }).join(' ');
-  // Color gradient based on direction
-  const last  = values[values.length-1];
-  const first = values[0];
-  const trending = last > first ? color : '#ff1744';
-  return `<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}" style="display:block">
-    <polyline points="${pts}" fill="none" stroke="${trending}" stroke-width="1.5" opacity=".8" stroke-linejoin="round" stroke-linecap="round"/>
-    <circle cx="${(w).toFixed(1)}" cy="${(h - ((last-mn)/rng) * (h-4) - 2).toFixed(1)}" r="3" fill="${trending}"/>
-  </svg>`;
-}
-
 /* ════════════════════════════════════════════════════
    MARKET CYCLE INDICATORS
    Uses CoinGlass API v4 via /api/coinglass proxy
