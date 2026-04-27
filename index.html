@@ -2812,238 +2812,272 @@ async function loadMTPI() {
    Updates: every 30 minutes (server-side cache)
 ════════════════════════════════════════════════════ */
 
-/* MVRV zone definitions */
-;
-
-/* Mini arc gauge for MVRV (0 to 7+ scale) */
-/* Sparkline SVG from array of values */
 /* ════════════════════════════════════════════════════
-   MARKET CYCLE INDICATORS
-   Uses CoinGlass API v4 via /api/coinglass proxy
-   Free plan endpoints:
-     - bitcoin/rainbow-price-chart (Rainbow + approximate MVRV)
-     - bitcoin/pi-cycle-top        (Pi Cycle moving averages)
-     - bitcoin/puell-multiple      (Puell Multiple)
+   CYCLE INDICATORS — Calculated from Binance klines
+   No external API needed. Pure math on price history.
+
+   1. Rainbow Chart  — Log regression bands on BTC price
+   2. Pi Cycle Top   — 111DMA vs 350DMA×2 crossover
+   3. Puell Multiple — Daily issuance USD / 365d MA
+      (approximated from price + known block reward schedule)
 ════════════════════════════════════════════════════ */
 
+/* Sparkline SVG */
 
+/* Rainbow band helper (log regression model) */
+function getRainbowBand(price, daysSinceGenesis) {
+  // Logarithmic regression: ln(price) = a * ln(days) + b
+  // Calibrated to BTC history (genesis = Jan 3 2009)
+  const a = 5.84, b = -17.01;
+  const logP = Math.log(price);
+  const logD = Math.log(daysSinceGenesis);
+  const baseLogP = a * logD + b;  // regression center
 
-/* ── Panel 1: Rainbow Chart → approximate cycle position ── */
-function renderMvrvRatio(json) {
-  const panel = $('mvrvRatioPanel');
-  const badge = $('mvrvBadge');
+  // Rainbow bands (offsets from regression line)
+  const bands = [
+    { name: 'Maximum bubble',   offset: 2.0,  color:'#ff1744', action:'SELL',       bg:'rgba(255,23,68,.08)',  border:'rgba(255,23,68,.2)' },
+    { name: 'Sell. Seriously',  offset: 1.5,  color:'#ff6d00', action:'SELL ZONE',  bg:'rgba(255,109,0,.08)', border:'rgba(255,109,0,.2)' },
+    { name: 'FOMO intensifies', offset: 1.0,  color:'#ffd740', action:'LATE BULL',  bg:'rgba(255,215,64,.08)',border:'rgba(255,215,64,.2)' },
+    { name: 'Is this a bubble?',offset: 0.5,  color:'#a5d6a7', action:'BULL TREND', bg:'rgba(165,214,167,.08)',border:'rgba(165,214,167,.2)' },
+    { name: 'Still cheap',      offset: 0.0,  color:'#00b0ff', action:'FAIR VALUE', bg:'rgba(0,176,255,.08)', border:'rgba(0,176,255,.2)' },
+    { name: 'Accumulate',       offset:-0.5,  color:'#00e676', action:'ACCUMULATE', bg:'rgba(0,230,118,.08)', border:'rgba(0,230,118,.2)' },
+    { name: 'BUY!',             offset:-1.0,  color:'#00c853', action:'STRONG BUY', bg:'rgba(0,200,83,.08)',  border:'rgba(0,200,83,.2)' },
+    { name: 'Fire Sale',        offset:-1.5,  color:'#1b5e20', action:'FIRE SALE',  bg:'rgba(27,94,32,.08)',  border:'rgba(27,94,32,.2)' },
+  ];
 
-  if(!json || json.code !== '0' || !json.data) {
-    // Show helpful message if API key works but data unavailable
-    panel.innerHTML = `<div class="err-box">
-      <div class="err-icon" style="font-size:1.5rem">🌈</div>
-      <div class="err-msg">Rainbow Chart data requires CoinGlass Starter plan.<br>
-      <small style="color:var(--t2)">Upgrade at coinglass.com/pricing</small></div>
-      <button class="retry-btn" onclick="loadMVRV()">↻ ${t('retry')}</button>
-    </div>`;
-    if(badge) { badge.textContent='N/A'; badge.style.color='var(--t2)'; }
-    return;
+  // Find which band the current price falls in
+  for(let i = 0; i < bands.length - 1; i++) {
+    const upper = Math.exp(baseLogP + bands[i].offset);
+    const lower = Math.exp(baseLogP + bands[i+1].offset);
+    if(price >= lower) return { ...bands[i], upper, lower, position: i };
   }
+  return { ...bands[bands.length-1], upper: Math.exp(baseLogP - 1.0), lower: 0, position: bands.length-1 };
+}
 
-  // Extract latest data point
-  const list = Array.isArray(json.data) ? json.data : (json.data.list || []);
-  const latest = list[list.length - 1] || {};
-  const price   = parseFloat(state.prices['BTCUSDT']?.lastPrice || latest.price || 0);
-  const band    = latest.band || latest.bandName || latest.level || '';
-  const ratio   = latest.ratio || latest.mvrvRatio || latest.value || null;
+/* ── Main cycle loader — all from Binance ── */
+async function loadMVRV() {
+  try {
+    // Fetch 400 daily candles from Binance (free, no key needed)
+    const res = await fetch('https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1d&limit=400');
+    if(!res.ok) throw new Error('Binance klines error');
+    const raw = await res.json();
 
-  // Rainbow bands → cycle zones
-  const bandMap = {
-    'Maximum bubble territory': { label:'EXTREME TOP',  color:'#ff1744', desc:'Historically marks cycle tops.' },
-    'Sell. Seriously, SELL!':   { label:'SELL ZONE',    color:'#ff6d00', desc:'Strong sell signal historically.' },
-    'FOMO intensifies':         { label:'EUPHORIA',     color:'#ffd740', desc:'Late cycle — reduce exposure.' },
-    'Is this a bubble?':        { label:'LATE BULL',    color:'#a5d6a7', desc:'Bull market — manage risk.' },
-    'Still cheap':              { label:'FAIR VALUE',   color:'#00b0ff', desc:'Reasonable valuation.' },
-    'Accumulate':               { label:'ACCUMULATE',   color:'#00e676', desc:'Historically good entry zone.' },
-    'BUY!':                     { label:'STRONG BUY',   color:'#00e676', desc:'Near cycle bottom historically.' },
-    'Basically a Fire Sale':    { label:'FIRE SALE',    color:'#00e676', desc:'Extreme undervaluation.' },
-  };
-  const zone = bandMap[band] || { label: band || 'LOADING', color:'var(--t2)', desc:'Cycle position data.' };
+    const closes  = raw.map(k => parseFloat(k[4]));
+    const volumes = raw.map(k => parseFloat(k[7])); // USD volume
+    const times   = raw.map(k => k[0]); // timestamps
+    const n = closes.length;
 
-  if(badge) { badge.textContent=zone.label; badge.style.color=zone.color; badge.style.background=zone.color+'18'; }
+    // Genesis date: Jan 3, 2009
+    const genesis = new Date('2009-01-03').getTime();
+    const lastTime = times[n-1];
+    const daysSinceGenesis = (lastTime - genesis) / 86400000;
 
-  // Sparkline from history
-  const vals = list.slice(-60).map(d => parseFloat(d.ratio || d.value || d.price || 0)).filter(Boolean);
-  const spark = vals.length > 5 ? sparklineSVG(vals, zone.color) : '';
+    const price = closes[n-1];
 
-  panel.innerHTML = `
+    // ── 1. Rainbow Chart ──
+    const band = getRainbowBand(price, daysSinceGenesis);
+    renderRainbow(price, band, closes.slice(-60));
+
+    // ── 2. Pi Cycle Top ──
+    // 111DMA and 350DMA×2
+    const sma = (arr, len, end) => {
+      const s = Math.max(0, end - len + 1);
+      return arr.slice(s, end+1).reduce((a,b)=>a+b,0) / (end - s + 1);
+    };
+    const last = n-1;
+    const ma111   = sma(closes, 111, last);
+    const ma350x2 = sma(closes, 350, last) * 2;
+    const ma111_7ago   = n > 7  ? sma(closes, 111, last-7)  : ma111;
+    const ma350x2_7ago = n > 7  ? sma(closes, 350, last-7) * 2 : ma350x2;
+    // History of (ma111 / ma350x2) ratio for sparkline
+    const piHistory = [];
+    for(let i = Math.max(0, n-60); i < n; i++) {
+      const m1 = sma(closes, Math.min(111, i+1), i);
+      const m2 = sma(closes, Math.min(350, i+1), i) * 2;
+      piHistory.push(m1 / (m2 || 1));
+    }
+    renderPiCycle(price, ma111, ma350x2, ma111_7ago, ma350x2_7ago, piHistory);
+
+    // ── 3. Puell Multiple ──
+    // Puell = daily USD issuance / 365d MA of daily USD issuance
+    // Approximate daily issuance: 6.25 BTC/block × 144 blocks/day × price
+    // Post-2024 halving: 3.125 BTC/block
+    const halvingDate4 = new Date('2024-04-20').getTime();
+    const dailyIssuance = closes.map((c, i) => {
+      const ts = times[i];
+      const reward = ts >= halvingDate4 ? 3.125 : 6.25;
+      return reward * 144 * c; // 144 blocks/day
+    });
+    const puellHistory = [];
+    for(let i = 0; i < n; i++) {
+      const ma365 = sma(dailyIssuance, Math.min(365, i+1), i);
+      puellHistory.push(dailyIssuance[i] / (ma365 || 1));
+    }
+    const puell = puellHistory[n-1];
+    renderPuell(price, puell, puellHistory.slice(-60));
+
+  } catch(e) {
+    console.warn('Cycle indicators error:', e.message);
+    ['mvrvRatioPanel','mvrvZPanel','mvrvRealizedPanel'].forEach(id => {
+      const el = $(id);
+      if(el) el.innerHTML = `<div class="err-box">
+        <div class="err-msg">Error loading cycle data.<br><small>${e.message}</small></div>
+        <button class="retry-btn" onclick="loadMVRV()">↻ Retry</button>
+      </div>`;
+    });
+  }
+}
+
+/* ── Render Rainbow ── */
+function renderRainbow(price, band, history) {
+  const badge = $('mvrvBadge');
+  if(badge) { badge.textContent=band.action; badge.style.color=band.color; badge.style.background=band.color+'18'; }
+
+  const spark = sparklineSVG(history, band.color);
+  const pos   = band.position; // 0=top, 7=bottom
+  const barPct = ((7 - pos) / 7 * 100).toFixed(0);
+
+  $('mvrvRatioPanel').innerHTML = `
     <div style="text-align:center;margin-bottom:12px">
-      <div style="font-size:2rem;margin-bottom:4px">🌈</div>
-      <div class="mvrv-val-big" style="color:${zone.color};font-size:1.5rem">${zone.label}</div>
-      <div class="mvrv-val-lbl" style="margin-top:3px">RAINBOW CHART BAND</div>
-      <div class="mvrv-zone-pill" style="color:${zone.color};background:${zone.color}18;border:1px solid ${zone.color}35;margin-top:8px">
-        ${band || zone.label}
+      <div style="font-size:1.8rem;margin-bottom:4px">🌈</div>
+      <div style="font-family:var(--mono);font-size:1.3rem;font-weight:700;color:${band.color};line-height:1">${band.action}</div>
+      <div style="font-family:var(--mono);font-size:8px;color:var(--t2);letter-spacing:1.5px;margin-top:3px">RAINBOW BAND</div>
+      <div style="display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:20px;margin-top:8px;font-family:var(--mono);font-size:9px;font-weight:700;color:${band.color};background:${band.bg};border:1px solid ${band.border}">
+        "${band.name}"
       </div>
     </div>
-    <div class="mvrv-stats">
-      <div class="mvrv-stat-row">
-        <span class="mvrv-stat-lbl">SPOT PRICE</span>
-        <span class="mvrv-stat-val" style="color:var(--t3)">$${price > 0 ? price.toLocaleString('en',{maximumFractionDigits:0}) : '—'}</span>
+    <div style="padding:0 4px;margin-bottom:12px">
+      <div style="height:8px;border-radius:4px;overflow:hidden;display:flex;margin-bottom:4px">
+        ${['#1b5e20','#00c853','#00e676','#00b0ff','#a5d6a7','#ffd740','#ff6d00','#ff1744'].map(c=>`<div style="flex:1;background:${c};opacity:.75"></div>`).join('')}
       </div>
-      ${ratio ? `<div class="mvrv-stat-row">
-        <span class="mvrv-stat-lbl">RAINBOW CHART</span>
-        <span class="mvrv-stat-val" style="color:${zone.color}">${parseFloat(ratio).toFixed(2)}x</span>
-      </div>` : ''}
+      <div style="position:relative;height:12px">
+        <div style="position:absolute;left:${barPct}%;top:0;width:2px;height:12px;background:#fff;border-radius:1px;transform:translateX(-50%);box-shadow:0 0 6px rgba(255,255,255,.6)"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:7px;color:var(--t2);margin-top:2px">
+        <span>BOTTOM</span><span>TOP</span>
+      </div>
     </div>
-    <div class="mvrv-signal" style="color:${zone.color};background:${zone.color}0d;border-color:${zone.color}30">
-      ${zone.desc}
+    <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--p2);border-radius:7px;border:1px solid var(--border)">
+        <span style="font-family:var(--mono);font-size:8.5px;color:var(--t2)">BTC PRICE</span>
+        <span style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--t3)">$${price.toLocaleString('en',{maximumFractionDigits:0})}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--p2);border-radius:7px;border:1px solid var(--border)">
+        <span style="font-family:var(--mono);font-size:8.5px;color:var(--t2)">BAND UPPER</span>
+        <span style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--t2)">$${Math.round(band.upper).toLocaleString('en')}</span>
+      </div>
+    </div>
+    <div style="padding:8px 10px;border-radius:8px;font-family:var(--mono);font-size:8.5px;line-height:1.65;border:1px solid ${band.border};background:${band.bg};color:${band.color}">
+      Based on BTC log regression model. Not financial advice.
     </div>
     ${spark ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
-      <div style="font-family:var(--mono);font-size:7.5px;color:var(--t2);margin-bottom:4px;letter-spacing:1px">HISTORY</div>
-      ${spark}
-    </div>` : ''}
+      <div style="font-family:var(--mono);font-size:7.5px;color:var(--t2);margin-bottom:4px;letter-spacing:1px">60-DAY PRICE</div>${spark}</div>` : ''}
   `;
 }
 
-/* ── Panel 2: Pi Cycle Top → MA crossover cycle signal ── */
-function renderMvrvZ(json) {
-  const panel = $('mvrvZPanel');
+/* ── Render Pi Cycle ── */
+function renderPiCycle(price, ma111, ma350x2, ma111prev, ma350x2prev, history) {
+  const gap = ma350x2 > 0 ? ((ma111 - ma350x2) / ma350x2 * 100) : 0;
+  const crossed = ma111 > ma350x2;
+  const converging = Math.abs(gap) < Math.abs(((ma111prev - ma350x2prev) / ma350x2prev * 100));
+  const color = crossed ? '#ff1744' : Math.abs(gap) < 10 ? '#ffd740' : '#00e676';
+  const state = crossed ? 'TOP SIGNAL' : Math.abs(gap) < 5 ? 'CONVERGING' : 'SAFE ZONE';
+
   const badge = $('mvrvZBadge');
+  if(badge) { badge.textContent=state; badge.style.color=color; badge.style.background=color+'18'; }
 
-  if(!json || json.code !== '0' || !json.data) {
-    panel.innerHTML = `<div class="err-box">
-      <div class="err-icon" style="font-size:1.5rem">π</div>
-      <div class="err-msg">Pi Cycle data requires CoinGlass Starter plan.<br>
-      <small style="color:var(--t2)">Upgrade at coinglass.com/pricing</small></div>
-      <button class="retry-btn" onclick="loadMVRV()">↻ ${t('retry')}</button>
-    </div>`;
-    if(badge) { badge.textContent='N/A'; badge.style.color='var(--t2)'; }
-    return;
-  }
+  const barPct = Math.max(0, Math.min(100, ((gap + 30) / 60 * 100)));
+  const spark  = sparklineSVG(history, color);
 
-  const list    = Array.isArray(json.data) ? json.data : (json.data.list || []);
-  const latest  = list[list.length - 1] || {};
-  const ma111   = parseFloat(latest.ma111 || latest.fast || 0);
-  const ma350x2 = parseFloat(latest.ma350x2 || latest.slow || 0);
-  const price   = parseFloat(state.prices['BTCUSDT']?.lastPrice || 0);
-
-  // Pi Cycle: when 111DMA crosses above 350DMAx2 → cycle top signal
-  const gap = ma350x2 > 0 ? ((ma111 - ma350x2) / ma350x2 * 100) : null;
-  const isCrossed = ma111 > ma350x2;
-  const color = isCrossed ? '#ff1744' : gap !== null && gap > -5 ? '#ffd740' : '#00e676';
-  const stateLabel = isCrossed ? 'TOP SIGNAL' : gap !== null && gap > -5 ? 'APPROACHING' : 'SAFE ZONE';
-
-  if(badge) { badge.textContent=stateLabel; badge.style.color=color; badge.style.background=color+'18'; }
-
-  // Bar showing gap between MAs
-  const gapPct = gap !== null ? Math.max(0, Math.min(100, (gap + 20) / 40 * 100)) : 50;
-
-  panel.innerHTML = `
+  $('mvrvZPanel').innerHTML = `
     <div style="text-align:center;margin-bottom:12px">
-      <div style="font-size:2rem;margin-bottom:4px">π</div>
-      <div class="mvrv-val-big" style="color:${color};font-size:1.5rem">${stateLabel}</div>
-      <div class="mvrv-val-lbl">PI CYCLE TOP INDICATOR</div>
-      <div class="mvrv-zone-pill" style="color:${color};background:${color}18;border:1px solid ${color}35;margin-top:8px">
-        ${isCrossed ? '⚠️ CROSSED' : 'NOT CROSSED'}
+      <div style="font-size:1.8rem;margin-bottom:4px">π</div>
+      <div style="font-family:var(--mono);font-size:1.3rem;font-weight:700;color:${color};line-height:1">${state}</div>
+      <div style="font-family:var(--mono);font-size:8px;color:var(--t2);letter-spacing:1.5px;margin-top:3px">PI CYCLE TOP</div>
+      <div style="display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:20px;margin-top:8px;font-family:var(--mono);font-size:9px;font-weight:700;color:${color};background:${color}18;border:1px solid ${color}35">
+        ${crossed ? '⚠️ CROSSED' : converging ? '↔ CONVERGING' : '✓ SEPARATED'}
       </div>
     </div>
-    <div style="padding:0 4px;margin-bottom:10px">
-      <div style="font-family:var(--mono);font-size:7.5px;color:var(--t2);margin-bottom:6px;letter-spacing:1px">MA CONVERGENCE</div>
+    <div style="padding:0 4px;margin-bottom:12px">
+      <div style="font-family:var(--mono);font-size:7.5px;color:var(--t2);margin-bottom:5px;letter-spacing:1px">111DMA vs 350DMA×2 GAP</div>
       <div style="height:6px;background:var(--bg2);border-radius:3px;overflow:hidden">
-        <div style="height:100%;width:${gapPct.toFixed(1)}%;background:${color};border-radius:3px;transition:width .5s"></div>
+        <div style="height:100%;width:${barPct.toFixed(0)}%;background:${color};border-radius:3px"></div>
       </div>
-      <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:7.5px;color:var(--t2);margin-top:3px">
-        <span>Diverged</span><span>Crossing</span>
+      <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:7px;color:var(--t2);margin-top:3px">
+        <span>−30%</span><span>0</span><span>+30%</span>
       </div>
     </div>
-    <div class="mvrv-stats">
-      ${ma111 > 0 ? `<div class="mvrv-stat-row">
-        <span class="mvrv-stat-lbl">111 DMA</span>
-        <span class="mvrv-stat-val" style="color:var(--b1)">$${ma111.toLocaleString('en',{maximumFractionDigits:0})}</span>
-      </div>` : ''}
-      ${ma350x2 > 0 ? `<div class="mvrv-stat-row">
-        <span class="mvrv-stat-lbl">350 DMA × 2</span>
-        <span class="mvrv-stat-val" style="color:var(--r2)">$${ma350x2.toLocaleString('en',{maximumFractionDigits:0})}</span>
-      </div>` : ''}
-      ${gap !== null ? `<div class="mvrv-stat-row">
-        <span class="mvrv-stat-lbl">GAP</span>
-        <span class="mvrv-stat-val" style="color:${color}">${gap >= 0?'+':''}${gap.toFixed(1)}%</span>
-      </div>` : ''}
+    <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--p2);border-radius:7px;border:1px solid var(--border)">
+        <span style="font-family:var(--mono);font-size:8.5px;color:var(--b1)">111 DMA</span>
+        <span style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--b1)">$${Math.round(ma111).toLocaleString('en')}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--p2);border-radius:7px;border:1px solid var(--border)">
+        <span style="font-family:var(--mono);font-size:8.5px;color:var(--r2)">350 DMA×2</span>
+        <span style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--r2)">$${Math.round(ma350x2).toLocaleString('en')}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--p2);border-radius:7px;border:1px solid var(--border)">
+        <span style="font-family:var(--mono);font-size:8.5px;color:var(--t2)">GAP</span>
+        <span style="font-family:var(--mono);font-size:10px;font-weight:700;color:${color}">${gap>=0?'+':''}${gap.toFixed(1)}%</span>
+      </div>
     </div>
-    <div class="mvrv-signal" style="color:${color};background:${color}0d;border-color:${color}30">
-      ${isCrossed ? 'Pi Cycle crossover detected — historically marks cycle tops within days/weeks.' :
-        gap !== null && gap > -5 ? 'MAs converging rapidly. Watch closely — potential top signal forming.' :
-        'MAs well separated. Pi Cycle not signaling a top. Trend likely intact.'}
+    <div style="padding:8px 10px;border-radius:8px;font-family:var(--mono);font-size:8.5px;line-height:1.65;border:1px solid ${color}35;background:${color}0d;color:${color}">
+      ${crossed ? 'Crossover detected — historically marks cycle tops within days/weeks.' :
+        Math.abs(gap) < 5 ? 'MAs converging rapidly. Watch for potential top signal.' :
+        'MAs well separated. No top signal. Trend likely intact.'}
     </div>
+    ${spark ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+      <div style="font-family:var(--mono);font-size:7.5px;color:var(--t2);margin-bottom:4px;letter-spacing:1px">111/350×2 RATIO (60D)</div>${spark}</div>` : ''}
   `;
 }
 
-/* ── Panel 3: Puell Multiple → miner revenue cycle indicator ── */
-function renderMvrvRealized(json) {
-  const panel = $('mvrvRealizedPanel');
-  const badge = $('mvrvRealizedPanel')?.previousElementSibling?.querySelector('.pbadge');
+/* ── Render Puell ── */
+function renderPuell(price, puell, history) {
+  const zone = puell < 0.5  ? { label:'MINER STRESS',  color:'#00e676', desc:'Miners selling at loss. Strong accumulation zone historically.' } :
+               puell < 1.0  ? { label:'FAIR VALUE',    color:'#00b0ff', desc:'Miner revenue near yearly average. Balanced conditions.' } :
+               puell < 4.0  ? { label:'BULL MARKET',   color:'#ffd740', desc:'Miner revenue elevated. Mid-to-late bull conditions.' } :
+                              { label:'DANGER ZONE',   color:'#ff1744', desc:'Extreme miner revenue. Historically near cycle tops.' };
 
-  if(!json || json.code !== '0' || !json.data) {
-    panel.innerHTML = `<div class="err-box">
-      <div class="err-icon" style="font-size:1.5rem">⛏</div>
-      <div class="err-msg">Puell Multiple data requires CoinGlass Starter plan.<br>
-      <small style="color:var(--t2)">Upgrade at coinglass.com/pricing</small></div>
-      <button class="retry-btn" onclick="loadMVRV()">↻ ${t('retry')}</button>
-    </div>`;
-    return;
-  }
+  const spark  = sparklineSVG(history, zone.color);
+  const barPct = Math.min(100, (puell / 5) * 100).toFixed(0);
 
-  const list   = Array.isArray(json.data) ? json.data : (json.data.list || []);
-  const latest = list[list.length - 1] || {};
-  const puell  = parseFloat(latest.value || latest.puell || latest.multiple || 0);
-
-  // Puell zones: <0.5 = accumulation, 0.5-1 = fair, 1-4 = bull, >4 = danger
-  const zone = puell < 0.5  ? { label:'MINER STRESS',  color:'#00e676', desc:'Miners selling at a loss. Historically strong accumulation zone.' } :
-               puell < 1.0  ? { label:'FAIR VALUE',     color:'#00b0ff', desc:'Miner revenue near yearly average. Balanced conditions.' } :
-               puell < 4.0  ? { label:'BULL MARKET',    color:'#ffd740', desc:'Miner revenue elevated. Bullish cycle conditions.' } :
-                              { label:'DANGER ZONE',    color:'#ff1744', desc:'Extreme miner revenue. Historically near cycle tops.' };
-
-  const vals = list.slice(-60).map(d => parseFloat(d.value || d.puell || 0)).filter(Boolean);
-  const spark = vals.length > 5 ? sparklineSVG(vals, zone.color) : '';
-
-  // Zone bar (log scale 0 → 8+)
-  const barPct = Math.min(100, (puell / 8) * 100);
-  const barColors = ['#00e676','#00b0ff','#ffd740','#ff1744'];
-
-  panel.innerHTML = `
+  $('mvrvRealizedPanel').innerHTML = `
     <div style="text-align:center;margin-bottom:12px">
-      <div style="font-size:2rem;margin-bottom:4px">⛏</div>
-      <div class="mvrv-val-big" style="color:${zone.color}">${puell > 0 ? puell.toFixed(3) : '—'}</div>
-      <div class="mvrv-val-lbl">PUELL MULTIPLE</div>
-      <div class="mvrv-zone-pill" style="color:${zone.color};background:${zone.color}18;border:1px solid ${zone.color}35;margin-top:8px">
+      <div style="font-size:1.8rem;margin-bottom:4px">⛏</div>
+      <div style="font-family:var(--mono);font-size:1.3rem;font-weight:700;color:${zone.color};line-height:1">${puell.toFixed(3)}</div>
+      <div style="font-family:var(--mono);font-size:8px;color:var(--t2);letter-spacing:1.5px;margin-top:3px">PUELL MULTIPLE</div>
+      <div style="display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:20px;margin-top:8px;font-family:var(--mono);font-size:9px;font-weight:700;color:${zone.color};background:${zone.color}18;border:1px solid ${zone.color}35">
         ${zone.label}
       </div>
     </div>
-    <div style="padding:0 4px;margin-bottom:10px">
-      <div class="mvrv-zonebar">
-        ${barColors.map(c => `<div class="mvrv-zone-seg" style="background:${c};opacity:.7"></div>`).join('')}
+    <div style="padding:0 4px;margin-bottom:12px">
+      <div style="height:8px;border-radius:4px;overflow:hidden;display:flex;margin-bottom:4px">
+        ${['#00e676','#00b0ff','#ffd740','#ff1744'].map(c=>`<div style="flex:1;background:${c};opacity:.7"></div>`).join('')}
       </div>
-      <div class="mvrv-zone-marker-wrap">
-        <div class="mvrv-zone-marker" style="left:${barPct.toFixed(1)}%"></div>
+      <div style="position:relative;height:12px">
+        <div style="position:absolute;left:${barPct}%;top:0;width:2px;height:12px;background:#fff;border-radius:1px;transform:translateX(-50%);box-shadow:0 0 6px rgba(255,255,255,.6)"></div>
       </div>
-      <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:7.5px;color:var(--t2)">
-        <span>0</span><span>0.5</span><span>1</span><span>4</span><span>8+</span>
-      </div>
-    </div>
-    <div class="mvrv-stats">
-      <div class="mvrv-stat-row">
-        <span class="mvrv-stat-lbl">CURRENT</span>
-        <span class="mvrv-stat-val" style="color:${zone.color}">${puell > 0 ? puell.toFixed(3) : '—'}</span>
-      </div>
-      <div class="mvrv-stat-row">
-        <span class="mvrv-stat-lbl">ZONE</span>
-        <span class="mvrv-stat-val" style="color:${zone.color}">${zone.label}</span>
+      <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:7px;color:var(--t2);margin-top:2px">
+        <span>0 (STRESS)</span><span>1</span><span>4</span><span>5+</span>
       </div>
     </div>
-    <div class="mvrv-signal" style="color:${zone.color};background:${zone.color}0d;border-color:${zone.color}30">
+    <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--p2);border-radius:7px;border:1px solid var(--border)">
+        <span style="font-family:var(--mono);font-size:8.5px;color:var(--t2)">PUELL VALUE</span>
+        <span style="font-family:var(--mono);font-size:10px;font-weight:700;color:${zone.color}">${puell.toFixed(3)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--p2);border-radius:7px;border:1px solid var(--border)">
+        <span style="font-family:var(--mono);font-size:8.5px;color:var(--t2)">BLOCK REWARD</span>
+        <span style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--t1)">3.125 BTC</span>
+      </div>
+    </div>
+    <div style="padding:8px 10px;border-radius:8px;font-family:var(--mono);font-size:8.5px;line-height:1.65;border:1px solid ${zone.color}35;background:${zone.color}0d;color:${zone.color}">
       ${zone.desc}
     </div>
-    ${spark ? `<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
-      <div style="font-family:var(--mono);font-size:7.5px;color:var(--t2);margin-bottom:4px;letter-spacing:1px">60-DAY HISTORY</div>
-      ${spark}
-    </div>` : ''}
+    ${spark ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+      <div style="font-family:var(--mono);font-size:7.5px;color:var(--t2);margin-bottom:4px;letter-spacing:1px">60-DAY PUELL (EST.)</div>${spark}</div>` : ''}
     <div style="margin-top:6px;font-family:var(--mono);font-size:7.5px;color:var(--t2);opacity:.6">
-      Puell = Daily miner revenue / 365-day MA. Measures miner stress vs profitability.
+      Estimated from Binance price + known block reward schedule.
     </div>
   `;
 }
@@ -3142,24 +3176,6 @@ function sparklineSVG(values, color, w=280, h=44) {
 }
 
 /* ── Main MVRV loader ── */
-async function loadMVRV() {
-  try {
-    const [r1, r2, r3] = await Promise.allSettled([
-      fetch('/api/coinglass?endpoint=bitcoin/rainbow-price-chart'),
-      fetch('/api/coinglass?endpoint=bitcoin/pi-cycle-top'),
-      fetch('/api/coinglass?endpoint=bitcoin/puell-multiple'),
-    ]);
-    const safeJson = async (r) => {
-      try { if(r.status==='fulfilled'&&r.value.ok) return await r.value.json(); } catch(e){}
-      return null;
-    };
-    renderMvrvRatio(await safeJson(r1));
-    renderMvrvZ(await safeJson(r2));
-    renderMvrvRealized(await safeJson(r3));
-  } catch(e) {
-    console.warn('MVRV:', e.message);
-  }
-}
 
 function renderMvrvRatio(mvrv, history) {
   const zone   = getMvrvZone(mvrv);
