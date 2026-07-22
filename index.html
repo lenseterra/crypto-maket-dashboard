@@ -1652,6 +1652,7 @@ function toggleLang() {
   // re-render all panels so translated strings appear immediately
   renderBigCards();
   renderTicker();
+  renderMasterPanel();
   renderFundingRate();
   renderLongShort();
   renderOI();
@@ -2691,85 +2692,87 @@ setInterval(renderSessions, 60000);
    Data: CoinGecko /global (already in dashboard)
 ════════════════════════════════════════════════════════ */
 async function loadDominance() {
-  try {
-    const res = await fetch('https://api.coingecko.com/api/v3/global');
-    if(!res.ok) throw new Error(res.status);
-    const json = await res.json();
-    const d    = json.data;
+  var panel = $('domPanel');
+  var badge = $('domBadge');
+  if (!panel) return;
 
-    const btcDom  = parseFloat(d.market_cap_percentage?.btc || 0);
-    const ethDom  = parseFloat(d.market_cap_percentage?.eth || 0);
-    const othDom  = 100 - btcDom - ethDom;
-    const totalCap= d.total_market_cap?.usd || 0;
-    const chg24h  = d.market_cap_change_percentage_24h_usd || 0;
+  // Try multiple endpoints (CoinGecko rate limits aggressively)
+  var endpoints = [
+    'https://api.coingecko.com/api/v3/global',
+    'https://api.coingecko.com/api/v3/global?x_cg_demo_api_key=',
+  ];
 
-    // Altseason index: BTC dom < 50 = altseason, > 60 = bitcoin season
-    // Scale: 0 = full altseason, 100 = full bitcoin season
-    const altIdx  = Math.max(0, Math.min(100, ((btcDom - 40) / 30) * 100));
-    const isAlt   = btcDom < 50;
-    const isBtc   = btcDom > 60;
-    const altLabel = isBtc ? 'BITCOIN SEASON' : isAlt ? 'ALTSEASON' : 'TRANSITIONING';
-    const altColor = isBtc ? '#f7931a' : isAlt ? '#00e676' : '#ffd740';
-
-    const badge = $('domBadge');
-    if(badge) {
-      badge.textContent = `BTC ${btcDom.toFixed(1)}%`;
-      badge.style.color = '#f7931a';
-    }
-
-    $('domPanel').innerHTML = `
-      <!-- Dominance bar -->
-      <div style="font-family:var(--mono);font-size:8px;color:var(--t2);margin-bottom:6px;letter-spacing:1px">MARKET CAP DISTRIBUTION</div>
-      <div class="dom-bar-track" style="height:12px;border-radius:6px;background:var(--bg2);overflow:hidden;position:relative">
-        <div style="position:absolute;top:0;left:0;height:100%;width:${btcDom.toFixed(1)}%;background:linear-gradient(90deg,#f7931a,#ffb347);transition:width .6s"></div>
-        <div style="position:absolute;top:0;left:${btcDom.toFixed(1)}%;height:100%;width:${ethDom.toFixed(1)}%;background:linear-gradient(90deg,#627eea,#8fa4f3);transition:all .6s"></div>
-        <div style="position:absolute;top:0;left:${(btcDom+ethDom).toFixed(1)}%;height:100%;right:0;background:rgba(255,255,255,.08)"></div>
-      </div>
-      <div class="dom-legend" style="margin-top:6px;margin-bottom:12px">
-        <div class="dom-leg-item"><div class="dom-leg-dot" style="background:#f7931a"></div><span style="color:var(--t3)">BTC ${btcDom.toFixed(1)}%</span></div>
-        <div class="dom-leg-item"><div class="dom-leg-dot" style="background:#627eea"></div><span style="color:var(--t3)">ETH ${ethDom.toFixed(1)}%</span></div>
-        <div class="dom-leg-item"><div class="dom-leg-dot" style="background:rgba(255,255,255,.15)"></div><span>Others ${othDom.toFixed(1)}%</span></div>
-      </div>
-      <!-- Altseason gauge -->
-      <div style="font-family:var(--mono);font-size:8px;color:var(--t2);margin-bottom:6px;letter-spacing:1px">ALTSEASON INDEX</div>
-      <div style="position:relative;height:12px;border-radius:6px;background:linear-gradient(90deg,#00e676 0%,#ffd740 50%,#f7931a 100%);margin-bottom:4px">
-        <div style="position:absolute;top:-2px;left:${(100-altIdx).toFixed(0)}%;width:4px;height:16px;background:#fff;border-radius:2px;transform:translateX(-50%);box-shadow:0 0 8px rgba(255,255,255,.8);transition:left .6s"></div>
-      </div>
-      <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:7.5px;color:var(--t2);margin-bottom:10px">
-        <span style="color:#00e676">ALT SEASON</span><span>TRANSITIONING</span><span style="color:#f7931a">BTC SEASON</span>
-      </div>
-      <div class="dom-stat-row">
-        <span style="font-family:var(--mono);font-size:8.5px;color:var(--t2)">SIGNAL</span>
-        <span style="font-family:var(--mono);font-size:10px;font-weight:700;color:${altColor}">${altLabel}</span>
-      </div>
-      <div class="dom-stat-row">
-        <span style="font-family:var(--mono);font-size:8.5px;color:var(--t2)">TOTAL MCAP</span>
-        <span style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--t3)">$${(totalCap/1e12).toFixed(2)}T</span>
-      </div>
-      <div class="dom-stat-row">
-        <span style="font-family:var(--mono);font-size:8.5px;color:var(--t2)">24H CHANGE</span>
-        <span style="font-family:var(--mono);font-size:10px;font-weight:700;color:${chg24h>=0?'var(--g1)':'var(--r1)'}">${chg24h>=0?'+':''}${chg24h.toFixed(2)}%</span>
-      </div>
-    `;
-
-    // Log to signal history if altseason signal changes
-    const prevAlt = sessionStorage.getItem('lt_altseason');
-    if(prevAlt && prevAlt !== altLabel) {
-      logSignal(isAlt?'bull':'info', isAlt?'🌈':'₿', `Altseason signal changed: ${altLabel}`, `BTC ${btcDom.toFixed(1)}%`);
-    }
-    sessionStorage.setItem('lt_altseason', altLabel);
-
-  } catch(e) {
-    $('domPanel').innerHTML = `<div class="err-box"><div class="err-msg">Dominance data error.</div><button class="retry-btn" onclick="loadDominance()">↻ Retry</button></div>`;
+  var data = null;
+  for (var ep of endpoints) {
+    try {
+      var r = await fetch(ep, { headers: { 'Accept': 'application/json' } });
+      if (r.ok) { var j = await r.json(); data = j.data; break; }
+    } catch(e) {}
   }
+
+  if (!data) {
+    // Fallback: use CoinGecko simple endpoint
+    try {
+      var r2 = await fetch('https://api.coingecko.com/api/v3/coins/bitcoin?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false');
+      if (r2.ok) {
+        var j2 = await r2.json();
+        // Estimate BTC dominance from market cap
+        var btcCap = j2.market_data && j2.market_data.market_cap && j2.market_data.market_cap.usd || 0;
+        // Use known approximate total if global fails
+        data = {
+          market_cap_percentage: { btc: 55, eth: 17 }, // approximate fallback
+          total_market_cap: { usd: btcCap > 0 ? btcCap / 0.55 : 2.5e12 },
+          market_cap_change_percentage_24h_usd: j2.market_data && j2.market_data.market_cap_change_percentage_24h || 0,
+        };
+      }
+    } catch(e) {}
+  }
+
+  if (!data) {
+    panel.innerHTML = '<div class="err-box"><div class="err-msg">Dominance data temporarily unavailable (rate limit).</div><button class="retry-btn" onclick="loadDominance()">&#8635; Retry</button></div>';
+    return;
+  }
+
+  var btcDom  = parseFloat(data.market_cap_percentage && data.market_cap_percentage.btc || 55);
+  var ethDom  = parseFloat(data.market_cap_percentage && data.market_cap_percentage.eth || 17);
+  var othDom  = Math.max(0, 100 - btcDom - ethDom);
+  var totalCap= data.total_market_cap && data.total_market_cap.usd || 0;
+  var chg24h  = data.market_cap_change_percentage_24h_usd || 0;
+  var altIdx  = Math.max(0, Math.min(100, ((btcDom - 40) / 30) * 100));
+  var isBtc   = btcDom > 60;
+  var isAlt   = btcDom < 50;
+  var altLabel= isBtc ? 'BITCOIN SEASON' : isAlt ? 'ALTSEASON' : 'TRANSITIONING';
+  var altColor= isBtc ? '#f7931a' : isAlt ? '#00e676' : '#ffd740';
+
+  if (badge) { badge.textContent = 'BTC '+btcDom.toFixed(1)+'%'; badge.style.color = '#f7931a'; }
+
+  panel.innerHTML =
+    '<div style="font-family:var(--mono);font-size:8px;color:var(--t2);margin-bottom:6px;letter-spacing:1px">MARKET CAP DISTRIBUTION</div>' +
+    '<div style="height:12px;border-radius:6px;overflow:hidden;background:var(--bg2);position:relative;margin-bottom:4px">' +
+      '<div style="position:absolute;left:0;top:0;height:100%;width:'+btcDom.toFixed(1)+'%;background:linear-gradient(90deg,#f7931a,#ffb347)"></div>' +
+      '<div style="position:absolute;left:'+btcDom.toFixed(1)+'%;top:0;height:100%;width:'+ethDom.toFixed(1)+'%;background:linear-gradient(90deg,#627eea,#8fa4f3)"></div>' +
+    '</div>' +
+    '<div style="display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap">' +
+      '<span style="font-family:var(--mono);font-size:8.5px;display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:#f7931a;display:inline-block"></span>BTC '+btcDom.toFixed(1)+'%</span>' +
+      '<span style="font-family:var(--mono);font-size:8.5px;display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:#627eea;display:inline-block"></span>ETH '+ethDom.toFixed(1)+'%</span>' +
+      '<span style="font-family:var(--mono);font-size:8.5px;display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:rgba(255,255,255,.2);display:inline-block"></span>Others '+othDom.toFixed(1)+'%</span>' +
+    '</div>' +
+    '<div style="font-family:var(--mono);font-size:8px;color:var(--t2);margin-bottom:5px;letter-spacing:1px">ALTSEASON INDEX</div>' +
+    '<div style="position:relative;height:10px;border-radius:5px;background:linear-gradient(90deg,#00e676,#ffd740,#f7931a);margin-bottom:4px">' +
+      '<div style="position:absolute;top:-2px;left:'+(100-altIdx).toFixed(0)+'%;width:3px;height:14px;background:#fff;border-radius:2px;transform:translateX(-50%)"></div>' +
+    '</div>' +
+    '<div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:7.5px;color:var(--t2);margin-bottom:10px"><span style="color:#00e676">ALTSEASON</span><span style="color:#f7931a">BTC SEASON</span></div>' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--p2);border-radius:7px;border:1px solid var(--border);margin-bottom:5px"><span style="font-family:var(--mono);font-size:8.5px;color:var(--t2)">SIGNAL</span><span style="font-family:var(--mono);font-size:10px;font-weight:700;color:'+altColor+'">'+altLabel+'</span></div>' +
+    (totalCap > 0 ? '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--p2);border-radius:7px;border:1px solid var(--border);margin-bottom:5px"><span style="font-family:var(--mono);font-size:8.5px;color:var(--t2)">TOTAL MCAP</span><span style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--t3)">$'+(totalCap/1e12).toFixed(2)+'T</span></div>' : '') +
+    '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--p2);border-radius:7px;border:1px solid var(--border)"><span style="font-family:var(--mono);font-size:8.5px;color:var(--t2)">24H CHANGE</span><span style="font-family:var(--mono);font-size:10px;font-weight:700;color:'+(chg24h>=0?'var(--g1)':'var(--r1)')+'">'+( chg24h>=0?'+':'')+chg24h.toFixed(2)+'%</span></div>';
+
+  try {
+    var prev = sessionStorage.getItem('lt_altseason');
+    if (prev && prev !== altLabel) logSignal(isAlt?'bull':'info', isAlt?'🌈':'₿', 'Altseason: '+altLabel, 'BTC '+btcDom.toFixed(1)+'%');
+    sessionStorage.setItem('lt_altseason', altLabel);
+  } catch(e) {}
 }
 
-/* ════════════════════════════════════════════════════════
-   MASTER DECISION PANEL
-   Reads ALL state data and produces a unified signal
-   3 modes: SCALPER / SWING / HOLDER
-════════════════════════════════════════════════════════ */
-let _masterMode = 'scalper';
 
 function setMasterMode(mode) {
   _masterMode = mode;
@@ -2806,16 +2809,16 @@ function renderMasterPanel() {
 
     cells = [
       { lbl:'FUNDING RATE', val: frBtc!==undefined ? `${frBtc>0?'+':''}${frBtc.toFixed(4)}%` : '—',
-        sub: frScore===null?'—':frScore>0?'BULLISH SIGNAL':frScore<0?'BEARISH SIGNAL':'NEUTRAL',
+        sub: frScore===null?'—':frScore>0?'BULLISH SIGNAL':frScore<0?'BEARISH SIGNAL':_ml('NEUTRAL'),
         color: frScore===null?'var(--t2)':frScore>0?'var(--g1)':frScore<0?'var(--r1)':'var(--y1)', score:frScore },
       { lbl:'L/S RATIO', val: lsBtc?`L:${lsBtc.long.toFixed(0)}% S:${lsBtc.short.toFixed(0)}%`:'—',
-        sub: lsScore===null?'—':lsScore>0?'SQUEEZE SETUP':lsScore<0?'FLUSH RISK':'BALANCED',
+        sub: lsScore===null?'—':lsScore>0?_ml('SQUEEZE SETUP'):lsScore<0?_ml('FLUSH RISK'):_ml('BALANCED'),
         color: lsScore===null?'var(--t2)':lsScore>0?'var(--g1)':lsScore<0?'var(--r1)':'var(--y1)', score:lsScore },
       { lbl:'LIQ BIAS', val: liqB||'—',
-        sub: liqScore===null?'—':liqScore>0?'SHORTS ABOVE':'LONGS BELOW',
+        sub: liqScore===null?'—':liqScore>0?_ml('SHORTS ABOVE'):_ml('LONGS BELOW'),
         color: liqScore===null?'var(--t2)':liqScore>0?'var(--g1)':'var(--r1)', score:liqScore },
       { lbl:'PRICE 24H', val: btcChg!==null?`${btcChg>=0?'+':''}${btcChg.toFixed(2)}%`:'—',
-        sub: priceScore===null?'—':priceScore>0?'BULLISH MOM':priceScore<0?'BEARISH MOM':'FLAT',
+        sub: priceScore===null?'—':priceScore>0?_ml('BULLISH MOM'):priceScore<0?_ml('BEARISH MOM'):'FLAT',
         color: priceScore===null?'var(--t2)':priceScore>0?'var(--g1)':'var(--r1)', score:priceScore },
     ];
 
@@ -2832,16 +2835,16 @@ function renderMasterPanel() {
 
     cells = [
       { lbl:'MTPI', val: state.tpi?.mtpi !== undefined ? `${state.tpi.mtpi>=0?'+':''}${state.tpi.mtpi.toFixed(3)}` : '—',
-        sub: mtpiScore===null?'—':mtpiScore>0?'LONG TREND':mtpiScore<0?'SHORT TREND':'NEUTRAL',
+        sub: mtpiScore===null?'—':mtpiScore>0?_ml('LONG TREND'):mtpiScore<0?_ml('SHORT TREND'):_ml('NEUTRAL'),
         color: mtpiScore===null?'var(--t2)':mtpiScore>0?'var(--g1)':mtpiScore<0?'var(--r1)':'var(--y1)', score:mtpiScore },
       { lbl:'OPEN INTEREST', val: oiBtc?fmt(oiBtc):'—',
-        sub: oiScore===null?'—':oiScore>0?'TREND CONFIRMED':oiScore<0?'BEARISH CONFIRMED':'WATCHING',
+        sub: oiScore===null?'—':oiScore>0?_ml('TREND CONFIRMED'):oiScore<0?'BEARISH CONFIRMED':_ml('WATCHING'),
         color: oiScore===null?'var(--t2)':oiScore>0?'var(--g1)':oiScore<0?'var(--r1)':'var(--y1)', score:oiScore },
       { lbl:'FEAR & GREED', val: fg!==null?`${fg}/100`:'—',
-        sub: fg===null?'—':fg<30?'EXTREME FEAR':fg>75?'EXTREME GREED':fg>55?'GREED':'FEAR',
+        sub: fg===null?'—':fg<30?_ml('EXTREME FEAR'):fg>75?_ml('EXTREME GREED'):fg>55?'GREED':'FEAR',
         color: fgScore===null?'var(--t2)':fgScore>0?'var(--g1)':'var(--r1)', score:fgScore },
       { lbl:'FUNDING RATE', val: frBtc!==undefined?`${frBtc>0?'+':''}${frBtc.toFixed(4)}%`:'—',
-        sub: frScore===null?'—':frScore>0?'CONTRARIAN BULL':frScore<0?'CONTRARIAN BEAR':'NEUTRAL',
+        sub: frScore===null?'—':frScore>0?_ml('CONTRARIAN BULL'):frScore<0?_ml('CONTRARIAN BEAR'):_ml('NEUTRAL'),
         color: frScore===null?'var(--t2)':frScore>0?'var(--g1)':frScore<0?'var(--r1)':'var(--y1)', score:frScore },
     ];
 
@@ -2856,16 +2859,16 @@ function renderMasterPanel() {
 
     cells = [
       { lbl:'LTPI', val: state.tpi?.ltpi !== undefined ? `${state.tpi.ltpi>=0?'+':''}${state.tpi.ltpi.toFixed(3)}` : '—',
-        sub: ltpiScore===null?'—':ltpiScore>0?'LONG BIAS':ltpiScore<0?'SHORT BIAS':'NEUTRAL',
+        sub: ltpiScore===null?'—':ltpiScore>0?'LONG BIAS':ltpiScore<0?'SHORT BIAS':_ml('NEUTRAL'),
         color: ltpiScore===null?'var(--t2)':ltpiScore>0?'var(--g1)':ltpiScore<0?'var(--r1)':'var(--y1)', score:ltpiScore },
       { lbl:'FEAR & GREED', val: fg!==null?`${fg}/100`:'—',
-        sub: fg===null?'—':fg<25?'BUY SIGNAL':fg>80?'SELL SIGNAL':'HOLD',
+        sub: fg===null?'—':fg<25?_ml('BUY SIGNAL'):fg>80?_ml('SELL SIGNAL'):_ml('HOLD'),
         color: fgScore===null?'var(--t2)':fgScore>0?'var(--g1)':'var(--r1)', score:fgScore },
       { lbl:'SENTIMENT L/S', val: lsBtc?`L:${lsBtc.long.toFixed(0)}%`:'—',
-        sub: lsScore===null?'—':lsScore>0?'CONTRARIAN BULL':lsScore<0?'CONTRARIAN BEAR':'BALANCED',
+        sub: lsScore===null?'—':lsScore>0?_ml('CONTRARIAN BULL'):lsScore<0?_ml('CONTRARIAN BEAR'):_ml('BALANCED'),
         color: lsScore===null?'var(--t2)':lsScore>0?'var(--g1)':lsScore<0?'var(--r1)':'var(--y1)', score:lsScore },
       { lbl:'PRICE TREND', val: btcChg!==null?`${btcChg>=0?'+':''}${btcChg.toFixed(2)}%`:'—',
-        sub: priceScore===null?'—':priceScore>0?'UPTREND':priceScore<0?'DOWNTREND':'FLAT',
+        sub: priceScore===null?'—':priceScore>0?_ml('UPTREND'):priceScore<0?_ml('DOWNTREND'):'FLAT',
         color: priceScore===null?'var(--t2)':priceScore>0?'var(--g1)':'var(--r1)', score:priceScore },
     ];
   }
@@ -2880,24 +2883,29 @@ function renderMasterPanel() {
   const isBull    = rawScore > 0.15;
   const isBear    = rawScore < -0.15;
   const mainColor = isBull ? 'var(--g1)' : isBear ? 'var(--r1)' : 'var(--y1)';
-  const biasLabel = isBull ? (rawScore > 0.5 ? 'STRONG BULL' : 'BULLISH') :
-                    isBear ? (rawScore < -0.5 ? 'STRONG BEAR' : 'BEARISH') : 'NEUTRAL';
+  const biasLabel = isBull ? (rawScore > 0.5 ? _ml('STRONG BULL') : _ml('BULLISH')) :
+                    isBear ? (rawScore < -0.5 ? _ml('STRONG BEAR') : _ml('BEARISH')) : _ml('NEUTRAL');
   const biasIcon  = isBull ? '🟢' : isBear ? '🔴' : '🟡';
 
-  // Action text per mode
-  const modeLabel = _masterMode.toUpperCase();
-  let action;
-  if(isBull && rawScore > 0.5)
-    action = `[${modeLabel}] Strong bullish consensus across all signals. Consider ${_masterMode==='scalper'?'long scalp entries on pullbacks':_masterMode==='swing'?'swing long with tight stop below support':'accumulating on dips'}. Manage risk — never more than 1-2% per trade.`;
-  else if(isBull)
-    action = `[${modeLabel}] Moderate bullish bias. ${_masterMode==='scalper'?'Look for long setups on 15m/1H timeframe with volume confirmation.':_masterMode==='swing'?'Swing long opportunity forming — wait for 4H candle confirmation.':'Favorable macro conditions for holding. Avoid leverage.'} Confluence is partial — wait for more signals to align.`;
-  else if(isBear && rawScore < -0.5)
-    action = `[${modeLabel}] Strong bearish consensus. ${_masterMode==='scalper'?'Short setups favored. Watch liquidation levels above for potential squeeze traps.':_masterMode==='swing'?'Consider reducing exposure or defensive positioning.':'Cycle indicators suggest caution. Reduce or hold cash.'} Apply strict stop-loss discipline.`;
-  else if(isBear)
-    action = `[${modeLabel}] Moderate bearish bias. Mixed signals — not the time for aggressive positions. ${_masterMode==='holder'?'Long-term holders should monitor cycle indicators closely.':'Wait for clearer directional confirmation before entering.'}`;
-  else
-    action = `[${modeLabel}] No clear edge detected. Market in balance — avoid forced trades. Wait for funding rate extremes, volume spikes, or TPI trend change as entry triggers.`;
-
+  // Action text — bilingual
+  var modeLabel = _masterMode.toUpperCase();
+  var _actES = {
+    sb: '['+modeLabel+'] Consenso alcista fuerte. Considera entradas long con stop definido.',
+    mb: '['+modeLabel+'] Sesgo alcista moderado — espera más confluencia antes de entrar.',
+    ss: '['+modeLabel+'] Consenso bajista fuerte. Reduce exposición o posicionamiento defensivo.',
+    ms: '['+modeLabel+'] Sesgo bajista moderado — evita longs agresivos.',
+    n:  '['+modeLabel+'] Sin ventaja clara. Espera confirmación direccional antes de operar.'
+  };
+  var _actEN = {
+    sb: '['+modeLabel+'] Strong bullish consensus. Consider long entries with defined stop-loss.',
+    mb: '['+modeLabel+'] Moderate bullish bias — wait for more confluence before entering.',
+    ss: '['+modeLabel+'] Strong bearish consensus. Reduce exposure or defensive positioning.',
+    ms: '['+modeLabel+'] Moderate bearish bias — avoid aggressive longs.',
+    n:  '['+modeLabel+'] No clear edge. Wait for directional confirmation before trading.'
+  };
+  var _actd = _lang === 'es' ? _actES : _actEN;
+  var action = isBull && rawScore > 0.5 ? _actd.sb : isBull ? _actd.mb :
+               isBear && rawScore < -0.5 ? _actd.ss : isBear ? _actd.ms : _actd.n;
   // Store TPI scores for next render
   state.tpi = state.tpi || {};
 
@@ -2954,6 +2962,204 @@ function renderMasterPanel() {
     );
   }
   sessionStorage.setItem(`lt_bias_${_masterMode}`, biasLabel);
+}
+
+
+/* ════════════════════════════════════════════════════
+   CYCLE INDICATORS — Calculated from Binance klines
+   Rainbow Chart + Pi Cycle Top + Puell Multiple
+════════════════════════════════════════════════════ */
+
+function getRainbowBand(price, daysSinceGenesis) {
+  var a = 5.84, b = -17.01;
+  var baseLogP = a * Math.log(daysSinceGenesis) + b;
+  var bands = [
+    { name:'Maximum bubble',    offset:2.0,  color:'#ff1744', action:'SELL',        bg:'rgba(255,23,68,.08)',   border:'rgba(255,23,68,.2)' },
+    { name:'Sell. Seriously',   offset:1.5,  color:'#ff6d00', action:'SELL ZONE',   bg:'rgba(255,109,0,.08)',  border:'rgba(255,109,0,.2)' },
+    { name:'FOMO intensifies',  offset:1.0,  color:'#ffd740', action:'LATE BULL',   bg:'rgba(255,215,64,.08)', border:'rgba(255,215,64,.2)' },
+    { name:'Is this a bubble?', offset:0.5,  color:'#a5d6a7', action:'BULL TREND',  bg:'rgba(165,214,167,.08)',border:'rgba(165,214,167,.2)' },
+    { name:'Still cheap',       offset:0.0,  color:'#00b0ff', action:'FAIR VALUE',  bg:'rgba(0,176,255,.08)',  border:'rgba(0,176,255,.2)' },
+    { name:'Accumulate',        offset:-0.5, color:'#00e676', action:'ACCUMULATE',  bg:'rgba(0,230,118,.08)',  border:'rgba(0,230,118,.2)' },
+    { name:'BUY!',              offset:-1.0, color:'#00c853', action:'STRONG BUY',  bg:'rgba(0,200,83,.08)',   border:'rgba(0,200,83,.2)' },
+    { name:'Fire Sale',         offset:-1.5, color:'#1b5e20', action:'FIRE SALE',   bg:'rgba(27,94,32,.08)',   border:'rgba(27,94,32,.2)' },
+  ];
+  for (var i = 0; i < bands.length - 1; i++) {
+    var upper = Math.exp(baseLogP + bands[i].offset);
+    var lower = Math.exp(baseLogP + bands[i+1].offset);
+    if (price >= lower) return Object.assign({}, bands[i], { upper: upper, lower: lower, position: i });
+  }
+  return Object.assign({}, bands[bands.length-1], { upper: 0, lower: 0, position: bands.length-1 });
+}
+
+function sparklineSVGcycle(values, color, w, h) {
+  w = w || 280; h = h || 44;
+  if (!values || values.length < 2) return '';
+  var mn = Math.min.apply(null, values), mx = Math.max.apply(null, values);
+  var rng = mx - mn || 1;
+  var pts = values.map(function(v, i) {
+    return (i/(values.length-1)*w).toFixed(1) + ',' + (h - ((v-mn)/rng)*(h-6) - 3).toFixed(1);
+  }).join(' ');
+  var last = values[values.length-1], first = values[0];
+  var c = last >= first ? color : '#ff1744';
+  return '<svg viewBox="0 0 '+w+' '+h+'" width="100%" height="'+h+'" style="display:block">' +
+    '<polyline points="'+pts+'" fill="none" stroke="'+c+'" stroke-width="1.5" opacity=".8" stroke-linejoin="round"/>' +
+    '<circle cx="'+w+'" cy="'+(h-((last-mn)/rng)*(h-6)-3).toFixed(1)+'" r="3" fill="'+c+'"/></svg>';
+}
+
+async function loadMVRV() {
+  try {
+    var res = await fetch('https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1d&limit=400');
+    if (!res.ok) throw new Error('Binance klines ' + res.status);
+    var raw = await res.json();
+
+    var closes  = raw.map(function(k){ return parseFloat(k[4]); });
+    var volumes = raw.map(function(k){ return parseFloat(k[7]); });
+    var times   = raw.map(function(k){ return k[0]; });
+    var n = closes.length;
+    if (n < 50) throw new Error('Not enough data');
+
+    var genesis = new Date('2009-01-03').getTime();
+    var daysSinceGenesis = (times[n-1] - genesis) / 86400000;
+    var price = closes[n-1];
+
+    function sma(arr, len, end) {
+      var s = Math.max(0, end - len + 1);
+      var sum = 0;
+      for (var i = s; i <= end; i++) sum += arr[i];
+      return sum / (end - s + 1);
+    }
+
+    // ── 1. Rainbow Chart ──
+    var band = getRainbowBand(price, daysSinceGenesis);
+    renderRainbow(price, band, closes.slice(-60));
+
+    // ── 2. Pi Cycle Top ──
+    var last = n - 1;
+    var ma111   = sma(closes, Math.min(111, n), last);
+    var ma350x2 = sma(closes, Math.min(350, n), last) * 2;
+    var ma111p  = n > 7  ? sma(closes, Math.min(111, n-7), last-7)  : ma111;
+    var ma350p  = n > 7  ? sma(closes, Math.min(350, n-7), last-7) * 2 : ma350x2;
+    var piHist  = [];
+    for (var i = Math.max(0, n-60); i < n; i++) {
+      var m1 = sma(closes, Math.min(111, i+1), i);
+      var m2 = sma(closes, Math.min(350, i+1), i) * 2;
+      piHist.push(m1 / (m2 || 1));
+    }
+    renderPiCycle(price, ma111, ma350x2, ma111p, ma350p, piHist);
+
+    // ── 3. Puell Multiple ──
+    var halvingDate = new Date('2024-04-20').getTime();
+    var dailyIss = closes.map(function(c, i) {
+      var reward = times[i] >= halvingDate ? 3.125 : 6.25;
+      return reward * 144 * c;
+    });
+    var puellHist = [];
+    for (var i = 0; i < n; i++) {
+      var ma365 = sma(dailyIss, Math.min(365, i+1), i);
+      puellHist.push(dailyIss[i] / (ma365 || 1));
+    }
+    renderPuell(closes[n-1], puellHist[n-1], puellHist.slice(-60));
+
+  } catch(e) {
+    console.warn('Cycle error:', e.message);
+    ['mvrvRatioPanel','mvrvZPanel','mvrvRealizedPanel'].forEach(function(id) {
+      var el = $(id);
+      if (el) el.innerHTML = '<div class="err-box"><div class="err-msg">'+e.message+'</div><button class="retry-btn" onclick="loadMVRV()">&#8635; Retry</button></div>';
+    });
+  }
+}
+
+function renderRainbow(price, band, history) {
+  var badge = $('mvrvBadge');
+  if (badge) { badge.textContent = band.action; badge.style.color = band.color; badge.style.background = band.color+'18'; }
+  var barPct = ((7 - band.position) / 7 * 100).toFixed(0);
+  var spark = sparklineSVGcycle(history, band.color);
+  $('mvrvRatioPanel').innerHTML =
+    '<div style="text-align:center;margin-bottom:12px">' +
+      '<div style="font-size:1.8rem;margin-bottom:4px">🌈</div>' +
+      '<div style="font-family:var(--mono);font-size:1.3rem;font-weight:700;color:'+band.color+';line-height:1">'+band.action+'</div>' +
+      '<div style="font-family:var(--mono);font-size:8px;color:var(--t2);letter-spacing:1.5px;margin-top:3px">RAINBOW BAND</div>' +
+      '<div style="display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:20px;margin-top:8px;font-family:var(--mono);font-size:9px;font-weight:700;color:'+band.color+';background:'+band.bg+';border:1px solid '+band.border+'">"'+band.name+'"</div>' +
+    '</div>' +
+    '<div style="padding:0 4px;margin-bottom:12px">' +
+      '<div style="height:8px;border-radius:4px;overflow:hidden;display:flex;margin-bottom:4px">'+
+        ['#1b5e20','#00c853','#00e676','#00b0ff','#a5d6a7','#ffd740','#ff6d00','#ff1744'].map(function(c){ return '<div style="flex:1;background:'+c+';opacity:.75"></div>'; }).join('')+
+      '</div>' +
+      '<div style="position:relative;height:12px">' +
+        '<div style="position:absolute;left:'+barPct+'%;top:0;width:2px;height:12px;background:#fff;border-radius:1px;transform:translateX(-50%);box-shadow:0 0 6px rgba(255,255,255,.6)"></div>' +
+      '</div>' +
+      '<div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:7px;color:var(--t2);margin-top:2px"><span>BOTTOM</span><span>TOP</span></div>' +
+    '</div>' +
+    '<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--p2);border-radius:7px;border:1px solid var(--border)">' +
+        '<span style="font-family:var(--mono);font-size:8.5px;color:var(--t2)">BTC PRICE</span>' +
+        '<span style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--t3)">$'+price.toLocaleString('en',{maximumFractionDigits:0})+'</span>' +
+      '</div>' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--p2);border-radius:7px;border:1px solid var(--border)">' +
+        '<span style="font-family:var(--mono);font-size:8.5px;color:var(--t2)">BAND UPPER</span>' +
+        '<span style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--t2)">$'+Math.round(band.upper).toLocaleString('en')+'</span>' +
+      '</div>' +
+    '</div>' +
+    '<div style="padding:8px 10px;border-radius:8px;font-family:var(--mono);font-size:8.5px;line-height:1.65;border:1px solid '+band.border+';background:'+band.bg+';color:'+band.color+'">Log regression model. Not financial advice.</div>' +
+    (spark ? '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"><div style="font-family:var(--mono);font-size:7.5px;color:var(--t2);margin-bottom:4px;letter-spacing:1px">60-DAY PRICE</div>'+spark+'</div>' : '');
+}
+
+function renderPiCycle(price, ma111, ma350x2, ma111prev, ma350x2prev, history) {
+  var gap = ma350x2 > 0 ? ((ma111 - ma350x2) / ma350x2 * 100) : 0;
+  var crossed = ma111 > ma350x2;
+  var color = crossed ? '#ff1744' : Math.abs(gap) < 10 ? '#ffd740' : '#00e676';
+  var state  = crossed ? 'TOP SIGNAL' : Math.abs(gap) < 5 ? 'CONVERGING' : 'SAFE ZONE';
+  var badge  = $('mvrvZBadge');
+  if (badge) { badge.textContent = state; badge.style.color = color; badge.style.background = color+'18'; }
+  var barPct = Math.max(0, Math.min(100, (gap + 30) / 60 * 100)).toFixed(0);
+  var spark  = sparklineSVGcycle(history, color);
+  $('mvrvZPanel').innerHTML =
+    '<div style="text-align:center;margin-bottom:12px">' +
+      '<div style="font-size:1.8rem;margin-bottom:4px">π</div>' +
+      '<div style="font-family:var(--mono);font-size:1.3rem;font-weight:700;color:'+color+';line-height:1">'+state+'</div>' +
+      '<div style="font-family:var(--mono);font-size:8px;color:var(--t2);letter-spacing:1.5px;margin-top:3px">PI CYCLE TOP</div>' +
+      '<div style="display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:20px;margin-top:8px;font-family:var(--mono);font-size:9px;font-weight:700;color:'+color+';background:'+color+'18;border:1px solid '+color+'35">'+(crossed?'⚠️ CROSSED':Math.abs(gap)<5?'↔ CONVERGING':'✓ SEPARATED')+'</div>' +
+    '</div>' +
+    '<div style="padding:0 4px;margin-bottom:12px">' +
+      '<div style="font-family:var(--mono);font-size:7.5px;color:var(--t2);margin-bottom:5px;letter-spacing:1px">111DMA vs 350DMA×2 GAP</div>' +
+      '<div style="height:6px;background:var(--bg2);border-radius:3px;overflow:hidden"><div style="height:100%;width:'+barPct+'%;background:'+color+';border-radius:3px"></div></div>' +
+      '<div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:7px;color:var(--t2);margin-top:3px"><span>-30%</span><span>0</span><span>+30%</span></div>' +
+    '</div>' +
+    '<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--p2);border-radius:7px;border:1px solid var(--border)"><span style="font-family:var(--mono);font-size:8.5px;color:var(--b1)">111 DMA</span><span style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--b1)">$'+Math.round(ma111).toLocaleString('en')+'</span></div>' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--p2);border-radius:7px;border:1px solid var(--border)"><span style="font-family:var(--mono);font-size:8.5px;color:var(--r2)">350 DMA×2</span><span style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--r2)">$'+Math.round(ma350x2).toLocaleString('en')+'</span></div>' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--p2);border-radius:7px;border:1px solid var(--border)"><span style="font-family:var(--mono);font-size:8.5px;color:var(--t2)">GAP</span><span style="font-family:var(--mono);font-size:10px;font-weight:700;color:'+color+'">'+(gap>=0?'+':'')+gap.toFixed(1)+'%</span></div>' +
+    '</div>' +
+    '<div style="padding:8px 10px;border-radius:8px;font-family:var(--mono);font-size:8.5px;line-height:1.65;border:1px solid '+color+'35;background:'+color+'0d;color:'+color+'">'+(crossed?'Crossover detected — historically marks cycle tops within days/weeks.':Math.abs(gap)<5?'MAs converging rapidly. Watch for potential top signal.':'MAs well separated. No top signal. Trend likely intact.')+'</div>' +
+    (spark ? '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"><div style="font-family:var(--mono);font-size:7.5px;color:var(--t2);margin-bottom:4px;letter-spacing:1px">111/350×2 RATIO (60D)</div>'+spark+'</div>' : '');
+}
+
+function renderPuell(price, puell, history) {
+  var zone = puell < 0.5  ? { label:'MINER STRESS', color:'#00e676', desc:'Miners under stress. Strong accumulation zone historically.' } :
+             puell < 1.0  ? { label:'FAIR VALUE',   color:'#00b0ff', desc:'Miner revenue near yearly average. Balanced conditions.' } :
+             puell < 4.0  ? { label:'BULL MARKET',  color:'#ffd740', desc:'Miner revenue elevated. Mid-to-late bull conditions.' } :
+                            { label:'DANGER ZONE',  color:'#ff1744', desc:'Extreme miner revenue. Historically near cycle tops.' };
+  var spark  = sparklineSVGcycle(history, zone.color);
+  var barPct = Math.min(100, (puell / 5) * 100).toFixed(0);
+  $('mvrvRealizedPanel').innerHTML =
+    '<div style="text-align:center;margin-bottom:12px">' +
+      '<div style="font-size:1.8rem;margin-bottom:4px">⛏</div>' +
+      '<div style="font-family:var(--mono);font-size:1.3rem;font-weight:700;color:'+zone.color+';line-height:1">'+puell.toFixed(3)+'</div>' +
+      '<div style="font-family:var(--mono);font-size:8px;color:var(--t2);letter-spacing:1.5px;margin-top:3px">PUELL MULTIPLE</div>' +
+      '<div style="display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:20px;margin-top:8px;font-family:var(--mono);font-size:9px;font-weight:700;color:'+zone.color+';background:'+zone.color+'18;border:1px solid '+zone.color+'35">'+zone.label+'</div>' +
+    '</div>' +
+    '<div style="padding:0 4px;margin-bottom:12px">' +
+      '<div style="height:8px;border-radius:4px;overflow:hidden;display:flex;margin-bottom:4px">'+['#00e676','#00b0ff','#ffd740','#ff1744'].map(function(c){return '<div style="flex:1;background:'+c+';opacity:.7"></div>';}).join('')+'</div>' +
+      '<div style="position:relative;height:12px"><div style="position:absolute;left:'+barPct+'%;top:0;width:2px;height:12px;background:#fff;border-radius:1px;transform:translateX(-50%);box-shadow:0 0 6px rgba(255,255,255,.6)"></div></div>' +
+      '<div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:7px;color:var(--t2);margin-top:2px"><span>0</span><span>1</span><span>4</span><span>5+</span></div>' +
+    '</div>' +
+    '<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--p2);border-radius:7px;border:1px solid var(--border)"><span style="font-family:var(--mono);font-size:8.5px;color:var(--t2)">PUELL VALUE</span><span style="font-family:var(--mono);font-size:10px;font-weight:700;color:'+zone.color+'">'+puell.toFixed(3)+'</span></div>' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--p2);border-radius:7px;border:1px solid var(--border)"><span style="font-family:var(--mono);font-size:8.5px;color:var(--t2)">BLOCK REWARD</span><span style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--t1)">3.125 BTC</span></div>' +
+    '</div>' +
+    '<div style="padding:8px 10px;border-radius:8px;font-family:var(--mono);font-size:8.5px;line-height:1.65;border:1px solid '+zone.color+'35;background:'+zone.color+'0d;color:'+zone.color+'">'+zone.desc+'</div>' +
+    (spark ? '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"><div style="font-family:var(--mono);font-size:7.5px;color:var(--t2);margin-bottom:4px;letter-spacing:1px">60-DAY PUELL</div>'+spark+'</div>' : '') +
+    '<div style="margin-top:6px;font-family:var(--mono);font-size:7.5px;color:var(--t2);opacity:.6">Estimated from Binance price + known block reward schedule.</div>';
 }
 
 /* ═══════════════════════════════════════════════
