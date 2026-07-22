@@ -662,6 +662,117 @@ body::before {
 /* History sparkline */
 .mvrv-spark { width:100%; height:48px; margin-top:8px; }
 
+
+/* ═══ MASTER DECISION PANEL ═══ */
+.master-panel {
+  background:linear-gradient(135deg,#060e18 0%,#07111a 50%,#060e18 100%);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:var(--radius); padding:18px 20px; margin-bottom:14px;
+  position:relative; overflow:hidden;
+}
+.master-panel::before {
+  content:''; position:absolute; inset:0;
+  background:radial-gradient(ellipse at 15% 50%, rgba(0,230,118,.05) 0%, transparent 55%),
+             radial-gradient(ellipse at 85% 50%, rgba(0,176,255,.04) 0%, transparent 55%);
+  pointer-events:none;
+}
+.master-top { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:14px; }
+.master-bias {
+  display:flex; align-items:center; gap:10px;
+  background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08);
+  border-radius:10px; padding:10px 16px; flex-shrink:0;
+}
+.master-bias-icon { font-size:1.6rem; line-height:1; }
+.master-bias-label { font-family:var(--mono); font-size:9px; color:var(--t2); letter-spacing:2px; text-transform:uppercase; }
+.master-bias-val { font-family:var(--mono); font-size:1rem; font-weight:700; line-height:1.2; }
+.master-score-wrap { display:flex; flex-direction:column; align-items:center; gap:2px; flex-shrink:0; }
+.master-score-num { font-family:var(--mono); font-size:2rem; font-weight:700; line-height:1; }
+.master-score-lbl { font-family:var(--mono); font-size:7.5px; color:var(--t2); letter-spacing:2px; }
+.master-divider { width:1px; height:40px; background:var(--border); flex-shrink:0; }
+.master-signals { display:flex; gap:6px; flex-wrap:wrap; flex:1; }
+.master-sig-pill {
+  display:flex; align-items:center; gap:5px;
+  background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.07);
+  border-radius:6px; padding:5px 9px;
+  font-family:var(--mono); font-size:9px; white-space:nowrap;
+}
+.master-sig-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+.master-ai-text {
+  font-family:var(--mono); font-size:8.5px; line-height:1.7;
+  padding:10px 14px; border-radius:8px; border:1px solid; margin-bottom:12px;
+}
+/* Mode tabs */
+.master-modes { display:flex; gap:6px; margin-bottom:12px; }
+.mode-tab {
+  padding:6px 14px; border-radius:7px; border:1px solid rgba(255,255,255,.08);
+  font-family:var(--mono); font-size:9px; font-weight:700; letter-spacing:1px;
+  cursor:pointer; background:rgba(255,255,255,.03); color:var(--t2); transition:all .2s;
+}
+.mode-tab:hover { color:var(--t3); border-color:rgba(255,255,255,.15); }
+.mode-tab.active { background:rgba(255,255,255,.08); color:var(--t3); border-color:rgba(255,255,255,.18); }
+.mode-tab.active.scalper { border-color:rgba(255,23,68,.3); color:var(--r1); background:rgba(255,23,68,.08); }
+.mode-tab.active.swing   { border-color:rgba(255,215,64,.3); color:var(--y1); background:rgba(255,215,64,.08); }
+.mode-tab.active.holder  { border-color:rgba(0,230,118,.3); color:var(--g1); background:rgba(0,230,118,.08); }
+/* Mode content grid */
+.master-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+@media(max-width:900px){ .master-grid{ grid-template-columns:repeat(2,1fr); } }
+@media(max-width:500px){ .master-grid{ grid-template-columns:1fr 1fr; } }
+.master-cell {
+  background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.06);
+  border-radius:8px; padding:9px 10px;
+}
+.master-cell-lbl { font-family:var(--mono); font-size:7.5px; color:var(--t2); letter-spacing:1px; text-transform:uppercase; margin-bottom:4px; }
+.master-cell-val { font-family:var(--mono); font-size:11px; font-weight:700; line-height:1.2; }
+.master-cell-sub { font-family:var(--mono); font-size:7.5px; color:var(--t2); margin-top:2px; }
+.master-action {
+  margin-top:10px; padding:10px 14px; border-radius:8px;
+  font-family:var(--mono); font-size:8.5px; line-height:1.7; border:1px solid;
+  text-align:center; font-weight:600;
+}
+
+/* ═══ MARKET SESSIONS ═══ */
+.sessions-wrap { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+.session-card {
+  flex:1; min-width:100px; padding:10px 12px; border-radius:9px;
+  border:1px solid; position:relative; overflow:hidden;
+}
+.session-card.active { box-shadow:0 0 16px rgba(0,0,0,.3); }
+.session-name { font-family:var(--mono); font-size:9px; font-weight:700; letter-spacing:2px; text-transform:uppercase; }
+.session-time { font-family:var(--mono); font-size:8px; color:var(--t2); margin-top:2px; }
+.session-status { font-family:var(--mono); font-size:8px; font-weight:700; margin-top:6px; letter-spacing:1px; }
+.session-bar { height:3px; border-radius:2px; margin-top:6px; background:rgba(255,255,255,.06); overflow:hidden; }
+.session-bar-fill { height:100%; border-radius:2px; transition:width 1s; }
+.session-active-dot { display:inline-block; width:5px; height:5px; border-radius:50%; margin-right:4px; animation:pulse 1.5s infinite; }
+
+/* ═══ SIGNAL HISTORY ═══ */
+.sig-history { display:flex; flex-direction:column; gap:5px; max-height:220px; overflow-y:auto; }
+.sig-history::-webkit-scrollbar { width:3px; }
+.sig-history::-webkit-scrollbar-thumb { background:var(--b2); border-radius:2px; }
+.sig-hist-item {
+  display:flex; align-items:center; gap:8px; padding:7px 10px;
+  background:var(--p2); border-radius:7px; border-left:3px solid transparent;
+  font-family:var(--mono); font-size:8.5px;
+}
+.sig-hist-time { color:var(--t2); font-size:8px; flex-shrink:0; width:40px; }
+.sig-hist-icon { font-size:12px; flex-shrink:0; }
+.sig-hist-msg { flex:1; color:var(--t3); }
+.sig-hist-val { color:var(--t2); font-size:8px; flex-shrink:0; }
+
+/* ═══ BTC DOMINANCE ═══ */
+.dom-wrap { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
+@media(max-width:700px){ .dom-wrap{ grid-template-columns:1fr; } }
+.dom-bar-wrap { margin:10px 0 6px; }
+.dom-bar-track { height:10px; background:var(--bg2); border-radius:5px; overflow:hidden; position:relative; }
+.dom-bar-btc { height:100%; background:linear-gradient(90deg,#f7931a,#ffb347); border-radius:5px; transition:width .6s ease; }
+.dom-bar-eth { position:absolute; top:0; height:100%; background:linear-gradient(90deg,#627eea,#8fa4f3); border-radius:0 5px 5px 0; transition:left .6s,width .6s; }
+.dom-legend { display:flex; gap:12px; flex-wrap:wrap; margin-top:6px; }
+.dom-leg-item { display:flex; align-items:center; gap:5px; font-family:var(--mono); font-size:8.5px; }
+.dom-leg-dot { width:8px; height:8px; border-radius:2px; flex-shrink:0; }
+.altseason-gauge { display:flex; align-items:center; gap:10px; margin:10px 0; }
+.altseason-track { flex:1; height:10px; border-radius:5px; background:linear-gradient(90deg,#f7931a 0%,#ffd740 40%,#00e676 100%); position:relative; overflow:visible; }
+.altseason-needle { position:absolute; top:-3px; width:3px; height:16px; background:#fff; border-radius:2px; transform:translateX(-50%); box-shadow:0 0 6px rgba(255,255,255,.7); transition:left .6s; }
+.dom-stat-row { display:flex; justify-content:space-between; align-items:center; padding:6px 10px; background:var(--p2); border-radius:7px; border:1px solid var(--border); margin-bottom:5px; }
+
 </style>
 </head>
 <body>
@@ -877,6 +988,96 @@ body::before {
       </div>
     </div>
 
+  </div>
+
+  <!-- ══════════════════════════════════════════════════
+       MASTER DECISION PANEL
+  ══════════════════════════════════════════════════ -->
+  <div class="master-panel" id="masterPanel">
+    <!-- Top row: bias + score + signal pills -->
+    <div class="master-top">
+      <div class="master-bias">
+        <div class="master-bias-icon" id="masterIcon">⏳</div>
+        <div>
+          <div class="master-bias-label">MARKET BIAS</div>
+          <div class="master-bias-val" id="masterBias" style="color:var(--t2)">LOADING...</div>
+        </div>
+      </div>
+      <div class="master-score-wrap">
+        <div class="master-score-num" id="masterScore" style="color:var(--t2)">—</div>
+        <div class="master-score-lbl">CONSENSUS</div>
+      </div>
+      <div class="master-divider"></div>
+      <div class="master-signals" id="masterPills"></div>
+    </div>
+    <!-- Mode tabs -->
+    <div class="master-modes">
+      <div class="ph" style="margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border);width:100%;display:flex;align-items:center;justify-content:space-between">
+        <div class="pt" style="font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:2px;color:var(--t2)">SELECT MODE</div>
+        <div style="display:flex;gap:5px">
+          <button class="mode-tab scalper active" onclick="setMasterMode('scalper')" id="modeScalper">⚡ SCALPER</button>
+          <button class="mode-tab swing"          onclick="setMasterMode('swing')"   id="modeSwing">🌊 SWING</button>
+          <button class="mode-tab holder"         onclick="setMasterMode('holder')"  id="modeHolder">💎 HOLDER</button>
+        </div>
+      </div>
+    </div>
+    <!-- Mode content -->
+    <div class="master-grid" id="masterGrid">
+      <div class="sk sk-line" style="height:60px"></div>
+      <div class="sk sk-line" style="height:60px"></div>
+      <div class="sk sk-line" style="height:60px"></div>
+      <div class="sk sk-line" style="height:60px"></div>
+    </div>
+    <!-- AI Action text -->
+    <div class="master-action" id="masterAction" style="background:rgba(255,255,255,.03);border-color:rgba(255,255,255,.08);color:var(--t2)">
+      Analyzing market data...
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════
+       MARKET SESSIONS + BTC DOMINANCE (side by side)
+  ══════════════════════════════════════════════════ -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+
+    <!-- SESSIONS -->
+    <div class="panel">
+      <div class="ph">
+        <div class="pt"><div class="pdot" style="background:var(--b1)"></div><span id="sessionsTitle">MARKET SESSIONS</span></div>
+        <span class="pbadge" style="background:var(--b3);color:var(--b1)" id="activeSessionBadge">LOADING</span>
+      </div>
+      <div class="pb" id="sessionsPanel">
+        <div class="sk sk-line" style="height:100px"></div>
+      </div>
+    </div>
+
+    <!-- BTC DOMINANCE -->
+    <div class="panel">
+      <div class="ph">
+        <div class="pt"><div class="pdot" style="background:#f7931a"></div><span id="domTitle">BTC DOMINANCE</span></div>
+        <span class="pbadge" style="background:rgba(247,147,26,.1);color:#f7931a" id="domBadge">LOADING</span>
+      </div>
+      <div class="pb" id="domPanel">
+        <div class="sk sk-line" style="height:100px"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══════════════════════════════════════════════════
+       SIGNAL HISTORY LOG
+  ══════════════════════════════════════════════════ -->
+  <div class="panel" style="margin-bottom:14px">
+    <div class="ph">
+      <div class="pt"><div class="pdot" style="background:var(--t2)"></div><span id="historyTitle">SIGNAL HISTORY</span></div>
+      <span class="pbadge" style="background:rgba(255,255,255,.05);color:var(--t2)" id="historyCount">0 events</span>
+    </div>
+    <div class="pb">
+      <div class="sig-history" id="signalHistory">
+        <div style="font-family:var(--mono);font-size:9px;color:var(--t2);text-align:center;padding:20px">
+          Monitoring signals... events will appear here automatically.
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- MVRV PANEL -->
@@ -2090,6 +2291,8 @@ function computeSignal() {
 
   // Actualizar checklist con los datos disponibles
   renderChecklist();
+  // Update master panel with fresh data
+  setTimeout(renderMasterPanel, 100);
 }
 
 /* ════════════════════════════════
@@ -2330,7 +2533,8 @@ async function refreshAll() {
     loadOpenInterest(),
     loadVolumeSpikes(),
     loadLiquidationMap(),
-    loadTPI()
+    loadTPI(),
+    loadDominance()
   ]);
 
   // Compute composite signal after all data loaded
@@ -2346,6 +2550,7 @@ connectWhaleWS();
 
 // Initial load
 applyLang();
+renderSessions();
 refreshAll();
 // MVRV loads independently — does NOT block main dashboard
 setTimeout(() => { try { loadMVRV(); } catch(e) {} }, 2000);
@@ -2630,6 +2835,8 @@ async function loadLTPI() {
     // Save & update ROC
     tpiState.ltpi.prev = tpiState.ltpi.score;
     tpiState.ltpi.score = ltpiScore;
+    state.tpi = state.tpi || {};
+    state.tpi.ltpi = ltpiScore;
     tpiState.ltpi.signals = signals;
     tpiState.ltpi.history.push(ltpiScore);
     if(tpiState.ltpi.history.length > 20) tpiState.ltpi.history.shift();
@@ -2778,6 +2985,8 @@ async function loadMTPI() {
 
     tpiState.mtpi.prev = tpiState.mtpi.score;
     tpiState.mtpi.score = mtpiScore;
+    state.tpi = state.tpi || {};
+    state.tpi.mtpi = mtpiScore;
     tpiState.mtpi.signals = signals;
     tpiState.mtpi.history.push(mtpiScore);
     if(tpiState.mtpi.history.length > 20) tpiState.mtpi.history.shift();
@@ -3324,6 +3533,401 @@ function renderMvrvRealized(realized, mvrv) {
       ⚠️ On-chain data via CoinGlass API. Updated ~daily.
     </div>
   `;
+}
+
+
+/* ════════════════════════════════════════════════════════
+   SIGNAL HISTORY LOG
+   Stores last 50 events in sessionStorage
+════════════════════════════════════════════════════════ */
+const sigHistory = JSON.parse(sessionStorage.getItem('lt_sighist') || '[]');
+
+function logSignal(type, icon, msg, val='') {
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false});
+  const entry = { type, icon, msg, val, time: timeStr, ts: Date.now() };
+  sigHistory.unshift(entry);
+  if(sigHistory.length > 50) sigHistory.pop();
+  sessionStorage.setItem('lt_sighist', JSON.stringify(sigHistory));
+  renderSignalHistory();
+}
+
+function renderSignalHistory() {
+  const el = $('signalHistory');
+  const count = $('historyCount');
+  if(!el) return;
+  if(!sigHistory.length) {
+    el.innerHTML = `<div style="font-family:var(--mono);font-size:9px;color:var(--t2);text-align:center;padding:20px">No signals yet.</div>`;
+    return;
+  }
+  const colors = { bull:'var(--g1)', bear:'var(--r1)', warn:'var(--y1)', info:'var(--b1)', whale:'#9c27b0' };
+  el.innerHTML = sigHistory.map(s => `
+    <div class="sig-hist-item" style="border-left-color:${colors[s.type]||'var(--border)'}">
+      <div class="sig-hist-time">${s.time}</div>
+      <div class="sig-hist-icon">${s.icon}</div>
+      <div class="sig-hist-msg">${s.msg}</div>
+      <div class="sig-hist-val" style="color:${colors[s.type]||'var(--t2)'}">${s.val}</div>
+    </div>`).join('');
+  if(count) count.textContent = `${sigHistory.length} events`;
+}
+
+// Init history on load
+renderSignalHistory();
+
+/* ════════════════════════════════════════════════════════
+   MARKET SESSIONS
+   Asia: 00:00–09:00 UTC
+   Europe: 07:00–16:00 UTC
+   New York: 13:00–22:00 UTC
+   Overlap periods are most volatile
+════════════════════════════════════════════════════════ */
+const SESSIONS = [
+  { id:'tokyo',   name:'TOKYO',    emoji:'🗼', utcOpen:0,  utcClose:9,  color:'#ff6d00', bg:'rgba(255,109,0,.08)',  border:'rgba(255,109,0,.2)' },
+  { id:'london',  name:'LONDON',   emoji:'🏦', utcOpen:7,  utcClose:16, color:'#00b0ff', bg:'rgba(0,176,255,.08)',  border:'rgba(0,176,255,.2)' },
+  { id:'newyork', name:'NEW YORK', emoji:'🗽', utcOpen:13, utcClose:22, color:'#00e676', bg:'rgba(0,230,118,.08)',  border:'rgba(0,230,118,.2)' },
+  { id:'sydney',  name:'SYDNEY',   emoji:'🦘', utcOpen:22, utcClose:7,  color:'#e040fb', bg:'rgba(224,64,251,.08)', border:'rgba(224,64,251,.2)' },
+];
+
+function isSessionActive(s) {
+  const nowH = new Date().getUTCHours() + new Date().getUTCMinutes()/60;
+  if(s.utcOpen < s.utcClose) return nowH >= s.utcOpen && nowH < s.utcClose;
+  return nowH >= s.utcOpen || nowH < s.utcClose; // overnight sessions (Sydney)
+}
+
+function sessionProgress(s) {
+  const nowH = new Date().getUTCHours() + new Date().getUTCMinutes()/60;
+  let elapsed;
+  const duration = s.utcOpen < s.utcClose ? s.utcClose - s.utcOpen : (24 - s.utcOpen) + s.utcClose;
+  if(s.utcOpen < s.utcClose) elapsed = nowH - s.utcOpen;
+  else elapsed = nowH >= s.utcOpen ? nowH - s.utcOpen : (24 - s.utcOpen) + nowH;
+  return Math.max(0, Math.min(100, (elapsed / duration) * 100));
+}
+
+function renderSessions() {
+  const activeSessions = SESSIONS.filter(isSessionActive);
+  const badge = $('activeSessionBadge');
+
+  // Check for overlap (most volatile)
+  const londonActive = isSessionActive(SESSIONS[1]);
+  const nyActive     = isSessionActive(SESSIONS[2]);
+  const overlap      = londonActive && nyActive;
+
+  if(badge) {
+    if(overlap) {
+      badge.textContent = '⚡ NY+LONDON OVERLAP';
+      badge.style.color = '#ffd740';
+      badge.style.background = 'rgba(255,215,64,.1)';
+    } else if(activeSessions.length) {
+      badge.textContent = activeSessions.map(s=>s.emoji+' '+s.name).join(' · ');
+      badge.style.color = activeSessions[0].color;
+      badge.style.background = activeSessions[0].bg;
+    } else {
+      badge.textContent = '😴 QUIET';
+      badge.style.color = 'var(--t2)';
+      badge.style.background = 'rgba(255,255,255,.04)';
+    }
+  }
+
+  const utcNow = `${String(new Date().getUTCHours()).padStart(2,'0')}:${String(new Date().getUTCMinutes()).padStart(2,'0')} UTC`;
+
+  $('sessionsPanel').innerHTML = `
+    <div style="font-family:var(--mono);font-size:8px;color:var(--t2);margin-bottom:10px;display:flex;justify-content:space-between">
+      <span>Session activity</span><span>🕐 ${utcNow}</span>
+    </div>
+    ${SESSIONS.map(s => {
+      const active = isSessionActive(s);
+      const pct    = active ? sessionProgress(s).toFixed(0) : 0;
+      const timeStr = `${String(s.utcOpen).padStart(2,'0')}:00–${String(s.utcClose).padStart(2,'0')}:00 UTC`;
+      return `<div class="session-card ${active?'active':''}" style="border-color:${active?s.border:'rgba(255,255,255,.06)'};background:${active?s.bg:'rgba(255,255,255,.02)'}">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div class="session-name" style="color:${active?s.color:'var(--t2)'}">${s.emoji} ${s.name}</div>
+          <div class="session-status" style="color:${active?s.color:'var(--t2)'}">
+            ${active?`<span class="session-active-dot" style="background:${s.color}"></span>OPEN`:'CLOSED'}
+          </div>
+        </div>
+        <div class="session-time">${timeStr}</div>
+        <div class="session-bar">
+          <div class="session-bar-fill" style="width:${pct}%;background:${s.color}"></div>
+        </div>
+      </div>`;
+    }).join('')}
+    ${overlap ? `<div style="margin-top:8px;padding:7px 10px;background:rgba(255,215,64,.07);border:1px solid rgba(255,215,64,.2);border-radius:7px;font-family:var(--mono);font-size:8.5px;color:var(--y1)">
+      ⚡ NY-London overlap active — historically highest volatility window of the day.
+    </div>` : ''}
+  `;
+}
+
+// Update sessions every minute
+setInterval(renderSessions, 60000);
+
+/* ════════════════════════════════════════════════════════
+   BTC DOMINANCE + ALTSEASON INDEX
+   Data: CoinGecko /global (already in dashboard)
+════════════════════════════════════════════════════════ */
+async function loadDominance() {
+  try {
+    const res = await fetch('https://api.coingecko.com/api/v3/global');
+    if(!res.ok) throw new Error(res.status);
+    const json = await res.json();
+    const d    = json.data;
+
+    const btcDom  = parseFloat(d.market_cap_percentage?.btc || 0);
+    const ethDom  = parseFloat(d.market_cap_percentage?.eth || 0);
+    const othDom  = 100 - btcDom - ethDom;
+    const totalCap= d.total_market_cap?.usd || 0;
+    const chg24h  = d.market_cap_change_percentage_24h_usd || 0;
+
+    // Altseason index: BTC dom < 50 = altseason, > 60 = bitcoin season
+    // Scale: 0 = full altseason, 100 = full bitcoin season
+    const altIdx  = Math.max(0, Math.min(100, ((btcDom - 40) / 30) * 100));
+    const isAlt   = btcDom < 50;
+    const isBtc   = btcDom > 60;
+    const altLabel = isBtc ? 'BITCOIN SEASON' : isAlt ? 'ALTSEASON' : 'TRANSITIONING';
+    const altColor = isBtc ? '#f7931a' : isAlt ? '#00e676' : '#ffd740';
+
+    const badge = $('domBadge');
+    if(badge) {
+      badge.textContent = `BTC ${btcDom.toFixed(1)}%`;
+      badge.style.color = '#f7931a';
+    }
+
+    $('domPanel').innerHTML = `
+      <!-- Dominance bar -->
+      <div style="font-family:var(--mono);font-size:8px;color:var(--t2);margin-bottom:6px;letter-spacing:1px">MARKET CAP DISTRIBUTION</div>
+      <div class="dom-bar-track" style="height:12px;border-radius:6px;background:var(--bg2);overflow:hidden;position:relative">
+        <div style="position:absolute;top:0;left:0;height:100%;width:${btcDom.toFixed(1)}%;background:linear-gradient(90deg,#f7931a,#ffb347);transition:width .6s"></div>
+        <div style="position:absolute;top:0;left:${btcDom.toFixed(1)}%;height:100%;width:${ethDom.toFixed(1)}%;background:linear-gradient(90deg,#627eea,#8fa4f3);transition:all .6s"></div>
+        <div style="position:absolute;top:0;left:${(btcDom+ethDom).toFixed(1)}%;height:100%;right:0;background:rgba(255,255,255,.08)"></div>
+      </div>
+      <div class="dom-legend" style="margin-top:6px;margin-bottom:12px">
+        <div class="dom-leg-item"><div class="dom-leg-dot" style="background:#f7931a"></div><span style="color:var(--t3)">BTC ${btcDom.toFixed(1)}%</span></div>
+        <div class="dom-leg-item"><div class="dom-leg-dot" style="background:#627eea"></div><span style="color:var(--t3)">ETH ${ethDom.toFixed(1)}%</span></div>
+        <div class="dom-leg-item"><div class="dom-leg-dot" style="background:rgba(255,255,255,.15)"></div><span>Others ${othDom.toFixed(1)}%</span></div>
+      </div>
+      <!-- Altseason gauge -->
+      <div style="font-family:var(--mono);font-size:8px;color:var(--t2);margin-bottom:6px;letter-spacing:1px">ALTSEASON INDEX</div>
+      <div style="position:relative;height:12px;border-radius:6px;background:linear-gradient(90deg,#00e676 0%,#ffd740 50%,#f7931a 100%);margin-bottom:4px">
+        <div style="position:absolute;top:-2px;left:${(100-altIdx).toFixed(0)}%;width:4px;height:16px;background:#fff;border-radius:2px;transform:translateX(-50%);box-shadow:0 0 8px rgba(255,255,255,.8);transition:left .6s"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:7.5px;color:var(--t2);margin-bottom:10px">
+        <span style="color:#00e676">ALT SEASON</span><span>TRANSITIONING</span><span style="color:#f7931a">BTC SEASON</span>
+      </div>
+      <div class="dom-stat-row">
+        <span style="font-family:var(--mono);font-size:8.5px;color:var(--t2)">SIGNAL</span>
+        <span style="font-family:var(--mono);font-size:10px;font-weight:700;color:${altColor}">${altLabel}</span>
+      </div>
+      <div class="dom-stat-row">
+        <span style="font-family:var(--mono);font-size:8.5px;color:var(--t2)">TOTAL MCAP</span>
+        <span style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--t3)">$${(totalCap/1e12).toFixed(2)}T</span>
+      </div>
+      <div class="dom-stat-row">
+        <span style="font-family:var(--mono);font-size:8.5px;color:var(--t2)">24H CHANGE</span>
+        <span style="font-family:var(--mono);font-size:10px;font-weight:700;color:${chg24h>=0?'var(--g1)':'var(--r1)'}">${chg24h>=0?'+':''}${chg24h.toFixed(2)}%</span>
+      </div>
+    `;
+
+    // Log to signal history if altseason signal changes
+    const prevAlt = sessionStorage.getItem('lt_altseason');
+    if(prevAlt && prevAlt !== altLabel) {
+      logSignal(isAlt?'bull':'info', isAlt?'🌈':'₿', `Altseason signal changed: ${altLabel}`, `BTC ${btcDom.toFixed(1)}%`);
+    }
+    sessionStorage.setItem('lt_altseason', altLabel);
+
+  } catch(e) {
+    $('domPanel').innerHTML = `<div class="err-box"><div class="err-msg">Dominance data error.</div><button class="retry-btn" onclick="loadDominance()">↻ Retry</button></div>`;
+  }
+}
+
+/* ════════════════════════════════════════════════════════
+   MASTER DECISION PANEL
+   Reads ALL state data and produces a unified signal
+   3 modes: SCALPER / SWING / HOLDER
+════════════════════════════════════════════════════════ */
+let _masterMode = 'scalper';
+
+function setMasterMode(mode) {
+  _masterMode = mode;
+  ['scalper','swing','holder'].forEach(m => {
+    const btn = document.getElementById('mode' + m.charAt(0).toUpperCase() + m.slice(1));
+    if(btn) {
+      btn.classList.toggle('active', m === mode);
+      btn.classList.toggle(m, m === mode);
+    }
+  });
+  renderMasterPanel();
+}
+
+function renderMasterPanel() {
+  const btc    = state.prices['BTCUSDT'];
+  const frBtc  = state.fr['BTCUSDT'];
+  const lsBtc  = state.ls['BTCUSDT'];
+  const fg     = state.fg;
+  const oiBtc  = state.oi['BTCUSDT'];
+  const liqB   = state.liqBias;
+  const btcChg = btc ? parseFloat(btc.priceChangePercent) : null;
+
+  // ── Build mode-specific cells and score ──────────────────────────
+  let cells = [], score = 0, total = 0;
+
+  if(_masterMode === 'scalper') {
+    // Short-term: FR + L/S + Liquidations + Volume
+    const frScore = frBtc !== undefined ?
+      (frBtc < -0.01 ? 1 : frBtc > 0.08 ? -1 : frBtc > 0.04 ? -0.5 : frBtc < 0.01 ? 0.3 : 0) : null;
+    const lsScore = lsBtc ?
+      (lsBtc.long > 65 ? -1 : lsBtc.long > 58 ? -0.5 : lsBtc.short > 60 ? 1 : lsBtc.short > 55 ? 0.5 : 0) : null;
+    const liqScore = liqB === 'SHORT_HEAVY' ? 0.7 : liqB === 'LONG_HEAVY' ? -0.7 : null;
+    const priceScore = btcChg !== null ? (btcChg > 1 ? 0.8 : btcChg > 0 ? 0.3 : btcChg < -1 ? -0.8 : -0.3) : null;
+
+    cells = [
+      { lbl:'FUNDING RATE', val: frBtc!==undefined ? `${frBtc>0?'+':''}${frBtc.toFixed(4)}%` : '—',
+        sub: frScore===null?'—':frScore>0?'BULLISH SIGNAL':frScore<0?'BEARISH SIGNAL':'NEUTRAL',
+        color: frScore===null?'var(--t2)':frScore>0?'var(--g1)':frScore<0?'var(--r1)':'var(--y1)', score:frScore },
+      { lbl:'L/S RATIO', val: lsBtc?`L:${lsBtc.long.toFixed(0)}% S:${lsBtc.short.toFixed(0)}%`:'—',
+        sub: lsScore===null?'—':lsScore>0?'SQUEEZE SETUP':lsScore<0?'FLUSH RISK':'BALANCED',
+        color: lsScore===null?'var(--t2)':lsScore>0?'var(--g1)':lsScore<0?'var(--r1)':'var(--y1)', score:lsScore },
+      { lbl:'LIQ BIAS', val: liqB||'—',
+        sub: liqScore===null?'—':liqScore>0?'SHORTS ABOVE':'LONGS BELOW',
+        color: liqScore===null?'var(--t2)':liqScore>0?'var(--g1)':'var(--r1)', score:liqScore },
+      { lbl:'PRICE 24H', val: btcChg!==null?`${btcChg>=0?'+':''}${btcChg.toFixed(2)}%`:'—',
+        sub: priceScore===null?'—':priceScore>0?'BULLISH MOM':priceScore<0?'BEARISH MOM':'FLAT',
+        color: priceScore===null?'var(--t2)':priceScore>0?'var(--g1)':'var(--r1)', score:priceScore },
+    ];
+
+  } else if(_masterMode === 'swing') {
+    // Medium-term: MTPI + OI + Fear&Greed + Price trend
+    const mtpiScore = state.tpi?.mtpi !== undefined ?
+      (state.tpi.mtpi > 0.15 ? 1 : state.tpi.mtpi < -0.15 ? -1 : 0) : null;
+    const oiScore = oiBtc && btcChg !== null ?
+      (btcChg > 1 && oiBtc > 0 ? 1 : btcChg < -1 && oiBtc > 0 ? -1 : 0) : null;
+    const fgScore = fg !== null ?
+      (fg < 30 ? 0.8 : fg > 75 ? -0.8 : fg > 55 ? 0.3 : -0.2) : null;
+    const frScore = frBtc !== undefined ?
+      (frBtc < 0 ? 0.7 : frBtc > 0.06 ? -0.7 : 0) : null;
+
+    cells = [
+      { lbl:'MTPI', val: state.tpi?.mtpi !== undefined ? `${state.tpi.mtpi>=0?'+':''}${state.tpi.mtpi.toFixed(3)}` : '—',
+        sub: mtpiScore===null?'—':mtpiScore>0?'LONG TREND':mtpiScore<0?'SHORT TREND':'NEUTRAL',
+        color: mtpiScore===null?'var(--t2)':mtpiScore>0?'var(--g1)':mtpiScore<0?'var(--r1)':'var(--y1)', score:mtpiScore },
+      { lbl:'OPEN INTEREST', val: oiBtc?fmt(oiBtc):'—',
+        sub: oiScore===null?'—':oiScore>0?'TREND CONFIRMED':oiScore<0?'BEARISH CONFIRMED':'WATCHING',
+        color: oiScore===null?'var(--t2)':oiScore>0?'var(--g1)':oiScore<0?'var(--r1)':'var(--y1)', score:oiScore },
+      { lbl:'FEAR & GREED', val: fg!==null?`${fg}/100`:'—',
+        sub: fg===null?'—':fg<30?'EXTREME FEAR':fg>75?'EXTREME GREED':fg>55?'GREED':'FEAR',
+        color: fgScore===null?'var(--t2)':fgScore>0?'var(--g1)':'var(--r1)', score:fgScore },
+      { lbl:'FUNDING RATE', val: frBtc!==undefined?`${frBtc>0?'+':''}${frBtc.toFixed(4)}%`:'—',
+        sub: frScore===null?'—':frScore>0?'CONTRARIAN BULL':frScore<0?'CONTRARIAN BEAR':'NEUTRAL',
+        color: frScore===null?'var(--t2)':frScore>0?'var(--g1)':frScore<0?'var(--r1)':'var(--y1)', score:frScore },
+    ];
+
+  } else { // holder
+    // Long-term: LTPI + Rainbow + Pi Cycle + Puell
+    const ltpiScore = state.tpi?.ltpi !== undefined ?
+      (state.tpi.ltpi > 0.15 ? 1 : state.tpi.ltpi < -0.15 ? -1 : 0) : null;
+    const fgScore = fg !== null ? (fg < 25 ? 1 : fg > 80 ? -1 : fg < 45 ? 0.5 : 0) : null;
+    const lsScore = lsBtc ?
+      (lsBtc.long > 68 ? -0.8 : lsBtc.short > 62 ? 0.8 : 0) : null;
+    const priceScore = btcChg !== null ? (btcChg > 3 ? 0.7 : btcChg < -3 ? -0.7 : 0) : null;
+
+    cells = [
+      { lbl:'LTPI', val: state.tpi?.ltpi !== undefined ? `${state.tpi.ltpi>=0?'+':''}${state.tpi.ltpi.toFixed(3)}` : '—',
+        sub: ltpiScore===null?'—':ltpiScore>0?'LONG BIAS':ltpiScore<0?'SHORT BIAS':'NEUTRAL',
+        color: ltpiScore===null?'var(--t2)':ltpiScore>0?'var(--g1)':ltpiScore<0?'var(--r1)':'var(--y1)', score:ltpiScore },
+      { lbl:'FEAR & GREED', val: fg!==null?`${fg}/100`:'—',
+        sub: fg===null?'—':fg<25?'BUY SIGNAL':fg>80?'SELL SIGNAL':'HOLD',
+        color: fgScore===null?'var(--t2)':fgScore>0?'var(--g1)':'var(--r1)', score:fgScore },
+      { lbl:'SENTIMENT L/S', val: lsBtc?`L:${lsBtc.long.toFixed(0)}%`:'—',
+        sub: lsScore===null?'—':lsScore>0?'CONTRARIAN BULL':lsScore<0?'CONTRARIAN BEAR':'BALANCED',
+        color: lsScore===null?'var(--t2)':lsScore>0?'var(--g1)':lsScore<0?'var(--r1)':'var(--y1)', score:lsScore },
+      { lbl:'PRICE TREND', val: btcChg!==null?`${btcChg>=0?'+':''}${btcChg.toFixed(2)}%`:'—',
+        sub: priceScore===null?'—':priceScore>0?'UPTREND':priceScore<0?'DOWNTREND':'FLAT',
+        color: priceScore===null?'var(--t2)':priceScore>0?'var(--g1)':'var(--r1)', score:priceScore },
+    ];
+  }
+
+  // ── Compute overall score ─────────────────────────────────────────
+  const validCells = cells.filter(c => c.score !== null);
+  const rawScore = validCells.length ?
+    validCells.reduce((s,c) => s + c.score, 0) / validCells.length : 0;
+
+  // Map -1..+1 to 0..10
+  const consensus = Math.round((rawScore + 1) / 2 * 100) / 10;
+  const isBull    = rawScore > 0.15;
+  const isBear    = rawScore < -0.15;
+  const mainColor = isBull ? 'var(--g1)' : isBear ? 'var(--r1)' : 'var(--y1)';
+  const biasLabel = isBull ? (rawScore > 0.5 ? 'STRONG BULL' : 'BULLISH') :
+                    isBear ? (rawScore < -0.5 ? 'STRONG BEAR' : 'BEARISH') : 'NEUTRAL';
+  const biasIcon  = isBull ? '🟢' : isBear ? '🔴' : '🟡';
+
+  // Action text per mode
+  const modeLabel = _masterMode.toUpperCase();
+  let action;
+  if(isBull && rawScore > 0.5)
+    action = `[${modeLabel}] Strong bullish consensus across all signals. Consider ${_masterMode==='scalper'?'long scalp entries on pullbacks':_masterMode==='swing'?'swing long with tight stop below support':'accumulating on dips'}. Manage risk — never more than 1-2% per trade.`;
+  else if(isBull)
+    action = `[${modeLabel}] Moderate bullish bias. ${_masterMode==='scalper'?'Look for long setups on 15m/1H timeframe with volume confirmation.':_masterMode==='swing'?'Swing long opportunity forming — wait for 4H candle confirmation.':'Favorable macro conditions for holding. Avoid leverage.'} Confluence is partial — wait for more signals to align.`;
+  else if(isBear && rawScore < -0.5)
+    action = `[${modeLabel}] Strong bearish consensus. ${_masterMode==='scalper'?'Short setups favored. Watch liquidation levels above for potential squeeze traps.':_masterMode==='swing'?'Consider reducing exposure or defensive positioning.':'Cycle indicators suggest caution. Reduce or hold cash.'} Apply strict stop-loss discipline.`;
+  else if(isBear)
+    action = `[${modeLabel}] Moderate bearish bias. Mixed signals — not the time for aggressive positions. ${_masterMode==='holder'?'Long-term holders should monitor cycle indicators closely.':'Wait for clearer directional confirmation before entering.'}`;
+  else
+    action = `[${modeLabel}] No clear edge detected. Market in balance — avoid forced trades. Wait for funding rate extremes, volume spikes, or TPI trend change as entry triggers.`;
+
+  // Store TPI scores for next render
+  state.tpi = state.tpi || {};
+
+  // ── Update DOM ───────────────────────────────────────────────────
+  const masterIcon  = $('masterIcon');
+  const masterBias  = $('masterBias');
+  const masterScore = $('masterScore');
+  const masterPills = $('masterPills');
+  const masterGrid  = $('masterGrid');
+  const masterAction= $('masterAction');
+
+  if(masterIcon)  masterIcon.textContent  = biasIcon;
+  if(masterBias)  { masterBias.textContent = biasLabel; masterBias.style.color = mainColor; }
+  if(masterScore) { masterScore.textContent = `${consensus.toFixed(1)}`; masterScore.style.color = mainColor; }
+
+  // Signal pills
+  if(masterPills) {
+    masterPills.innerHTML = cells.map(c => `
+      <div class="master-sig-pill" style="border-color:${c.color}20">
+        <div class="master-sig-dot" style="background:${c.color}"></div>
+        <span style="color:var(--t2)">${c.lbl}:</span>
+        <span style="color:${c.color};font-weight:700">${c.sub}</span>
+      </div>`).join('');
+  }
+
+  // Cells grid
+  if(masterGrid) {
+    masterGrid.innerHTML = cells.map(c => `
+      <div class="master-cell" style="border-color:${c.color}20">
+        <div class="master-cell-lbl">${c.lbl}</div>
+        <div class="master-cell-val" style="color:${c.color}">${c.val}</div>
+        <div class="master-cell-sub" style="color:${c.color};opacity:.8">${c.sub}</div>
+      </div>`).join('');
+  }
+
+  // Action box
+  if(masterAction) {
+    const aBG  = isBull?'rgba(0,230,118,.06)':isBear?'rgba(255,23,68,.06)':'rgba(255,215,64,.06)';
+    const aBD  = isBull?'rgba(0,230,118,.2)':isBear?'rgba(255,23,68,.2)':'rgba(255,215,64,.2)';
+    masterAction.style.background   = aBG;
+    masterAction.style.borderColor  = aBD;
+    masterAction.style.color        = mainColor;
+    masterAction.textContent        = action;
+  }
+
+  // Log to history if bias changed
+  const prevBias = sessionStorage.getItem(`lt_bias_${_masterMode}`);
+  if(prevBias && prevBias !== biasLabel) {
+    logSignal(
+      isBull?'bull':isBear?'bear':'info',
+      biasIcon,
+      `${modeLabel} bias changed to ${biasLabel}`,
+      `${consensus.toFixed(1)}/10`
+    );
+  }
+  sessionStorage.setItem(`lt_bias_${_masterMode}`, biasLabel);
 }
 
 /* ═══════════════════════════════════════════════
