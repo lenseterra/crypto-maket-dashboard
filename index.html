@@ -1807,19 +1807,19 @@ async function loadPrices() {
 
 function renderBigCards() {
   ['BTCUSDT','ETHUSDT'].forEach(sym => {
-    const t = state.prices[sym];
-    if(!t) return;
+    const pd = state.prices[sym];
+    if(!pd) return;
     const panelId = sym==='BTCUSDT'?'btcCard':'ethCard';
     const color = SYMS_COLOR[sym];
-    const chg = parseFloat(t.priceChangePercent);
-    const p   = parseFloat(t.lastPrice);
+    const chg = parseFloat(pd.priceChangePercent);
+    const p   = parseFloat(pd.lastPrice);
     $( panelId ).innerHTML = `
       <div style="font-family:var(--mono);font-size:2rem;font-weight:700;color:var(--t3);line-height:1;margin-bottom:6px">${fmtP(p)}</div>
       <div class="${cls(chg)}" style="font-family:var(--mono);font-size:11px;font-weight:700;margin-bottom:10px">${pct(chg)} (24h)</div>
       <div style="display:flex;gap:12px;padding-top:8px;border-top:1px solid var(--border)">
-        <div><div style="font-family:var(--mono);font-size:8.5px;color:var(--t2);letter-spacing:1px">MAX 24H</div><div style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--t3)">${fmtP(parseFloat(t.highPrice))}</div></div>
-        <div><div style="font-family:var(--mono);font-size:8.5px;color:var(--t2);letter-spacing:1px">MIN 24H</div><div style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--t3)">${fmtP(parseFloat(t.lowPrice))}</div></div>
-        <div><div style="font-family:var(--mono);font-size:8.5px;color:var(--t2);letter-spacing:1px">VOL</div><div style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--t3)">${fmt(parseFloat(t.quoteVolume))}</div></div>
+        <div><div style="font-family:var(--mono);font-size:8.5px;color:var(--t2);letter-spacing:1px">MAX 24H</div><div style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--t3)">${fmtP(parseFloat(pd.highPrice))}</div></div>
+        <div><div style="font-family:var(--mono);font-size:8.5px;color:var(--t2);letter-spacing:1px">MIN 24H</div><div style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--t3)">${fmtP(parseFloat(pd.lowPrice))}</div></div>
+        <div><div style="font-family:var(--mono);font-size:8.5px;color:var(--t2);letter-spacing:1px">VOL</div><div style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--t3)">${fmt(parseFloat(pd.quoteVolume))}</div></div>
       </div>
     `;
   });
@@ -1827,12 +1827,12 @@ function renderBigCards() {
 
 function renderTicker() {
   const items = [...SYMS,...SYMS].map(sym => {
-    const t = state.prices[sym];
-    if(!t) return `<div class="t-item"><span class="t-sym">${SYMS_LABEL[sym]||sym}</span></div>`;
-    const chg = parseFloat(t.priceChangePercent);
+    const pd = state.prices[sym];
+    if(!pd) return `<div class="t-item"><span class="t-sym">${SYMS_LABEL[sym]||sym}</span></div>`;
+    const chg = parseFloat(pd.priceChangePercent);
     return `<div class="t-item">
       <span class="t-sym">${SYMS_LABEL[sym]}</span>
-      <span class="t-px">${fmtP(parseFloat(t.lastPrice))}</span>
+      <span class="t-px">${fmtP(parseFloat(pd.lastPrice))}</span>
       <span class="t-ch ${cls(chg)}">${pct(chg,1)}</span>
     </div>`;
   }).join('');
