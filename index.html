@@ -1669,59 +1669,61 @@ function applyLang() {
 }
 
 function updateStaticUI() {
-  // topbar / status
-  const ls = document.getElementById('liveStatus');
-  if(ls && ls.textContent !== t('live') && ls.textContent !== t('wsError') && ls.textContent !== t('reconnecting')) {
-    if(ls.textContent.includes('LIVE') || ls.textContent.includes('live') || ls.textContent === 'LIVE') ls.textContent = t('live');
-  }
-  const rb = document.getElementById('refreshBtn');
-  if(rb && rb.textContent !== t('loading')) rb.textContent = t('refresh');
-  // donate buttons
-  document.querySelectorAll('.btn-donate').forEach(b => {
-    if(!b.textContent.includes('project') && !b.textContent.includes('proyecto')) {
-      b.innerHTML = t('donate_btn');
-    } else {
-      b.innerHTML = t('donate_footer');
+  try {
+    // topbar / status
+    const ls = document.getElementById('liveStatus');
+    if(ls && ls.textContent !== t('live') && ls.textContent !== t('wsError') && ls.textContent !== t('reconnecting')) {
+      if(ls.textContent.includes('LIVE') || ls.textContent.includes('live') || ls.textContent === 'LIVE') ls.textContent = t('live');
     }
-  });
-  // AI drawer
-  const inp = document.getElementById('aiInput');
-  if(inp) inp.placeholder = t('ai_placeholder');
-  const stl = document.getElementById('aiStatusLbl');
-  if(stl && !stl.style.color.includes('255')) stl.textContent = t('ai_status_ready');
-  // Quick btns
-  document.querySelectorAll('.qb[data-i18n]').forEach(b => {
-    b.textContent = t(b.getAttribute('data-i18n'));
-  });
-  // Donation modal
-  const stitle = document.querySelector('.don-box [style*="letter-spacing:3px"]');
-  if(stitle) stitle.textContent = t('support_title');
-  const sdesc = document.querySelector('.don-box [style*="line-height:1.6"]');
-  if(sdesc) sdesc.innerHTML = t('support_desc');
-  const spp = document.querySelector('#donPP [style*="letter-spacing:1px"]');
-  if(spp) spp.textContent = t('pp_scan');
-  const ssolLabel = document.querySelector('#donSOL [style*="letter-spacing:1.5px"]');
-  if(ssolLabel) ssolLabel.textContent = t('sol_label');
-  const sCopyBtn = document.getElementById('solCopyBtn');
-  if(sCopyBtn && !sCopyBtn.textContent.includes('✅')) sCopyBtn.textContent = t('sol_copy');
-  const sthanks = document.querySelector('.don-box [style*="margin-top:16px"]');
-  if(sthanks) sthanks.textContent = t('thanks');
-  const solNote = document.querySelector('#donSOL [style*="line-height:1.5"]');
-  if(solNote) solNote.innerHTML = t('sol_note');
-  // footer
-  const fdesc = document.querySelector('.f-disc');
-  if(fdesc) fdesc.textContent = t('footer_disc');
-  // checklist static text
-  const clDesc = document.querySelector('#checklistGrid')?.previousElementSibling;
-  if(clDesc) clDesc.innerHTML = t('cl_based') + ' <span style="color:var(--y1)">' + t('cl_disclaimer') + '</span>';
-  // FR note
-  const frNote = document.querySelector('#frGrid + div');
-  if(frNote) frNote.innerHTML = `⚠️ <span style="color:var(--r1)">${t('fr_note_danger').split(':')[0]}:</span>${t('fr_note_danger').split(':').slice(1).join(':')}<br>✅ <span style="color:var(--g1)">${t('fr_note_opp').split(':')[0]}:</span>${t('fr_note_opp').split(':').slice(1).join(':')}`;
-  // whale threshold label
-  const whaleLbl = document.querySelector('#whaleFeed')?.previousElementSibling?.querySelector('span');
-  if(whaleLbl && whaleLbl.style.fontSize === '9px') whaleLbl.textContent = t('whale_thresh');
-  const whaleApply = document.querySelector('[onclick="applyWhaleThreshold()"]');
-  if(whaleApply) whaleApply.textContent = t('whale_apply');
+    const rb = document.getElementById('refreshBtn');
+    if(rb && rb.textContent !== t('loading')) rb.textContent = t('refresh');
+    // donate buttons
+    document.querySelectorAll('.btn-donate').forEach(b => {
+      if(!b.textContent.includes('project') && !b.textContent.includes('proyecto')) {
+        b.innerHTML = t('donate_btn');
+      } else {
+        b.innerHTML = t('donate_footer');
+      }
+    });
+    // AI drawer
+    const inp = document.getElementById('aiInput');
+    if(inp) inp.placeholder = t('ai_placeholder');
+    const stl = document.getElementById('aiStatusLbl');
+    if(stl && !stl.style.color.includes('255')) stl.textContent = t('ai_status_ready');
+    // Quick btns
+    document.querySelectorAll('.qb[data-i18n]').forEach(b => {
+      b.textContent = t(b.getAttribute('data-i18n'));
+    });
+    // Donation modal
+    const stitle = document.querySelector('.don-box [style*="letter-spacing:3px"]');
+    if(stitle) stitle.textContent = t('support_title');
+    const sdesc = document.querySelector('.don-box [style*="line-height:1.6"]');
+    if(sdesc) sdesc.innerHTML = t('support_desc');
+    const spp = document.querySelector('#donPP [style*="letter-spacing:1px"]');
+    if(spp) spp.textContent = t('pp_scan');
+    const ssolLabel = document.querySelector('#donSOL [style*="letter-spacing:1.5px"]');
+    if(ssolLabel) ssolLabel.textContent = t('sol_label');
+    const sCopyBtn = document.getElementById('solCopyBtn');
+    if(sCopyBtn && !sCopyBtn.textContent.includes('✅')) sCopyBtn.textContent = t('sol_copy');
+    const sthanks = document.querySelector('.don-box [style*="margin-top:16px"]');
+    if(sthanks) sthanks.textContent = t('thanks');
+    const solNote = document.querySelector('#donSOL [style*="line-height:1.5"]');
+    if(solNote) solNote.innerHTML = t('sol_note');
+    // footer
+    const fdesc = document.querySelector('.f-disc');
+    if(fdesc) fdesc.textContent = t('footer_disc');
+    // checklist static text
+    const clDesc = document.querySelector('#checklistGrid')?.previousElementSibling;
+    if(clDesc) clDesc.innerHTML = t('cl_based') + ' <span style="color:var(--y1)">' + t('cl_disclaimer') + '</span>';
+    // FR note
+    const frNote = document.querySelector('#frGrid + div');
+    if(frNote) frNote.innerHTML = `⚠️ <span style="color:var(--r1)">${t('fr_note_danger').split(':')[0]}:</span>${t('fr_note_danger').split(':').slice(1).join(':')}<br>✅ <span style="color:var(--g1)">${t('fr_note_opp').split(':')[0]}:</span>${t('fr_note_opp').split(':').slice(1).join(':')}`;
+    // whale threshold label
+    const whaleLbl = document.querySelector('#whaleFeed')?.previousElementSibling?.querySelector('span');
+    if(whaleLbl && whaleLbl.style.fontSize === '9px') whaleLbl.textContent = t('whale_thresh');
+    const whaleApply = document.querySelector('[onclick="applyWhaleThreshold()"]');
+    if(whaleApply) whaleApply.textContent = t('whale_apply');
+  } catch(e) { /* ui errors ignored */ }
 }
 
 /* ─── HELPERS ─── */
@@ -2549,8 +2551,7 @@ async function refreshAll() {
 connectWhaleWS();
 
 // Initial load
-applyLang();
-renderSessions();
+try{applyLang();}catch(e){}
 refreshAll();
 // MVRV loads independently — does NOT block main dashboard
 setTimeout(() => { try { loadMVRV(); } catch(e) {} }, 2000);
@@ -3345,6 +3346,11 @@ const SESSIONS = [
   { id:'sydney',  name:'SYDNEY',   emoji:'🦘', utcOpen:22, utcClose:7,  color:'#e040fb', bg:'rgba(224,64,251,.08)', border:'rgba(224,64,251,.2)' },
 ];
 
+// Init sessions now that SESSIONS is defined
+renderSessions();
+setInterval(renderSessions, 60000);
+
+
 function isSessionActive(s) {
   const nowH = new Date().getUTCHours() + new Date().getUTCMinutes()/60;
   if(s.utcOpen < s.utcClose) return nowH >= s.utcOpen && nowH < s.utcClose;
@@ -3415,7 +3421,6 @@ function renderSessions() {
 }
 
 // Update sessions every minute
-setInterval(renderSessions, 60000);
 
 /* ════════════════════════════════════════════════════════
    BTC DOMINANCE + ALTSEASON INDEX
