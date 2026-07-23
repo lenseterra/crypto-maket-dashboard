@@ -773,6 +773,59 @@ body::before {
 .altseason-needle { position:absolute; top:-3px; width:3px; height:16px; background:#fff; border-radius:2px; transform:translateX(-50%); box-shadow:0 0 6px rgba(255,255,255,.7); transition:left .6s; }
 .dom-stat-row { display:flex; justify-content:space-between; align-items:center; padding:6px 10px; background:var(--p2); border-radius:7px; border:1px solid var(--border); margin-bottom:5px; }
 
+
+/* ═══ NEW INDICATORS ROW ═══ */
+.ind-row { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-bottom:14px; }
+@media(max-width:1200px){ .ind-row{ grid-template-columns:repeat(3,1fr); } }
+@media(max-width:700px) { .ind-row{ grid-template-columns:repeat(2,1fr); } }
+
+.ind-card {
+  background:var(--panel); border:1px solid var(--border);
+  border-radius:var(--radius); padding:12px 14px;
+  display:flex; flex-direction:column; gap:4px;
+  position:relative; overflow:hidden;
+}
+.ind-card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:2px;
+  border-radius:var(--radius) var(--radius) 0 0;
+}
+.ind-card.rsi::before  { background:var(--b1); }
+.ind-card.macd::before { background:#9c27b0; }
+.ind-card.cbp::before  { background:#f7931a; }
+.ind-card.cvd::before  { background:var(--g1); }
+.ind-card.vol::before  { background:var(--y1); }
+
+.ind-label { font-family:var(--mono); font-size:8px; letter-spacing:2px;
+  color:var(--t2); text-transform:uppercase; }
+.ind-value { font-family:var(--mono); font-size:1.4rem; font-weight:700; line-height:1; }
+.ind-sub   { font-family:var(--mono); font-size:8.5px; margin-top:2px; }
+.ind-signal{
+  display:inline-flex; align-items:center; gap:4px;
+  padding:3px 8px; border-radius:5px; margin-top:4px;
+  font-family:var(--mono); font-size:8px; font-weight:700; letter-spacing:1px;
+  width:fit-content;
+}
+.ind-bar-wrap { margin-top:6px; height:4px; background:rgba(255,255,255,.06); border-radius:2px; overflow:hidden; }
+.ind-bar-fill { height:100%; border-radius:2px; transition:width .5s; }
+
+/* RSI gauge arc (mini) */
+.rsi-gauge { display:flex; align-items:center; justify-content:center; margin:4px 0; }
+
+/* MACD histogram */
+.macd-hist { display:flex; align-items:flex-end; gap:1px; height:28px; margin-top:6px; }
+.macd-bar  { flex:1; border-radius:1px 1px 0 0; min-width:3px; transition:height .3s; }
+
+/* CBP comparison */
+.cbp-row { display:flex; justify-content:space-between; align-items:center;
+  padding:4px 0; border-bottom:1px solid rgba(255,255,255,.04); font-family:var(--mono); font-size:9px; }
+
+/* CVD sparkline */
+.cvd-spark { margin-top:4px; }
+
+/* Volatility gauge */
+.vol-segments { display:flex; height:6px; border-radius:3px; overflow:hidden; gap:1px; margin-top:6px; }
+.vol-seg { flex:1; border-radius:2px; }
+
 </style>
 </head>
 <body>
@@ -1078,6 +1131,41 @@ body::before {
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- ══ NEW INDICATORS ROW ══ -->
+  <div class="ind-row" id="newIndicatorsRow">
+
+    <!-- RSI -->
+    <div class="ind-card rsi" id="rsiCard">
+      <div class="ind-label">RSI (14) · BTC 4H</div>
+      <div class="sk sk-line" style="height:60px;margin-top:4px"></div>
+    </div>
+
+    <!-- MACD -->
+    <div class="ind-card macd" id="macdCard">
+      <div class="ind-label">MACD · BTC 4H</div>
+      <div class="sk sk-line" style="height:60px;margin-top:4px"></div>
+    </div>
+
+    <!-- Coinbase Premium -->
+    <div class="ind-card cbp" id="cbpCard">
+      <div class="ind-label">Coinbase Premium</div>
+      <div class="sk sk-line" style="height:60px;margin-top:4px"></div>
+    </div>
+
+    <!-- CVD -->
+    <div class="ind-card cvd" id="cvdCard">
+      <div class="ind-label">CVD · Volume Delta</div>
+      <div class="sk sk-line" style="height:60px;margin-top:4px"></div>
+    </div>
+
+    <!-- Volatility -->
+    <div class="ind-card vol" id="volCard">
+      <div class="ind-label">Volatility Index</div>
+      <div class="sk sk-line" style="height:60px;margin-top:4px"></div>
+    </div>
+
   </div>
 
   <!-- MVRV PANEL -->
@@ -2536,7 +2624,8 @@ async function refreshAll() {
     loadVolumeSpikes(),
     loadLiquidationMap(),
     loadTPI(),
-    loadDominance()
+    loadDominance(),
+    loadNewIndicators()
   ]);
 
   // Compute composite signal after all data loaded
@@ -3830,6 +3919,370 @@ function renderPuell(price,puell,hist) {
     (spark?'<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"><div style="font-family:var(--mono);font-size:7.5px;color:var(--t2);margin-bottom:4px">60-DAY PUELL</div>'+spark+'</div>':'');
 }
 
+
+/* ════════════════════════════════════════════════════════════════
+   NEW INDICATORS ENGINE
+   All calculated from free Binance klines — no API key needed
+
+   1. RSI (14)           — overbought/oversold momentum
+   2. MACD (12,26,9)     — trend direction + momentum
+   3. Coinbase Premium   — institutional buying pressure
+   4. CVD                — cumulative volume delta (buy vs sell pressure)
+   5. Volatility Index   — 14-day historical volatility (annualized)
+════════════════════════════════════════════════════════════════ */
+
+/* ── Shared 4H klines cache (fetched once, used by all indicators) ── */
+var _klineCache4h = null;
+var _klineCache4hTs = 0;
+
+async function get4hKlines(limit) {
+  limit = limit || 100;
+  var now = Date.now();
+  // Cache for 2 minutes
+  if (_klineCache4h && _klineCache4h.length >= limit && (now - _klineCache4hTs) < 120000) {
+    return _klineCache4h;
+  }
+  var res = await fetch('https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=4h&limit=' + limit);
+  if (!res.ok) throw new Error('klines ' + res.status);
+  _klineCache4h = await res.json();
+  _klineCache4hTs = now;
+  return _klineCache4h;
+}
+
+/* ── RSI calculation ── */
+function calcRSI(closes, period) {
+  period = period || 14;
+  if (closes.length < period + 1) return null;
+  var gains = 0, losses = 0;
+  for (var i = closes.length - period; i < closes.length; i++) {
+    var diff = closes[i] - closes[i-1];
+    if (diff > 0) gains += diff; else losses -= diff;
+  }
+  var avgGain = gains / period, avgLoss = losses / period;
+  if (avgLoss === 0) return 100;
+  var rs = avgGain / avgLoss;
+  return 100 - (100 / (1 + rs));
+}
+
+/* ── MACD calculation ── */
+function calcEMA(closes, period) {
+  var k = 2 / (period + 1);
+  var ema = closes[0];
+  for (var i = 1; i < closes.length; i++) {
+    ema = closes[i] * k + ema * (1 - k);
+  }
+  return ema;
+}
+function calcEMAArr(closes, period) {
+  var k = 2 / (period + 1), arr = [closes[0]];
+  for (var i = 1; i < closes.length; i++) {
+    arr.push(closes[i] * k + arr[arr.length-1] * (1 - k));
+  }
+  return arr;
+}
+function calcMACD(closes) {
+  if (closes.length < 35) return null;
+  var ema12arr = calcEMAArr(closes, 12);
+  var ema26arr = calcEMAArr(closes, 26);
+  // MACD line
+  var macdLine = ema12arr.map(function(v,i){ return v - ema26arr[i]; });
+  // Signal line (9-period EMA of MACD line)
+  var signalArr = calcEMAArr(macdLine, 9);
+  var last = macdLine.length - 1;
+  return {
+    macd:     macdLine[last],
+    signal:   signalArr[last],
+    hist:     macdLine[last] - signalArr[last],
+    histArr:  macdLine.slice(-12).map(function(v,i){ return v - signalArr[signalArr.length-12+i]; }),
+    bullish:  macdLine[last] > signalArr[last],
+    crossed:  (macdLine[last] > signalArr[last]) !== (macdLine[last-1] > signalArr[last-1])
+  };
+}
+
+/* ── CVD calculation ── */
+function calcCVD(klines) {
+  // CVD = cumulative (bull candle volume - bear candle volume)
+  // Approximate: if close > open → buy volume, else → sell volume
+  var cvd = 0;
+  var cvdArr = [];
+  klines.forEach(function(k) {
+    var open  = parseFloat(k[1]);
+    var close = parseFloat(k[4]);
+    var vol   = parseFloat(k[5]);  // base asset volume
+    var price = (parseFloat(k[2]) + parseFloat(k[3])) / 2; // (high+low)/2
+    var delta = close > open ? vol * price : -vol * price;  // in USD approx
+    cvd += delta;
+    cvdArr.push(cvd);
+  });
+  return { current: cvd, arr: cvdArr.slice(-20), trend: cvd > 0 ? 'bullish' : 'bearish' };
+}
+
+/* ── Volatility Index ── */
+function calcVolatility(closes, period) {
+  period = period || 14;
+  if (closes.length < period + 1) return null;
+  var returns = [];
+  for (var i = closes.length - period; i < closes.length; i++) {
+    returns.push(Math.log(closes[i] / closes[i-1]));
+  }
+  var mean = returns.reduce(function(a,b){return a+b;},0) / returns.length;
+  var variance = returns.reduce(function(a,r){return a + Math.pow(r-mean,2);},0) / returns.length;
+  var dailyVol = Math.sqrt(variance);
+  // 4H candles: 6 per day, annualize: sqrt(6*365)
+  return dailyVol * Math.sqrt(6 * 365) * 100; // as percentage
+}
+
+/* ── Mini SVG sparkline (for CVD) ── */
+function _miniSpark(arr, color, w, h) {
+  w = w || 120; h = h || 24;
+  if (!arr || arr.length < 2) return '';
+  var mn = Math.min.apply(null,arr), mx = Math.max.apply(null,arr), rng = mx-mn||1;
+  var pts = arr.map(function(v,i){
+    return (i/(arr.length-1)*w).toFixed(1)+','+(h-((v-mn)/rng)*(h-4)-2).toFixed(1);
+  }).join(' ');
+  return '<svg width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" style="display:block">' +
+    '<polyline points="'+pts+'" fill="none" stroke="'+color+'" stroke-width="1.5" stroke-linejoin="round" opacity=".85"/></svg>';
+}
+
+/* ── RSI arc gauge ── */
+function _rsiArc(rsi) {
+  var pct  = Math.max(0, Math.min(100, rsi)) / 100;
+  var cx=40, cy=36, r=28;
+  function polar(p) {
+    var ang = Math.PI - p * Math.PI;
+    return {x: cx + r*Math.cos(ang), y: cy - r*Math.sin(ang)};
+  }
+  function arc(f,t,c) {
+    var p1=polar(f),p2=polar(t);
+    return '<path d="M'+p1.x.toFixed(1)+','+p1.y.toFixed(1)+' A'+r+','+r+' 0 0 0 '+p2.x.toFixed(1)+','+p2.y.toFixed(1)+'" stroke="'+c+'" stroke-width="7" fill="none" stroke-linecap="butt"/>';
+  }
+  var needle_ang = Math.PI - pct * Math.PI;
+  var nx = cx + r*0.75*Math.cos(needle_ang), ny = cy - r*0.75*Math.sin(needle_ang);
+  var color = rsi > 70 ? '#ff1744' : rsi < 30 ? '#00e676' : rsi > 55 ? '#ffd740' : '#00b0ff';
+  return '<svg viewBox="0 0 80 44" width="80" height="44" style="display:block;margin:0 auto">' +
+    arc(0,0.3,'rgba(0,230,118,.5)') + arc(0.3,0.7,'rgba(255,215,64,.4)') + arc(0.7,1,'rgba(255,23,68,.5)') +
+    '<line x1="'+cx+'" y1="'+cy+'" x2="'+nx.toFixed(1)+'" y2="'+ny.toFixed(1)+'" stroke="'+color+'" stroke-width="2.5" stroke-linecap="round"/>' +
+    '<circle cx="'+cx+'" cy="'+cy+'" r="3.5" fill="'+color+'"/>' +
+    '<text x="8" y="41" font-family="monospace" font-size="7" fill="rgba(0,230,118,.7)">30</text>' +
+    '<text x="34" y="12" font-family="monospace" font-size="7" fill="rgba(255,215,64,.7)" text-anchor="middle">50</text>' +
+    '<text x="65" y="41" font-family="monospace" font-size="7" fill="rgba(255,23,68,.7)">70</text>' +
+    '</svg>';
+}
+
+/* ══ MAIN LOADER ══ */
+async function loadNewIndicators() {
+  try {
+    var raw = await get4hKlines(100);
+    var closes  = raw.map(function(k){return parseFloat(k[4]);});
+    var opens   = raw.map(function(k){return parseFloat(k[1]);});
+    var highs   = raw.map(function(k){return parseFloat(k[2]);});
+    var lows    = raw.map(function(k){return parseFloat(k[3]);});
+    var vols    = raw.map(function(k){return parseFloat(k[5]);});
+
+    var rsi  = calcRSI(closes, 14);
+    var macd = calcMACD(closes);
+    var cvd  = calcCVD(raw);
+    var vix  = calcVolatility(closes, 14);
+
+    renderRSI(rsi);
+    renderMACD(macd);
+    renderCVD(cvd);
+    renderVolatility(vix);
+
+    // Coinbase Premium runs separately (different API)
+    loadCoinbasePremium();
+
+    // Feed RSI/MACD into master panel state
+    state.rsi  = rsi;
+    state.macd = macd;
+    state.cvd  = cvd;
+    state.vix  = vix;
+
+    // Log significant signals
+    if (rsi !== null) {
+      if (rsi > 75)  logSignal('warn',  '⚠️', 'RSI overbought', rsi.toFixed(1));
+      if (rsi < 28)  logSignal('bull',  '🟢', 'RSI oversold',   rsi.toFixed(1));
+    }
+    if (macd && macd.crossed) {
+      logSignal(macd.bullish?'bull':'bear', macd.bullish?'📈':'📉',
+        'MACD crossover: ' + (macd.bullish?'bullish signal':'bearish signal'),
+        macd.hist.toFixed(2));
+    }
+
+  } catch(e) {
+    console.warn('loadNewIndicators:', e.message);
+    ['rsiCard','macdCard','cvdCard','volCard'].forEach(function(id){
+      var el = $(id);
+      if(el) el.innerHTML = '<div class="ind-label">ERROR</div><div style="font-family:var(--mono);font-size:8px;color:var(--r1);margin-top:6px">'+e.message+'</div>';
+    });
+  }
+}
+
+async function loadCoinbasePremium() {
+  var card = $('cbpCard');
+  if (!card) return;
+  try {
+    var [cbRes, bnRes] = await Promise.all([
+      fetch('https://api.exchange.coinbase.com/products/BTC-USD/ticker'),
+      fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT')
+    ]);
+    if (!cbRes.ok || !bnRes.ok) throw new Error('API error');
+    var cb = await cbRes.json();
+    var bn = await bnRes.json();
+
+    var cbPrice = parseFloat(cb.price);
+    var bnPrice = parseFloat(bn.price);
+    var premium = ((cbPrice - bnPrice) / bnPrice) * 100;
+    var isPos   = premium >= 0;
+    var color   = premium > 0.1 ? 'var(--g1)' : premium < -0.1 ? 'var(--r1)' : 'var(--y1)';
+    var signal  = premium > 0.1  ? '🟢 INST. BUYING' :
+                  premium < -0.1 ? '🔴 INST. SELLING' : '⚖️ NEUTRAL';
+    var signalBG= premium > 0.1  ? 'rgba(0,230,118,.1)' :
+                  premium < -0.1 ? 'rgba(255,23,68,.1)'  : 'rgba(255,215,64,.1)';
+
+    card.innerHTML =
+      '<div class="ind-label">Coinbase Premium Index</div>' +
+      '<div class="ind-value" style="color:'+color+';margin-top:4px">'+(isPos?'+':'')+premium.toFixed(3)+'%</div>' +
+      '<div class="cbp-row" style="margin-top:8px"><span style="color:var(--t2)">Coinbase</span><span style="color:var(--t3)">$'+cbPrice.toLocaleString('en',{maximumFractionDigits:1})+'</span></div>' +
+      '<div class="cbp-row"><span style="color:var(--t2)">Binance</span><span style="color:var(--t3)">$'+bnPrice.toLocaleString('en',{maximumFractionDigits:1})+'</span></div>' +
+      '<div class="ind-signal" style="color:'+color+';background:'+signalBG+';border:1px solid '+color+'30;margin-top:6px">'+signal+'</div>' +
+      '<div style="font-family:var(--mono);font-size:7.5px;color:var(--t2);margin-top:6px;line-height:1.5">+premium = institutions buying on CB<br>-premium = selling pressure from CB</div>';
+
+    // Log if significant
+    if (Math.abs(premium) > 0.15) {
+      logSignal(isPos?'bull':'bear', isPos?'🏦':'🏦',
+        'Coinbase Premium: ' + (isPos?'institutions buying':'institutions selling'),
+        (isPos?'+':'')+premium.toFixed(3)+'%');
+    }
+  } catch(e) {
+    // CORS issue on Coinbase — show helpful message
+    if (card) card.innerHTML =
+      '<div class="ind-label">Coinbase Premium</div>' +
+      '<div style="font-family:var(--mono);font-size:8px;color:var(--t2);margin-top:8px;line-height:1.6">'+
+      'Coinbase API has CORS restrictions.<br>'+
+      '<span style="color:var(--b1)">Proxy needed for live data.</span><br>'+
+      '<span style="color:var(--t2);font-size:7.5px">Will be enabled in next update.</span></div>';
+  }
+}
+
+function renderRSI(rsi) {
+  var card = $('rsiCard');
+  if (!card || rsi === null) return;
+  var color   = rsi > 70 ? 'var(--r1)' : rsi < 30 ? 'var(--g1)' : rsi > 55 ? 'var(--y1)' : 'var(--b1)';
+  var label   = rsi > 75 ? '🔴 OVERBOUGHT' : rsi < 25 ? '🟢 OVERSOLD' :
+                rsi > 55 ? '⚠️ ABOVE MID'  : rsi < 45 ? '💙 BELOW MID' : '⚖️ NEUTRAL';
+  var sigBG   = rsi > 70 ? 'rgba(255,23,68,.1)' : rsi < 30 ? 'rgba(0,230,118,.1)' : 'rgba(255,215,64,.1)';
+  var pct     = Math.max(0, Math.min(100, rsi));
+
+  card.innerHTML =
+    '<div class="ind-label">RSI (14) · BTC 4H</div>' +
+    '<div style="display:flex;align-items:center;gap:8px;margin-top:4px">' +
+      _rsiArc(rsi) +
+      '<div>' +
+        '<div class="ind-value" style="color:'+color+'">'+rsi.toFixed(1)+'</div>' +
+        '<div class="ind-sub" style="color:'+color+'">'+label+'</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="ind-bar-wrap"><div class="ind-bar-fill" style="width:'+pct+'%;background:'+color+'"></div></div>' +
+    '<div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:7.5px;color:var(--t2);margin-top:2px"><span>0</span><span>30</span><span>70</span><span>100</span></div>' +
+    '<div class="ind-signal" style="color:'+color+';background:'+sigBG+';border:1px solid '+color+'30;margin-top:4px">'+label+'</div>';
+}
+
+function renderMACD(macd) {
+  var card = $('macdCard');
+  if (!card || !macd) return;
+  var color   = macd.bullish ? 'var(--g1)' : 'var(--r1)';
+  var label   = macd.crossed ? (macd.bullish ? '📈 BULL CROSS' : '📉 BEAR CROSS') :
+                macd.bullish ? '▲ BULLISH' : '▼ BEARISH';
+  var sigBG   = macd.bullish ? 'rgba(0,230,118,.1)' : 'rgba(255,23,68,.1)';
+  var maxHist = Math.max.apply(null, macd.histArr.map(Math.abs)) || 1;
+
+  var bars = macd.histArr.map(function(v) {
+    var h   = Math.max(3, Math.abs(v)/maxHist * 24);
+    var c   = v >= 0 ? 'var(--g1)' : 'var(--r1)';
+    return '<div class="macd-bar" style="height:'+h.toFixed(0)+'px;background:'+c+';opacity:'+(0.4+Math.abs(v)/maxHist*0.6).toFixed(2)+'"></div>';
+  }).join('');
+
+  card.innerHTML =
+    '<div class="ind-label">MACD (12,26,9) · BTC 4H</div>' +
+    '<div style="display:flex;gap:12px;margin-top:6px;flex-wrap:wrap">' +
+      '<div><div style="font-family:var(--mono);font-size:7.5px;color:var(--t2)">MACD</div>' +
+        '<div style="font-family:var(--mono);font-size:1rem;font-weight:700;color:'+color+'">'+(macd.macd>=0?'+':'')+macd.macd.toFixed(1)+'</div></div>' +
+      '<div><div style="font-family:var(--mono);font-size:7.5px;color:var(--t2)">SIGNAL</div>' +
+        '<div style="font-family:var(--mono);font-size:1rem;font-weight:700;color:var(--t2)">'+(macd.signal>=0?'+':'')+macd.signal.toFixed(1)+'</div></div>' +
+      '<div><div style="font-family:var(--mono);font-size:7.5px;color:var(--t2)">HIST</div>' +
+        '<div style="font-family:var(--mono);font-size:1rem;font-weight:700;color:'+color+'">'+(macd.hist>=0?'+':'')+macd.hist.toFixed(1)+'</div></div>' +
+    '</div>' +
+    '<div class="macd-hist" style="margin-top:6px">'+bars+'</div>' +
+    '<div class="ind-signal" style="color:'+color+';background:'+sigBG+';border:1px solid '+color+'30;margin-top:4px">'+label+(macd.crossed?' ⚡':'')+'</div>';
+}
+
+function renderCVD(cvd) {
+  var card = $('cvdCard');
+  if (!card || !cvd) return;
+  var isPos   = cvd.current > 0;
+  var color   = isPos ? 'var(--g1)' : 'var(--r1)';
+  var sigBG   = isPos ? 'rgba(0,230,118,.1)' : 'rgba(255,23,68,.1)';
+  var label   = isPos ? '🟢 BUY PRESSURE' : '🔴 SELL PRESSURE';
+  var absVal  = Math.abs(cvd.current);
+  var dispVal = absVal >= 1e9 ? (cvd.current/1e9).toFixed(2)+'B' :
+                absVal >= 1e6 ? (cvd.current/1e6).toFixed(1)+'M' :
+                                (cvd.current/1e3).toFixed(0)+'K';
+
+  // Normalize CVD array for sparkline
+  var spark = _miniSpark(cvd.arr, color, 130, 28);
+
+  card.innerHTML =
+    '<div class="ind-label">CVD · Volume Delta BTC 4H</div>' +
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px">' +
+      '<div>' +
+        '<div class="ind-value" style="color:'+color+'">'+(isPos?'+':'')+dispVal+'</div>' +
+        '<div class="ind-sub" style="color:'+color+'">cumulative delta</div>' +
+      '</div>' +
+      '<div class="cvd-spark">'+spark+'</div>' +
+    '</div>' +
+    '<div class="ind-signal" style="color:'+color+';background:'+sigBG+';border:1px solid '+color+'30;margin-top:6px">'+label+'</div>' +
+    '<div style="font-family:var(--mono);font-size:7.5px;color:var(--t2);margin-top:4px;line-height:1.5">Bulls minus bears (vol weighted).<br>Rising = net buy flow dominant.</div>';
+}
+
+function renderVolatility(vix) {
+  var card = $('volCard');
+  if (!card || vix === null) return;
+  var level = vix < 50  ? 'LOW'    :
+              vix < 80  ? 'NORMAL' :
+              vix < 120 ? 'HIGH'   : 'EXTREME';
+  var color = vix < 50  ? 'var(--b1)' :
+              vix < 80  ? 'var(--g1)' :
+              vix < 120 ? 'var(--y1)' : 'var(--r1)';
+  var sigBG = vix < 50  ? 'rgba(0,176,255,.1)' :
+              vix < 80  ? 'rgba(0,230,118,.1)' :
+              vix < 120 ? 'rgba(255,215,64,.1)' : 'rgba(255,23,68,.1)';
+  var desc  = vix < 50  ? 'Calm market. Breakouts may be explosive.' :
+              vix < 80  ? 'Normal range. Momentum trades viable.' :
+              vix < 120 ? 'Elevated volatility. Tighten stops.' :
+                          'Extreme volatility. Reduce leverage.';
+
+  var segs  = [50,80,120,999];
+  var segColors = ['var(--b1)','var(--g1)','var(--y1)','var(--r1)'];
+  var filled = Math.min(4, segs.findIndex(function(s){return vix<s;})+1);
+  var bars   = segs.map(function(_,i){
+    return '<div class="vol-seg" style="background:'+(i<filled?segColors[i]:'rgba(255,255,255,.08)');+'"></div>';
+  }).join('');
+
+  var pct = Math.min(100, (vix / 200) * 100).toFixed(0);
+
+  card.innerHTML =
+    '<div class="ind-label">Volatility Index · BTC 4H</div>' +
+    '<div style="display:flex;align-items:flex-end;gap:10px;margin-top:4px">' +
+      '<div class="ind-value" style="color:'+color+'">'+vix.toFixed(1)+'%</div>' +
+      '<div style="font-family:var(--mono);font-size:9px;color:'+color+';margin-bottom:4px">annualized</div>' +
+    '</div>' +
+    '<div class="ind-bar-wrap" style="margin-top:6px"><div class="ind-bar-fill" style="width:'+pct+'%;background:'+color+'"></div></div>' +
+    '<div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:7.5px;color:var(--t2);margin-top:2px"><span>LOW</span><span>NORM</span><span>HIGH</span><span>EXTREME</span></div>' +
+    '<div class="ind-signal" style="color:'+color+';background:'+sigBG+';border:1px solid '+color+'30;margin-top:4px">'+level+'</div>' +
+    '<div style="font-family:var(--mono);font-size:7.5px;color:var(--t2);margin-top:4px;line-height:1.5">'+desc+'</div>';
+}
+
 /* ═══════════════════════════════════════════════
    DONATION MODAL
 ═══════════════════════════════════════════════ */
@@ -3929,6 +4382,9 @@ function _aiCtx() {
     const oi = s.oi[sym];
     if(oi) lines.push('Open Interest ' + sym.replace('USDT','') + ': ' + fmt(oi));
   });
+  if(s.rsi  !== undefined && s.rsi !== null) lines.push('RSI (14) 4H: '+s.rsi.toFixed(1)+(s.rsi>70?' [OVERBOUGHT]':s.rsi<30?' [OVERSOLD]':''));
+  if(s.macd) lines.push('MACD 4H: hist '+(s.macd.hist>=0?'+':'')+s.macd.hist.toFixed(2)+(s.macd.bullish?' [BULLISH]':' [BEARISH]')+(s.macd.crossed?' CROSSOVER!':''));
+  if(s.vix  !== undefined && s.vix !== null) lines.push('Volatility: '+s.vix.toFixed(1)+'% ('+( s.vix<50?'LOW':s.vix<80?'NORMAL':s.vix<120?'HIGH':'EXTREME')+')');
   if(s.liqBias) lines.push('Sesgo liquidaciones BTC: ' + (s.liqBias==='SHORT_HEAVY'?t('liq_short_heavy'):t('liq_long_heavy')));
   return lines.join('\n') || 'Datos del dashboard cargando...';
 }
