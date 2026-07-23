@@ -826,6 +826,17 @@ body::before {
 .vol-segments { display:flex; height:6px; border-radius:3px; overflow:hidden; gap:1px; margin-top:6px; }
 .vol-seg { flex:1; border-radius:2px; }
 
+
+/* === EDUCATIONAL NOTES === */
+.edu-toggle{cursor:pointer;display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:8px;color:var(--b1);letter-spacing:1px;margin-top:8px;user-select:none;opacity:.75;transition:opacity .2s}
+.edu-toggle:hover{opacity:1}
+.edu-body{display:none;margin-top:6px}
+.edu-body.open{display:block}
+.edu-note{padding:10px 12px;background:rgba(0,176,255,.05);border:1px solid rgba(0,176,255,.15);border-left:3px solid #00b0ff;border-radius:0 7px 7px 0;font-size:11px;line-height:1.65;color:var(--t2)}
+.edu-note strong{color:var(--t3)}
+.edu-tip{display:block;margin-top:6px;padding:4px 8px;background:rgba(0,230,118,.07);border:1px solid rgba(0,230,118,.15);border-radius:4px;color:var(--g1);font-size:10px}
+.edu-warn{display:block;margin-top:5px;padding:4px 8px;background:rgba(255,215,64,.07);border:1px solid rgba(255,215,64,.15);border-radius:4px;color:var(--y1);font-size:10px}
+
 </style>
 </head>
 <body>
@@ -2812,7 +2823,7 @@ function renderTPI(id, data) {
     ${extreme}
     <div class="tpi-disc">${t('tpi_disclaimer')}</div>
   </div>
-</div>`;
+</div>` + _edu(id==='ltpiPanel'?'ltpi':'mtpi','#00b0ff');
 }
 
 /* ═════════════════════════════════════════════════
@@ -3859,7 +3870,7 @@ function renderRainbow(price,band,hist) {
     '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--p2);border-radius:7px;border:1px solid var(--border)"><span style="font-family:var(--mono);font-size:8.5px;color:var(--t2)">BAND UPPER</span><span style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--t2)">$'+Math.round(band.upper).toLocaleString('en')+'</span></div>'+
     '</div>'+
     '<div style="padding:8px 10px;border-radius:8px;font-family:var(--mono);font-size:8.5px;line-height:1.65;border:1px solid '+band.bd+';background:'+band.bg+';color:'+band.color+'">Log regression model. Not financial advice.</div>'+
-    (spark?'<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"><div style="font-family:var(--mono);font-size:7.5px;color:var(--t2);margin-bottom:4px">60-DAY PRICE</div>'+spark+'</div>':'');
+    (spark?'<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"><div style="font-family:var(--mono);font-size:7.5px;color:var(--t2);margin-bottom:4px">60-DAY PRICE</div>'+spark+'</div>':'') + _edu('rainbow','#ffd740');
 }
 
 function renderPiCycle(price,ma111,ma350x2,hist) {
@@ -3889,7 +3900,7 @@ function renderPiCycle(price,ma111,ma350x2,hist) {
     '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--p2);border-radius:7px;border:1px solid var(--border)"><span style="font-family:var(--mono);font-size:8.5px;color:var(--t2)">GAP</span><span style="font-family:var(--mono);font-size:10px;font-weight:700;color:'+color+'">'+(gap>=0?'+':'')+gap.toFixed(1)+'%</span></div>'+
     '</div>'+
     '<div style="padding:8px 10px;border-radius:8px;font-family:var(--mono);font-size:8.5px;line-height:1.65;border:1px solid '+color+'35;background:'+color+'0d;color:'+color+'">'+(crossed?'Crossover detected — historically marks cycle tops.':Math.abs(gap)<5?'MAs converging. Watch for top signal.':'MAs separated. No top signal. Trend likely intact.')+'</div>'+
-    (spark?'<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"><div style="font-family:var(--mono);font-size:7.5px;color:var(--t2);margin-bottom:4px">111/350×2 RATIO 60D</div>'+spark+'</div>':'');
+    (spark?'<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"><div style="font-family:var(--mono);font-size:7.5px;color:var(--t2);margin-bottom:4px">111/350×2 RATIO 60D</div>'+spark+'</div>':'') + _edu('picycle','#ff1744');
 }
 
 function renderPuell(price,puell,hist) {
@@ -3916,7 +3927,7 @@ function renderPuell(price,puell,hist) {
     '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--p2);border-radius:7px;border:1px solid var(--border)"><span style="font-family:var(--mono);font-size:8.5px;color:var(--t2)">BLOCK REWARD</span><span style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--t1)">3.125 BTC</span></div>'+
     '</div>'+
     '<div style="padding:8px 10px;border-radius:8px;font-family:var(--mono);font-size:8.5px;line-height:1.65;border:1px solid '+zone.color+'35;background:'+zone.color+'0d;color:'+zone.color+'">'+zone.desc+'</div>'+
-    (spark?'<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"><div style="font-family:var(--mono);font-size:7.5px;color:var(--t2);margin-bottom:4px">60-DAY PUELL</div>'+spark+'</div>':'');
+    (spark?'<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"><div style="font-family:var(--mono);font-size:7.5px;color:var(--t2);margin-bottom:4px">60-DAY PUELL</div>'+spark+'</div>':'') + _edu('puell','#f7931a');
 }
 
 
@@ -4185,7 +4196,7 @@ function renderRSI(rsi) {
     '</div>' +
     '<div class="ind-bar-wrap"><div class="ind-bar-fill" style="width:'+pct+'%;background:'+color+'"></div></div>' +
     '<div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:7.5px;color:var(--t2);margin-top:2px"><span>0</span><span>30</span><span>70</span><span>100</span></div>' +
-    '<div class="ind-signal" style="color:'+color+';background:'+sigBG+';border:1px solid '+color+'30;margin-top:4px">'+label+'</div>';
+    '<div class="ind-signal" style="color:'+color+';background:'+sigBG+';border:1px solid '+color+'30;margin-top:4px">'+label+'</div>' + _edu('rsi','#00b0ff');
 }
 
 function renderMACD(macd) {
@@ -4214,7 +4225,7 @@ function renderMACD(macd) {
         '<div style="font-family:var(--mono);font-size:1rem;font-weight:700;color:'+color+'">'+(macd.hist>=0?'+':'')+macd.hist.toFixed(1)+'</div></div>' +
     '</div>' +
     '<div class="macd-hist" style="margin-top:6px">'+bars+'</div>' +
-    '<div class="ind-signal" style="color:'+color+';background:'+sigBG+';border:1px solid '+color+'30;margin-top:4px">'+label+(macd.crossed?' ⚡':'')+'</div>';
+    '<div class="ind-signal" style="color:'+color+';background:'+sigBG+';border:1px solid '+color+'30;margin-top:4px">'+label+(macd.crossed?' ⚡':'')+'</div>' + _edu('macd','#9c27b0');
 }
 
 function renderCVD(cvd) {
@@ -4242,7 +4253,7 @@ function renderCVD(cvd) {
       '<div class="cvd-spark">'+spark+'</div>' +
     '</div>' +
     '<div class="ind-signal" style="color:'+color+';background:'+sigBG+';border:1px solid '+color+'30;margin-top:6px">'+label+'</div>' +
-    '<div style="font-family:var(--mono);font-size:7.5px;color:var(--t2);margin-top:4px;line-height:1.5">Bulls minus bears (vol weighted).<br>Rising = net buy flow dominant.</div>';
+    '<div style="font-family:var(--mono);font-size:7.5px;color:var(--t2);margin-top:4px;line-height:1.5">Bulls minus bears (vol weighted).<br>Rising = net buy flow dominant.</div>' + _edu('cvd','#00e676');
 }
 
 function renderVolatility(vix) {
@@ -4280,7 +4291,78 @@ function renderVolatility(vix) {
     '<div class="ind-bar-wrap" style="margin-top:6px"><div class="ind-bar-fill" style="width:'+pct+'%;background:'+color+'"></div></div>' +
     '<div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:7.5px;color:var(--t2);margin-top:2px"><span>LOW</span><span>NORM</span><span>HIGH</span><span>EXTREME</span></div>' +
     '<div class="ind-signal" style="color:'+color+';background:'+sigBG+';border:1px solid '+color+'30;margin-top:4px">'+level+'</div>' +
-    '<div style="font-family:var(--mono);font-size:7.5px;color:var(--t2);margin-top:4px;line-height:1.5">'+desc+'</div>';
+    '<div style="font-family:var(--mono);font-size:7.5px;color:var(--t2);margin-top:4px;line-height:1.5">'+desc+'</div>' + _edu('vix','#ffd740');
+}
+
+var _EDU_NOTES = {
+  'rsi': {
+    es: {name:'RSI — Indice de Fuerza Relativa',what:'Mide velocidad y magnitud del movimiento de precio. Escala 0-100.',zones:'Bajo 30 = Sobrevendido, zona historica de compra. Sobre 70 = Sobrecomprado, zona de tomar ganancias. 40-60 = Neutral.',tip:'💡 El RSI solo no es suficiente. Usalo para confirmar entradas con otras senales.',warn:'⚠️ En bull markets fuertes el RSI puede mantenerse sobre 70 semanas. No vendas solo por eso.'},
+    en: {name:'RSI — Relative Strength Index',what:'Measures the speed and magnitude of price movement. Scale 0-100.',zones:'Below 30 = Oversold, historical buying zone. Above 70 = Overbought, take profit zone. 40-60 = Neutral.',tip:'💡 RSI alone is not enough. Use it to confirm entries alongside other signals.',warn:'⚠️ In strong bull markets RSI can stay above 70 for weeks. Do not sell just because of that.'}
+  },
+  'macd': {
+    es: {name:'MACD — Convergencia/Divergencia de Medias',what:'Compara dos EMAs (12 vs 26) para detectar cambios de momentum.',zones:'MACD cruza sobre Signal = cruce alcista. MACD cruza bajo Signal = cruce bajista. Histograma = fuerza de la tendencia.',tip:'💡 El cruce es mas potente lejos de la linea cero o tras una tendencia larga.',warn:'⚠️ El MACD es rezagado, reacciona al precio pasado y no lo predice.'},
+    en: {name:'MACD — Moving Average Convergence/Divergence',what:'Compares two EMAs (12 vs 26) to detect momentum shifts.',zones:'MACD crosses above Signal = bullish crossover. MACD crosses below Signal = bearish. Histogram = trend strength.',tip:'💡 Crossover is strongest far from the zero line or after a long trend.',warn:'⚠️ MACD is a lagging indicator. It reacts to past price, not predicts the future.'}
+  },
+  'cbp': {
+    es: {name:'Coinbase Premium Index',what:'Diferencia de precio BTC entre Coinbase (institucional EE.UU.) vs Binance (minorista global).',zones:'Premium positivo = institucionales comprando, senal alcista historica. Premium negativo = presion vendedora institucional.',tip:'💡 Premium sostenido +0.1% durante precio lateral es senal alcista temprana fuerte.',warn:'⚠️ Picos cortos pueden ser ruido. Busca premiums sostenidos por 30+ minutos.'},
+    en: {name:'Coinbase Premium Index',what:'Price difference between BTC on Coinbase (US institutional) vs Binance (global retail).',zones:'Positive premium = institutions buying, historically bullish. Negative premium = institutional selling pressure.',tip:'💡 A sustained +0.1% premium during sideways price is a strong early bullish signal.',warn:'⚠️ Short-term spikes can be noise. Look for premiums sustained over 30 minutes.'}
+  },
+  'cvd': {
+    es: {name:'CVD — Delta de Volumen Acumulado',what:'Rastrea si el volumen neto va a compras o ventas en velas 4H.',zones:'CVD subiendo = compradores agresivos, presion alcista. CVD bajando = vendedores agresivos. Precio sube + CVD sube = movimiento confirmado.',tip:'💡 Senal mas poderosa: precio sube pero CVD baja = posible falso breakout.',warn:'⚠️ Es una aproximacion basada en velas. Usalo como filtro direccional, no entrada precisa.'},
+    en: {name:'CVD — Cumulative Volume Delta',what:'Tracks whether net volume is going into buys or sells on the 4H timeframe.',zones:'Rising CVD = aggressive buyers, bullish. Falling CVD = aggressive sellers, bearish. Price up + CVD up = confirmed buy move.',tip:'💡 Most powerful signal: price goes up but CVD goes down = possible fake breakout.',warn:'⚠️ This is a candle-based approximation. Use as a directional filter, not a precise entry.'}
+  },
+  'vix': {
+    es: {name:'Indice de Volatilidad',what:'Mide cuanto se ha movido el precio de BTC en 14 dias, anualizado como porcentaje.',zones:'Bajo 50% = mercado tranquilo. 50-80% = volatilidad normal. Sobre 80% = alta, reduce tamanos y amplia stops. Sobre 120% = extrema, opera pequeno.',tip:'💡 Volatilidad baja = stops ajustados. Volatilidad alta = amplia stops o te sacaran del mercado.',warn:'⚠️ Nunca aumentes apalancamiento durante alta volatilidad. Los mercados pueden ir en tu contra mas rapido de lo que puedes reaccionar.'},
+    en: {name:'Volatility Index',what:'Measures how much BTC has moved over the last 14 days, annualized as a percentage.',zones:'Below 50% = calm market. 50-80% = normal. Above 80% = high, reduce sizes and widen stops. Above 120% = extreme, trade small.',tip:'💡 Low volatility = tight stops make sense. High volatility = widen stops or you risk being shaken out.',warn:'⚠️ Never increase leverage during high volatility.'}
+  },
+  'rainbow': {
+    es: {name:'Rainbow Chart — Posicion en el Ciclo',what:'Aplica regresion logaritmica al precio historico de BTC desde 2009 para mostrar posicion en el ciclo.',zones:'Fire Sale/BUY = subvaluacion extrema, mejor zona de acumulacion multi-ano. Accumulate = bajo promedio historico. FOMO = sobre el promedio, reduce. Sell/Max Bubble = sobrevaluacion extrema.',tip:'💡 Este es un indicador MACRO. No tiene relacion con movimientos de precio a corto plazo.',warn:'⚠️ El modelo se basa en datos pasados. BTC podria romper patrones historicos.'},
+    en: {name:'Rainbow Chart — Cycle Position',what:'Applies logarithmic regression to BTC price history since 2009 to show cycle position.',zones:'Fire Sale/BUY = extreme undervaluation, best multi-year accumulation zone. Accumulate = below historical average. FOMO = above average, start reducing. Sell/Max Bubble = extreme overvaluation.',tip:'💡 This is a MACRO indicator. It has nothing to do with short-term price movements.',warn:'⚠️ The model is based on past data. BTC could break historical patterns.'}
+  },
+  'picycle': {
+    es: {name:'Pi Cycle Top Indicator',what:'Usa la media movil de 111 dias vs la de 350 dias x2 para detectar posibles techos de ciclo.',zones:'MAs bien separadas = zona segura. MAs convergiendo (gap < 5%) = zona de advertencia. 111DMA cruza sobre 350DMAx2 = senal historica de techo, llamo el techo con dias de diferencia en 2013 y 2021.',tip:'💡 Historial impresionante pero solo ha cruzado pocas veces. Usalo para decisiones de asignacion mayor.',warn:'⚠️ Estar en la zona segura no significa que el precio no puede caer. Es detector de techos, no de entradas.'},
+    en: {name:'Pi Cycle Top Indicator',what:'Uses the 111-day MA vs 350-day MA x2 to detect potential cycle tops.',zones:'MAs well separated = safe zone. MAs converging (gap < 5%) = warning zone. 111DMA crosses above 350DMAx2 = historical top signal, called the top within days in 2013 and 2021.',tip:'💡 Impressive track record but only crossed a handful of times. Use for major allocation decisions.',warn:'⚠️ Being in the safe zone does not mean price cannot fall. This is a top detector, not an entry signal.'}
+  },
+  'puell': {
+    es: {name:'Puell Multiple',what:'Mide si los mineros de Bitcoin ganan mucho mas o menos que su promedio anual.',zones:'Bajo 0.5 = mineros estresados, historicamente mejor zona de acumulacion BTC. 0.5-1 = ingresos normales. 1-4 = bull market. Sobre 4 = ingresos extremos, historicamente cerca de techos.',tip:'💡 Cuando los mineros estan estresados venden para sobrevivir creando pisos. Cuando son ricos mantienen sosteniendo los alcistas.',warn:'⚠️ Puell bajo puede durar meses antes de reversion. Usalo como zona de asignacion, no de timing.'},
+    en: {name:'Puell Multiple',what:'Measures whether Bitcoin miners are earning much more or less than their yearly average.',zones:'Below 0.5 = miners stressed, historically best BTC accumulation zone. 0.5-1 = normal. 1-4 = bull market. Above 4 = extreme revenue, historically near cycle tops.',tip:'💡 When miners are stressed they sell to survive, creating bottoms. When rich they hold, sustaining bulls.',warn:'⚠️ Low Puell can stay low for months. Use as an allocation zone, not a timing tool.'}
+  },
+  'ltpi': {
+    es: {name:'LTPI — Tendencia Largo Plazo',what:'Combina 8 senales semanales para estimar la probabilidad de que el precio suba en las proximas semanas.',zones:'Sobre 0 = estado LARGO, mayor probabilidad de movimiento alcista. Bajo 0 = estado CORTO. ROC = velocidad de cambio de direccion, mas importante que el valor absoluto. Strength = nivel de consenso.',tip:'💡 Es indicador de TENDENCIA, no predictor de techos/pisos. Sera mas incorrecto en los puntos de giro.',warn:'⚠️ Una lectura LARGO extrema que empieza a caer es advertencia de venta temprana, no senal para agregar mas.'},
+    en: {name:'LTPI — Long-Term Trend',what:'Combines 8 weekly signals to estimate the probability that price will go up over the coming weeks.',zones:'Above 0 = LONG state, higher probability of upward movement. Below 0 = SHORT state. ROC = how fast it is changing direction, more important than the absolute value. Strength = level of consensus.',tip:'💡 This is a TREND indicator, not a top/bottom predictor. It will be most wrong at turning points.',warn:'⚠️ An extreme LONG reading that starts to fall is an early sell warning. Do not add more.'}
+  },
+  'mtpi': {
+    es: {name:'MTPI — Tendencia Mediano Plazo',what:'Usa 8 senales diarias/4H para estimar probabilidad de tendencia en los proximos dias.',zones:'Sobre 0 = LARGO, tendencia favorece el alza. Bajo 0 = CORTO. Mejor setup: LTPI LARGO + MTPI recien cruzo a LARGO desde CORTO = entrada swing de alta probabilidad.',tip:'💡 Cuando LTPI y MTPI estan ambos LARGO, la senal tiene maxima conviccion.',warn:'⚠️ Si LTPI es CORTO pero MTPI es LARGO, es un rebote contra la tendencia. Sal rapido, no mantengas swing.'},
+    en: {name:'MTPI — Mid-Term Trend',what:'Uses 8 daily/4H signals to estimate trend probability over the coming days.',zones:'Above 0 = LONG, trend favors upside. Below 0 = SHORT. Best setup: LTPI LONG + MTPI just crossed LONG from SHORT = high-probability swing entry.',tip:'💡 When LTPI and MTPI are both LONG, the signal has maximum conviction.',warn:'⚠️ If LTPI is SHORT but MTPI is LONG, it is a counter-trend bounce. Exit quickly.'}
+  },
+};
+
+function _edu(key, borderColor) {
+  borderColor = borderColor || '#00b0ff';
+  var lang  = typeof _lang !== 'undefined' ? _lang : 'en';
+  var nd    = _EDU_NOTES[key];
+  if (!nd) return '';
+  var n   = nd[lang] || nd.en;
+  var uid = 'edu_' + key + '_' + (Math.random() * 999999 | 0);
+  var lbl = lang === 'es' ? 'Que significa esto?' : 'What does this mean?';
+  return '<div class="edu-toggle" onclick="' +
+    'var b=document.getElementById(\'' + uid + '\');' +
+    'b.classList.toggle(\'open\');' +
+    'this.children[1].textContent=b.classList.contains(\'open\')?\' (cerrar) \':\' \';' +
+    '">' +
+    '<span style="color:#00b0ff;font-size:11px">📖</span>' +
+    '<span> </span>' +
+    '<span style="font-family:var(--mono);font-size:8px;color:var(--t2)">' + lbl + '</span>' +
+  '</div>' +
+  '<div class="edu-body" id="' + uid + '">' +
+    '<div class="edu-note" style="border-left-color:' + borderColor + '">' +
+      '<strong>' + n.name + '</strong><br>' +
+      n.what + '<br><br>' +
+      n.zones +
+      '<span class="edu-tip">' + n.tip + '</span>' +
+      '<span class="edu-warn">' + n.warn + '</span>' +
+    '</div>' +
+  '</div>';
 }
 
 /* ═══════════════════════════════════════════════
