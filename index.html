@@ -837,6 +837,131 @@ body::before {
 .edu-tip{display:block;margin-top:6px;padding:4px 8px;background:rgba(0,230,118,.07);border:1px solid rgba(0,230,118,.15);border-radius:4px;color:var(--g1);font-size:10px}
 .edu-warn{display:block;margin-top:5px;padding:4px 8px;background:rgba(255,215,64,.07);border:1px solid rgba(255,215,64,.15);border-radius:4px;color:var(--y1);font-size:10px}
 
+
+/* ═══ SEMAFORO / TRAFFIC LIGHT ═══ */
+.semaforo-wrap { margin-bottom:14px; }
+.semaforo-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.semaforo-title { font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:2px; color:var(--t2); }
+.semaforo-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:8px; }
+@media(max-width:900px){ .semaforo-grid{ grid-template-columns:repeat(3,1fr); } }
+@media(max-width:500px){ .semaforo-grid{ grid-template-columns:repeat(2,1fr); } }
+.sem-card {
+  border-radius:9px; padding:10px 10px 8px;
+  border:1px solid; text-align:center;
+  transition:all .3s; position:relative; overflow:hidden;
+}
+.sem-card::after {
+  content:''; position:absolute; top:0; left:0; right:0; height:3px;
+}
+.sem-card.green  { background:rgba(0,230,118,.07);  border-color:rgba(0,230,118,.25); }
+.sem-card.yellow { background:rgba(255,215,64,.07);  border-color:rgba(255,215,64,.25); }
+.sem-card.red    { background:rgba(255,23,68,.07);   border-color:rgba(255,23,68,.25); }
+.sem-card.gray   { background:rgba(255,255,255,.03); border-color:rgba(255,255,255,.08); }
+.sem-card.green::after  { background:var(--g1); }
+.sem-card.yellow::after { background:var(--y1); }
+.sem-card.red::after    { background:var(--r1); }
+.sem-card.gray::after   { background:var(--t2); }
+.sem-icon  { font-size:1.4rem; line-height:1; margin-bottom:4px; }
+.sem-name  { font-family:var(--mono); font-size:7.5px; color:var(--t2); letter-spacing:1px; text-transform:uppercase; margin-bottom:4px; }
+.sem-value { font-family:var(--mono); font-size:9px; font-weight:700; margin-bottom:3px; }
+.sem-signal{ font-family:var(--mono); font-size:7.5px; letter-spacing:.5px; opacity:.8; }
+
+/* ═══ GLOSARIO MODAL ═══ */
+.gloss-overlay {
+  display:none; position:fixed; inset:0; z-index:9990;
+  background:rgba(0,0,0,.75); backdrop-filter:blur(8px);
+  align-items:flex-start; justify-content:center; padding:30px 16px; overflow-y:auto;
+}
+.gloss-overlay.show { display:flex !important; }
+.gloss-box {
+  background:#070d14; border:1px solid rgba(255,255,255,.1);
+  border-radius:16px; padding:24px; max-width:680px; width:100%;
+  position:relative; box-shadow:0 24px 80px rgba(0,0,0,.9);
+  animation:popIn .25s ease;
+}
+.gloss-close {
+  position:absolute; top:14px; right:14px;
+  background:rgba(255,255,255,.07); border:none; border-radius:50%;
+  color:var(--t2); width:28px; height:28px; font-size:14px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+}
+.gloss-search {
+  width:100%; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);
+  border-radius:8px; padding:9px 14px; font-family:var(--mono); font-size:12px;
+  color:var(--t3); outline:none; margin:14px 0 16px;
+}
+.gloss-search:focus { border-color:rgba(0,176,255,.4); }
+.gloss-cats { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
+.gloss-cat {
+  padding:4px 12px; border-radius:20px; border:1px solid rgba(255,255,255,.1);
+  font-family:var(--mono); font-size:8px; font-weight:700; letter-spacing:1px;
+  cursor:pointer; background:rgba(255,255,255,.04); color:var(--t2); transition:all .2s;
+}
+.gloss-cat.active { background:rgba(0,176,255,.1); border-color:rgba(0,176,255,.3); color:var(--b1); }
+.gloss-list { display:flex; flex-direction:column; gap:8px; max-height:60vh; overflow-y:auto; }
+.gloss-list::-webkit-scrollbar { width:3px; }
+.gloss-list::-webkit-scrollbar-thumb { background:rgba(0,176,255,.2); border-radius:2px; }
+.gloss-item {
+  padding:12px 14px; background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.06); border-radius:9px; border-left:3px solid;
+}
+.gloss-term { font-family:var(--mono); font-size:11px; font-weight:700; color:var(--t3); margin-bottom:4px; }
+.gloss-def  { font-size:11px; line-height:1.6; color:var(--t2); }
+.gloss-tag  { display:inline-block; font-family:var(--mono); font-size:7.5px; 
+  padding:1px 6px; border-radius:3px; margin-top:5px; }
+.gloss-example { margin-top:5px; padding:5px 8px; background:rgba(0,176,255,.06);
+  border-radius:5px; font-family:var(--mono); font-size:9px; color:var(--b1); line-height:1.5; }
+
+/* ═══ ALTCOIN SCREENER ═══ */
+.screener-wrap { margin-bottom:14px; }
+.screener-table { width:100%; border-collapse:collapse; }
+.screener-table th { font-family:var(--mono); font-size:8px; letter-spacing:1.5px;
+  color:var(--t2); text-transform:uppercase; padding:6px 10px; text-align:right;
+  border-bottom:1px solid var(--border); }
+.screener-table th:first-child { text-align:left; }
+.screener-table td { font-family:var(--mono); font-size:10px; padding:7px 10px;
+  border-bottom:1px solid rgba(255,255,255,.04); text-align:right; }
+.screener-table td:first-child { text-align:left; }
+.screener-table tr:hover td { background:rgba(255,255,255,.02); }
+.scr-sym { font-weight:700; color:var(--t3); }
+.scr-badge { display:inline-block; padding:2px 6px; border-radius:3px;
+  font-size:7.5px; font-weight:700; }
+
+/* ═══ CICLO DE MERCADO ═══ */
+.cycle-guide-wrap { margin-bottom:14px; }
+.cycle-phases { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+@media(max-width:800px){ .cycle-phases{ grid-template-columns:repeat(2,1fr); } }
+.cycle-phase {
+  padding:12px 14px; border-radius:10px; border:1px solid;
+  position:relative; overflow:hidden;
+}
+.cycle-phase.active-phase { box-shadow:0 0 20px rgba(0,0,0,.4); }
+.cycle-phase-num { font-family:var(--mono); font-size:9px; color:var(--t2); margin-bottom:4px; letter-spacing:1px; }
+.cycle-phase-name { font-family:var(--mono); font-size:11px; font-weight:700; margin-bottom:6px; }
+.cycle-phase-desc { font-size:10px; line-height:1.55; color:var(--t2); }
+.cycle-phase-action { margin-top:8px; font-family:var(--mono); font-size:9px; font-weight:700; }
+.cycle-indicator { position:absolute; top:8px; right:8px; width:8px; height:8px;
+  border-radius:50%; animation:pulse 1.5s infinite; }
+.cycle-current-label { font-family:var(--mono); font-size:9px; color:var(--t2);
+  margin-bottom:10px; letter-spacing:1px; }
+
+/* ═══ MACRO CALENDAR ═══ */
+.macro-cal-wrap { margin-bottom:14px; }
+.macro-events { display:flex; flex-direction:column; gap:6px; }
+.macro-event {
+  display:flex; align-items:center; gap:10px; padding:8px 12px;
+  background:var(--p2); border:1px solid var(--border); border-radius:8px;
+  border-left:3px solid;
+}
+.macro-event.past { opacity:.45; }
+.macro-event.today { box-shadow:0 0 12px rgba(0,230,118,.15); }
+.macro-date { font-family:var(--mono); font-size:9px; color:var(--t2); 
+  min-width:52px; flex-shrink:0; }
+.macro-name { font-family:var(--mono); font-size:9px; font-weight:700; flex:1; }
+.macro-impact { font-family:var(--mono); font-size:7.5px; font-weight:700;
+  padding:2px 6px; border-radius:3px; flex-shrink:0; }
+.macro-note { font-size:9px; color:var(--t2); margin-top:2px; }
+
 </style>
 </head>
 <body>
@@ -857,6 +982,7 @@ body::before {
     <div class="tb-right">
       <button class="btn-donate" id="donateBtnTop" onclick="donOpen()">☕ Donate</button>
       <button class="btn-ai" onclick="aiOpen()"><div class="btn-ai-pulse"></div>🤖 Ask AI</button>
+      <button class="btn-donate" style="background:rgba(0,176,255,.1);border-color:rgba(0,176,255,.3);color:var(--b1)" onclick="glossOpen()">📚 Glosario</button>
       <button class="btn-lang" id="langBtn" onclick="toggleLang()"><span class="lang-flag">🇺🇸</span><span id="langLabel">ES</span></button>
       <div class="live-badge"><div class="lp"></div><span id="liveStatus">CONNECTING</span></div>
     </div>
@@ -1179,6 +1305,48 @@ body::before {
 
   </div>
 
+  <!-- ══ SEMÁFORO SIMPLIFICADO ══ -->
+  <div class="panel semaforo-wrap" id="semaforoPanel">
+    <div class="ph">
+      <div class="pt"><div class="pdot" style="background:var(--g1)"></div>
+        <span id="semTitle">SEMÁFORO DE MERCADO</span>
+      </div>
+      <span class="pbadge" style="background:rgba(255,255,255,.05);color:var(--t2)" id="semBadge">CARGANDO</span>
+    </div>
+    <div class="pb">
+      <div style="font-family:var(--mono);font-size:8px;color:var(--t2);margin-bottom:10px" id="semDesc">
+        Lectura simplificada de todas las señales — diseñada para principiantes.
+      </div>
+      <div class="semaforo-grid" id="semaforoGrid">
+        <div class="sk sk-line" style="height:80px"></div>
+        <div class="sk sk-line" style="height:80px"></div>
+        <div class="sk sk-line" style="height:80px"></div>
+        <div class="sk sk-line" style="height:80px"></div>
+        <div class="sk sk-line" style="height:80px"></div>
+        <div class="sk sk-line" style="height:80px"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ GUÍA DE CICLO DE MERCADO ══ -->
+  <div class="panel cycle-guide-wrap" id="cycleGuidePanel">
+    <div class="ph">
+      <div class="pt"><div class="pdot" style="background:#9c27b0"></div>
+        <span id="cycleTitle">CICLO DE MERCADO BTC</span>
+      </div>
+      <span class="pbadge" style="background:rgba(156,39,176,.1);color:#ce93d8" id="cycleBadge">ANALIZANDO</span>
+    </div>
+    <div class="pb">
+      <div class="cycle-current-label" id="cycleCurrentLabel">Determinando fase actual...</div>
+      <div class="cycle-phases" id="cyclePhases">
+        <div class="sk sk-line" style="height:120px"></div>
+        <div class="sk sk-line" style="height:120px"></div>
+        <div class="sk sk-line" style="height:120px"></div>
+        <div class="sk sk-line" style="height:120px"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- MVRV PANEL -->
   <div class="mvrv-wrap" id="mvrvWrap">
 
@@ -1223,6 +1391,19 @@ body::before {
 
   </div>
 
+  <!-- ══ ALTCOIN SCREENER ══ -->
+  <div class="panel screener-wrap" id="screenerPanel">
+    <div class="ph">
+      <div class="pt"><div class="pdot" style="background:var(--o1)"></div>
+        <span id="screenerTitle">ALTCOIN SCREENER</span>
+      </div>
+      <span class="pbadge" style="background:var(--o3);color:var(--o1)">TOP 8 PARES</span>
+    </div>
+    <div class="pb" id="screenerBody">
+      <div class="sk sk-line" style="height:200px"></div>
+    </div>
+  </div>
+
   <!-- TPI — TREND PROBABILITY INDICATORS -->
   <div class="tpi-panel-wrap" id="tpiWrap">
 
@@ -1254,6 +1435,19 @@ body::before {
 
   </div>
 
+  <!-- ══ CALENDARIO MACRO ══ -->
+  <div class="panel macro-cal-wrap" id="macroCalPanel">
+    <div class="ph">
+      <div class="pt"><div class="pdot" style="background:var(--b1)"></div>
+        <span id="macroTitle">CALENDARIO MACRO</span>
+      </div>
+      <span class="pbadge" style="background:var(--b3);color:var(--b1)">FED · CPI · CRIPTO</span>
+    </div>
+    <div class="pb" id="macroCalBody">
+      <div class="sk sk-line" style="height:150px"></div>
+    </div>
+  </div>
+
   <!-- CHECKLIST LIVE -->
   <div class="panel" style="margin-bottom:14px">
     <div class="ph">
@@ -1271,7 +1465,20 @@ body::before {
     </div>
   </div>
 
-  <!-- FOOTER -->
+  
+  <!-- ══ GLOSARIO MODAL ══ -->
+  <div class="gloss-overlay" id="glossModal">
+    <div class="gloss-box">
+      <button class="gloss-close" onclick="glossClose()">✕</button>
+      <div style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:2px;color:var(--b1)">📚 GLOSARIO CRIPTO</div>
+      <div style="font-family:var(--mono);font-size:8px;color:var(--t2);margin-top:3px">Términos y cómo leer cada indicador</div>
+      <input class="gloss-search" id="glossSearch" placeholder="Buscar término..." oninput="glossFilter()" />
+      <div class="gloss-cats" id="glossCats"></div>
+      <div class="gloss-list" id="glossList"></div>
+    </div>
+  </div>
+
+<!-- FOOTER -->
   <div class="footer">
     <div class="f-apis">
       <span style="font-family:var(--mono);font-size:10px;color:var(--t2)">APIs:</span>
@@ -2392,6 +2599,9 @@ function computeSignal() {
 
   // Actualizar checklist con los datos disponibles
   renderChecklist();
+  renderSemaforo();
+  renderCycleGuide();
+  renderMacroCal();
   // Update master panel with fresh data
   setTimeout(renderMasterPanel, 100);
 }
@@ -2636,7 +2846,8 @@ async function refreshAll() {
     loadLiquidationMap(),
     loadTPI(),
     loadDominance(),
-    loadNewIndicators()
+    loadNewIndicators(),
+    loadScreener()
   ]);
 
   // Compute composite signal after all data loaded
@@ -4363,6 +4574,418 @@ function _edu(key, borderColor) {
       '<span class="edu-warn">' + n.warn + '</span>' +
     '</div>' +
   '</div>';
+}
+
+
+/* ════════════════════════════════════════════════════════════════
+   FEATURE 1: SEMÁFORO DE MERCADO
+   Reads all state data and shows simple GREEN/YELLOW/RED cards
+════════════════════════════════════════════════════════════════ */
+function renderSemaforo() {
+  var grid  = document.getElementById('semaforoGrid');
+  var badge = document.getElementById('semBadge');
+  if (!grid) return;
+
+  var lang = typeof _lang !== 'undefined' ? _lang : 'en';
+
+  var signals = [];
+
+  /* 1. Funding Rate */
+  var fr = state.fr && state.fr['BTCUSDT'];
+  var frColor = 'gray', frVal = '—', frSig = '—';
+  if (fr !== undefined) {
+    if (fr < -0.01)     { frColor='green';  frVal=(fr>0?'+':'')+fr.toFixed(4)+'%'; frSig = lang==='es'?'Shorts pagando → Alcista':'Shorts paying → Bullish'; }
+    else if (fr > 0.08) { frColor='red';    frVal='+'+fr.toFixed(4)+'%'; frSig = lang==='es'?'FR extremo → Precaución':'Extreme FR → Caution'; }
+    else if (fr > 0.04) { frColor='yellow'; frVal='+'+fr.toFixed(4)+'%'; frSig = lang==='es'?'FR elevado → Neutral':'Elevated FR → Neutral'; }
+    else                { frColor='green';  frVal=(fr>0?'+':'')+fr.toFixed(4)+'%'; frSig = lang==='es'?'Balanceado':'Balanced'; }
+  }
+  signals.push({icon:'💸', name:'Funding Rate', val:frVal, sig:frSig, color:frColor});
+
+  /* 2. Fear & Greed */
+  var fg = state.fg;
+  var fgColor='gray', fgVal='—', fgSig='—';
+  if (fg !== null && fg !== undefined) {
+    if (fg < 25)      { fgColor='green';  fgVal=fg+'/100'; fgSig=lang==='es'?'Miedo extremo → Acumular':'Extreme Fear → Accumulate'; }
+    else if (fg < 45) { fgColor='green';  fgVal=fg+'/100'; fgSig=lang==='es'?'Miedo → Oportunidad':'Fear → Opportunity'; }
+    else if (fg < 60) { fgColor='yellow'; fgVal=fg+'/100'; fgSig=lang==='es'?'Neutro':'Neutral'; }
+    else if (fg < 80) { fgColor='yellow'; fgVal=fg+'/100'; fgSig=lang==='es'?'Codicia → Precaución':'Greed → Caution'; }
+    else              { fgColor='red';    fgVal=fg+'/100'; fgSig=lang==='es'?'Codicia extrema → Vende':'Extreme Greed → Sell'; }
+  }
+  signals.push({icon:'😨', name:'Fear & Greed', val:fgVal, sig:fgSig, color:fgColor});
+
+  /* 3. L/S Ratio */
+  var ls = state.ls && state.ls['BTCUSDT'];
+  var lsColor='gray', lsVal='—', lsSig='—';
+  if (ls) {
+    if (ls.long > 65)      { lsColor='red';    lsVal='L:'+ls.long.toFixed(0)+'%'; lsSig=lang==='es'?'Muy saturado largo':'Overcrowded long'; }
+    else if (ls.long > 58) { lsColor='yellow'; lsVal='L:'+ls.long.toFixed(0)+'%'; lsSig=lang==='es'?'Ligeramente largo':'Slightly long'; }
+    else if (ls.short > 60){ lsColor='green';  lsVal='S:'+ls.short.toFixed(0)+'%'; lsSig=lang==='es'?'Muchos cortos → Alcista':'Many shorts → Bullish'; }
+    else                   { lsColor='green';  lsVal='L:'+ls.long.toFixed(0)+'%'; lsSig=lang==='es'?'Balanceado':'Balanced'; }
+  }
+  signals.push({icon:'⚖️', name:'L/S Ratio', val:lsVal, sig:lsSig, color:lsColor});
+
+  /* 4. RSI */
+  var rsi = state.rsi;
+  var rsiColor='gray', rsiVal='—', rsiSig='—';
+  if (rsi !== null && rsi !== undefined) {
+    if (rsi > 75)      { rsiColor='red';    rsiVal=rsi.toFixed(0); rsiSig=lang==='es'?'Sobrecomprado':'Overbought'; }
+    else if (rsi > 60) { rsiColor='yellow'; rsiVal=rsi.toFixed(0); rsiSig=lang==='es'?'Momentum alto':'High momentum'; }
+    else if (rsi > 40) { rsiColor='green';  rsiVal=rsi.toFixed(0); rsiSig=lang==='es'?'Zona neutral':'Neutral zone'; }
+    else if (rsi > 25) { rsiColor='green';  rsiVal=rsi.toFixed(0); rsiSig=lang==='es'?'Momentum bajo':'Low momentum'; }
+    else               { rsiColor='green';  rsiVal=rsi.toFixed(0); rsiSig=lang==='es'?'Sobrevendido → Compra':'Oversold → Buy'; }
+  }
+  signals.push({icon:'📐', name:'RSI (14)', val:rsiVal, sig:rsiSig, color:rsiColor});
+
+  /* 5. MACD */
+  var macd = state.macd;
+  var macdColor='gray', macdVal='—', macdSig='—';
+  if (macd) {
+    if (macd.bullish && macd.crossed)       { macdColor='green';  macdVal='BULL ⚡'; macdSig=lang==='es'?'Cruce alcista':'Bull crossover'; }
+    else if (macd.bullish && !macd.crossed) { macdColor='green';  macdVal='BULL ▲';  macdSig=lang==='es'?'Tendencia alcista':'Bullish trend'; }
+    else if (!macd.bullish && macd.crossed) { macdColor='red';    macdVal='BEAR ⚡'; macdSig=lang==='es'?'Cruce bajista':'Bear crossover'; }
+    else                                    { macdColor='red';    macdVal='BEAR ▼';  macdSig=lang==='es'?'Tendencia bajista':'Bearish trend'; }
+  }
+  signals.push({icon:'📊', name:'MACD', val:macdVal, sig:macdSig, color:macdColor});
+
+  /* 6. Volatility */
+  var vix = state.vix;
+  var vixColor='gray', vixVal='—', vixSig='—';
+  if (vix !== null && vix !== undefined) {
+    if (vix < 50)       { vixColor='green';  vixVal=vix.toFixed(0)+'%'; vixSig=lang==='es'?'Mercado tranquilo':'Calm market'; }
+    else if (vix < 80)  { vixColor='green';  vixVal=vix.toFixed(0)+'%'; vixSig=lang==='es'?'Volatilidad normal':'Normal volatility'; }
+    else if (vix < 120) { vixColor='yellow'; vixVal=vix.toFixed(0)+'%'; vixSig=lang==='es'?'Alta volatilidad':'High volatility'; }
+    else                { vixColor='red';    vixVal=vix.toFixed(0)+'%'; vixSig=lang==='es'?'Volatilidad extrema':'Extreme volatility'; }
+  }
+  signals.push({icon:'⚡', name:lang==='es'?'Volatilidad':'Volatility', val:vixVal, sig:vixSig, color:vixColor});
+
+  /* Overall score */
+  var score = {green:0, yellow:0, red:0};
+  signals.forEach(function(s){ if(score[s.color]!==undefined) score[s.color]++; });
+  var overall = score.red >= 3 ? 'red' : score.green >= 4 ? 'green' : 'yellow';
+  var overallLabel = overall === 'green'  ? (lang==='es'?'🟢 MERCADO FAVORABLE':'🟢 FAVORABLE MARKET') :
+                     overall === 'red'    ? (lang==='es'?'🔴 MERCADO ADVERSO':'🔴 ADVERSE MARKET') :
+                                            (lang==='es'?'🟡 MERCADO MIXTO':'🟡 MIXED MARKET');
+
+  if (badge) {
+    badge.textContent = overallLabel;
+    badge.style.color = overall==='green'?'var(--g1)':overall==='red'?'var(--r1)':'var(--y1)';
+    badge.style.background = overall==='green'?'rgba(0,230,118,.1)':overall==='red'?'rgba(255,23,68,.1)':'rgba(255,215,64,.1)';
+  }
+
+  grid.innerHTML = signals.map(function(s) {
+    var c = s.color==='green'?'var(--g1)':s.color==='red'?'var(--r1)':s.color==='yellow'?'var(--y1)':'var(--t2)';
+    return '<div class="sem-card ' + s.color + '">' +
+      '<div class="sem-icon">' + s.icon + '</div>' +
+      '<div class="sem-name">' + s.name + '</div>' +
+      '<div class="sem-value" style="color:' + c + '">' + s.val + '</div>' +
+      '<div class="sem-signal" style="color:' + c + '">' + s.sig + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+/* ════════════════════════════════════════════════════════════════
+   FEATURE 2: CICLO DE MERCADO
+════════════════════════════════════════════════════════════════ */
+function renderCycleGuide() {
+  var panel  = document.getElementById('cyclePhases');
+  var badge  = document.getElementById('cycleBadge');
+  var lbl    = document.getElementById('cycleCurrentLabel');
+  if (!panel) return;
+
+  var lang = typeof _lang !== 'undefined' ? _lang : 'en';
+
+  var phases = [
+    { num:'01', name:lang==='es'?'ACUMULACIÓN':'ACCUMULATION',
+      color:'#00e676', border:'rgba(0,230,118,.2)', bg:'rgba(0,230,118,.06)',
+      desc:lang==='es'?'El mercado toca fondo. Precio bajo, pesimismo extremo, volumen bajo. Los que saben compran en silencio.':
+                       'Market bottoms out. Low price, extreme pessimism, low volume. Smart money buys quietly.',
+      action:lang==='es'?'💡 Acumula gradualmente. Dollar-cost average.':'💡 Accumulate gradually. Dollar-cost average.',
+      indicators:lang==='es'?'Rainbow: Fire Sale/BUY | Puell < 0.5 | RSI < 30 | F&G < 25':
+                             'Rainbow: Fire Sale/BUY | Puell < 0.5 | RSI < 30 | F&G < 25' },
+    { num:'02', name:lang==='es'?'TENDENCIA ALCISTA':'UPTREND',
+      color:'#ffd740', border:'rgba(255,215,64,.2)', bg:'rgba(255,215,64,.06)',
+      desc:lang==='es'?'El precio comienza a subir. Volumen aumenta. Optimismo moderado. Cada corrección es absorbida.':
+                       'Price starts rising. Volume increases. Moderate optimism. Dips get bought.',
+      action:lang==='es'?'💡 Mantén posiciones. Compra correcciones. No vendas prematuramente.':'💡 Hold positions. Buy dips. Do not sell prematurely.',
+      indicators:lang==='es'?'LTPI > 0 subiendo | MACD alcista | Rainbow: Accumulate/Cheap':
+                             'LTPI > 0 rising | MACD bullish | Rainbow: Accumulate/Cheap' },
+    { num:'03', name:lang==='es'?'EUFORIA / BURBUJA':'EUPHORIA / BUBBLE',
+      color:'#ff6d00', border:'rgba(255,109,0,.2)', bg:'rgba(255,109,0,.06)',
+      desc:lang==='es'?'Precio en máximos. FOMO generalizado. Todos hablan de cripto. Volumen extremo. Señales de techo.':
+                       'Price at highs. Widespread FOMO. Everyone talks crypto. Extreme volume. Top signals emerging.',
+      action:lang==='es'?'💡 Toma ganancias parciales. Reduce exposición. Sube stops.':'💡 Take partial profits. Reduce exposure. Raise stops.',
+      indicators:lang==='es'?'Rainbow: FOMO/Sell | Puell > 3 | FR > 0.08% | F&G > 75':
+                             'Rainbow: FOMO/Sell | Puell > 3 | FR > 0.08% | F&G > 75' },
+    { num:'04', name:lang==='es'?'DISTRIBUCIÓN / CAÍDA':'DISTRIBUTION / FALL',
+      color:'#ff1744', border:'rgba(255,23,68,.2)', bg:'rgba(255,23,68,.06)',
+      desc:lang==='es'?'Los que compraron barato venden. Precio cae. Pánico. Volumen alto bajando. Bearish confirmado.':
+                       'Early buyers sell. Price falls. Panic. High volume on downside. Bearish confirmed.',
+      action:lang==='es'?'💡 Reduce o sal. Espera la acumulación. Prepara el próximo ciclo.':'💡 Reduce or exit. Wait for accumulation. Prepare for next cycle.',
+      indicators:lang==='es'?'LTPI < 0 | MACD bajista | F&G < 25 | Pi Cycle puede haberse cruzado':
+                             'LTPI < 0 | MACD bearish | F&G < 25 | Pi Cycle may have crossed' },
+  ];
+
+  /* Determine current phase from available data */
+  var fg   = state.fg;
+  var rsi  = state.rsi;
+  var macd = state.macd;
+  var ltpi = state.tpi && state.tpi.ltpi;
+
+  var currentPhase = 1; // default: uptrend
+  if (ltpi !== undefined && ltpi !== null) {
+    if (ltpi < -0.3 && fg !== null && fg < 35)      currentPhase = 3; // distribution
+    else if (ltpi < 0)                              currentPhase = 3;
+    else if (ltpi > 0.4 && fg !== null && fg > 70)  currentPhase = 2; // euphoria
+    else if (ltpi > 0)                              currentPhase = 1; // uptrend
+    else                                            currentPhase = 0; // accumulation
+  } else if (fg !== null) {
+    if (fg < 25)      currentPhase = 0;
+    else if (fg < 55) currentPhase = 1;
+    else if (fg < 75) currentPhase = 2;
+    else              currentPhase = 2;
+  }
+
+  if (lbl) {
+    lbl.textContent = (lang==='es' ? '📍 Fase actual estimada: ' : '📍 Estimated current phase: ') +
+      phases[currentPhase].name;
+    lbl.style.color = phases[currentPhase].color;
+  }
+  if (badge) {
+    badge.textContent = phases[currentPhase].name;
+    badge.style.color = phases[currentPhase].color;
+    badge.style.background = phases[currentPhase].bg;
+    badge.style.borderColor = phases[currentPhase].border;
+  }
+
+  panel.innerHTML = phases.map(function(p, i) {
+    var isActive = i === currentPhase;
+    return '<div class="cycle-phase' + (isActive?' active-phase':'') + '" style="border-color:' + p.border + ';background:' + p.bg + '">' +
+      (isActive ? '<div class="cycle-indicator" style="background:'+p.color+'"></div>' : '') +
+      '<div class="cycle-phase-num" style="color:' + p.color + '">FASE ' + p.num + '</div>' +
+      '<div class="cycle-phase-name" style="color:' + p.color + '">' + p.name + '</div>' +
+      '<div class="cycle-phase-desc">' + p.desc + '</div>' +
+      '<div class="cycle-phase-action" style="color:' + p.color + '">' + p.action + '</div>' +
+      '<div style="font-family:var(--mono);font-size:7.5px;color:var(--t2);margin-top:6px;line-height:1.5;opacity:.7">' + p.indicators + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+/* ════════════════════════════════════════════════════════════════
+   FEATURE 3: ALTCOIN SCREENER
+════════════════════════════════════════════════════════════════ */
+var _screenerSyms = ['ETHUSDT','SOLUSDT','BNBUSDT','XRPUSDT','ADAUSDT','DOGEUSDT','AVAXUSDT','LINKUSDT'];
+
+async function loadScreener() {
+  var body = document.getElementById('screenerBody');
+  if (!body) return;
+  var lang = typeof _lang !== 'undefined' ? _lang : 'en';
+
+  try {
+    /* Fetch prices + 24h change for all syms */
+    var priceRes = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbols=' +
+      encodeURIComponent(JSON.stringify(_screenerSyms)));
+    if (!priceRes.ok) throw new Error('ticker ' + priceRes.status);
+    var prices = await priceRes.json();
+
+    /* Fetch funding rates */
+    var frRes = await fetch('https://fapi.binance.com/fapi/v1/premiumIndex?symbol=');
+    var frMap = {};
+    if (frRes.ok) {
+      var frData = await frRes.json();
+      frData.forEach(function(d){ frMap[d.symbol] = parseFloat(d.lastFundingRate)*100; });
+    }
+
+    var rows = prices.map(function(d) {
+      var sym    = d.symbol.replace('USDT','');
+      var price  = parseFloat(d.lastPrice);
+      var chg    = parseFloat(d.priceChangePercent);
+      var vol    = parseFloat(d.quoteVolume);
+      var fr     = frMap[d.symbol];
+      var chgColor = chg >= 0 ? 'var(--g1)' : 'var(--r1)';
+      var frColor  = fr !== undefined ? (fr < -0.01?'var(--g1)':fr>0.08?'var(--r1)':fr>0.04?'var(--y1)':'var(--t2)') : 'var(--t2)';
+      var frSignal = fr !== undefined ? (fr<-0.01?'BULL':fr>0.08?'BEAR':fr>0.04?'WARN':'—') : '—';
+      var volStr   = vol >= 1e9 ? (vol/1e9).toFixed(1)+'B' : vol >= 1e6 ? (vol/1e6).toFixed(0)+'M' : (vol/1e3).toFixed(0)+'K';
+      var sigBG    = fr!==undefined?(fr<-0.01?'rgba(0,230,118,.12)':fr>0.08?'rgba(255,23,68,.12)':fr>0.04?'rgba(255,215,64,.1)':'rgba(255,255,255,.05)'):'rgba(255,255,255,.05)';
+      return '<tr>' +
+        '<td><span class="scr-sym">'+sym+'</span></td>' +
+        '<td style="color:var(--t3)">$'+price.toLocaleString('en',{maximumFractionDigits:price>100?1:4})+'</td>' +
+        '<td style="color:'+chgColor+'">'+(chg>=0?'+':'')+chg.toFixed(2)+'%</td>' +
+        '<td style="color:var(--t2)">'+volStr+'</td>' +
+        '<td style="color:'+frColor+'">'+(fr!==undefined?(fr>=0?'+':'')+fr.toFixed(4)+'%':'—')+'</td>' +
+        '<td><span class="scr-badge" style="color:'+frColor+';background:'+sigBG+'">'+frSignal+'</span></td>' +
+      '</tr>';
+    }).join('');
+
+    var hdr = lang==='es' ?
+      '<tr><th>PAR</th><th>PRECIO</th><th>24H</th><th>VOLUMEN</th><th>FUND. RATE</th><th>SEÑAL</th></tr>' :
+      '<tr><th>PAIR</th><th>PRICE</th><th>24H</th><th>VOLUME</th><th>FUND. RATE</th><th>SIGNAL</th></tr>';
+
+    body.innerHTML = '<table class="screener-table"><thead>' + hdr + '</thead><tbody>' + rows + '</tbody></table>' +
+      '<div style="font-family:var(--mono);font-size:7.5px;color:var(--t2);margin-top:8px;opacity:.6">' +
+      (lang==='es'?'Señal FR: BULL = FR negativo (contrarian alcista), BEAR = FR extremo positivo':'FR Signal: BULL = negative FR (contrarian bullish), BEAR = extreme positive FR') +
+      '</div>';
+  } catch(e) {
+    body.innerHTML = '<div class="err-box"><div class="err-msg">' + e.message + '</div><button class="retry-btn" onclick="loadScreener()">&#8635; Retry</button></div>';
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   FEATURE 4: MACRO CALENDAR
+   Hardcoded 2025-2026 key events (Fed, CPI, crypto-specific)
+════════════════════════════════════════════════════════════════ */
+var _MACRO_EVENTS = [
+  /* Format: [date_str, name_es, name_en, impact, color, note_es, note_en] */
+  ['2025-07-25','Decisión Fed (FOMC)','Fed Decision (FOMC)','ALTO','#ff6d00','El mercado mueve fuerte con cada decisión de tasas de interés.','Markets move hard on every rate decision.'],
+  ['2025-08-12','CPI EE.UU. Julio','US CPI July','ALTO','#ffd740','Dato de inflación. Si baja → alcista para cripto.','Inflation data. If lower → bullish for crypto.'],
+  ['2025-09-17','Decisión Fed (FOMC)','Fed Decision (FOMC)','ALTO','#ff6d00','Reunión clave. Expectativa de recorte de tasas.','Key meeting. Rate cut expectations.'],
+  ['2025-09-10','CPI EE.UU. Agosto','US CPI August','MEDIO','#ffd740','',''],
+  ['2025-10-08','CPI EE.UU. Sept.','US CPI September','MEDIO','#ffd740','',''],
+  ['2025-10-29','Decisión Fed (FOMC)','Fed Decision (FOMC)','ALTO','#ff6d00','',''],
+  ['2025-11-12','CPI EE.UU. Oct.','US CPI October','MEDIO','#ffd740','',''],
+  ['2025-12-10','CPI EE.UU. Nov.','US CPI November','MEDIO','#ffd740','',''],
+  ['2025-12-17','Decisión Fed (FOMC)','Fed Decision (FOMC)','ALTO','#ff6d00','Última reunión del año. Suele tener volatilidad.','Last meeting of the year. Usually volatile.'],
+  ['2026-01-14','CPI EE.UU. Dic.','US CPI December','MEDIO','#ffd740','',''],
+  ['2026-01-28','Decisión Fed (FOMC)','Fed Decision (FOMC)','ALTO','#ff6d00','Primera reunión 2026.','First meeting of 2026.'],
+];
+
+function renderMacroCal() {
+  var body = document.getElementById('macroCalBody');
+  if (!body) return;
+  var lang = typeof _lang !== 'undefined' ? _lang : 'en';
+  var now  = new Date();
+  var nowTs = now.getTime();
+
+  /* Show next 6 events + past 2 */
+  var upcoming = _MACRO_EVENTS.map(function(e) {
+    var d = new Date(e[0] + 'T12:00:00Z');
+    return { ts:d.getTime(), date:e[0], nameES:e[1], nameEN:e[2], impact:e[3], color:e[4], noteES:e[5], noteEN:e[6] };
+  }).sort(function(a,b){ return a.ts-b.ts; });
+
+  var past = upcoming.filter(function(e){ return e.ts < nowTs; }).slice(-2);
+  var future = upcoming.filter(function(e){ return e.ts >= nowTs; }).slice(0,6);
+  var show = past.concat(future);
+
+  body.innerHTML = '<div class="macro-events">' + show.map(function(e) {
+    var isPast   = e.ts < nowTs;
+    var isToday  = Math.abs(e.ts - nowTs) < 86400000;
+    var daysAway = Math.round((e.ts - nowTs) / 86400000);
+    var daysLabel = isPast ? (lang==='es'?'Pasado':'Past') :
+                   isToday ? (lang==='es'?'HOY':'TODAY') :
+                   daysAway === 1 ? (lang==='es'?'Mañana':'Tomorrow') :
+                   daysAway + (lang==='es'?' días':' days');
+    var impactColor = e.impact==='ALTO'?'#ff6d00':e.impact==='MEDIO'?'#ffd740':'var(--b1)';
+    var name = lang==='es' ? e.nameES : e.nameEN;
+    var note = lang==='es' ? e.noteES : e.noteEN;
+    var dateLabel = new Date(e.date+'T12:00:00Z').toLocaleDateString(lang==='es'?'es-CO':'en-US',{month:'short',day:'numeric'});
+    return '<div class="macro-event' + (isPast?' past':'') + (isToday?' today':'') + '" style="border-left-color:' + e.color + '">' +
+      '<div class="macro-date">' + dateLabel + '<br><span style="font-size:7.5px;color:' + e.color + '">' + daysLabel + '</span></div>' +
+      '<div><div class="macro-name" style="color:' + (isPast?'var(--t2)':'var(--t3)') + '">' + name + '</div>' +
+       (note ? '<div class="macro-note">' + note + '</div>' : '') + '</div>' +
+      '<div class="macro-impact" style="color:' + impactColor + ';background:' + impactColor + '18">' + e.impact + '</div>' +
+    '</div>';
+  }).join('') + '</div>' +
+  '<div style="font-family:var(--mono);font-size:7.5px;color:var(--t2);margin-top:10px;opacity:.6;line-height:1.5">' +
+  (lang==='es'?'Fechas aproximadas. El mercado cripto reacciona especialmente al CPI y decisiones de la Fed.':
+               'Approximate dates. Crypto markets react especially to CPI and Fed decisions.') + '</div>';
+}
+
+/* ════════════════════════════════════════════════════════════════
+   FEATURE 5: GLOSARIO CRIPTO
+   Comprehensive bilingual glossary with categories and search
+════════════════════════════════════════════════════════════════ */
+var _GLOSARIO = [
+  /* [term, def_es, def_en, category, color, example_es, example_en] */
+  ['Funding Rate','Pago periódico (cada 8h) entre traders con posiciones largas y cortas en futuros perpetuos. Mantiene el precio del futuro alineado con el spot.','Periodic payment (every 8h) between long and short traders in perpetual futures. Keeps futures price aligned with spot.','Derivados','#00b0ff','Ejemplo: FR de +0.05% significa que los largos pagan 0.05% de su posición a los cortos cada 8 horas.','Example: FR of +0.05% means longs pay 0.05% of their position to shorts every 8 hours.'],
+  ['Long / Corto','LONG = apuestas a que el precio sube. CORTO = apuestas a que el precio baja. En futuros puedes ganar en ambas direcciones.','LONG = bet that price goes up. SHORT = bet that price goes down. In futures you can profit in both directions.','Básicos','#00e676','Ejemplo: Entrar long en BTC a $90k significa que ganas si el precio sube por encima de $90k.','Example: Going long on BTC at $90k means you profit if price rises above $90k.'],
+  ['Liquidación','Cuando el mercado mueve contra tu posición apalancada y pierdes todo el margen puesto. El exchange cierra tu posición automáticamente.','When the market moves against your leveraged position and you lose all your margin. The exchange closes your position automatically.','Derivados','#ff1744','Ejemplo: Con 10x de apalancamiento, un movimiento del 10% en tu contra te liquida completamente.','Example: With 10x leverage, a 10% move against you results in full liquidation.'],
+  ['Apalancamiento / Leverage','Amplificador de posición. Con 10x puedes controlar $10,000 poniendo solo $1,000. Amplifica tanto ganancias como pérdidas.','Position amplifier. With 10x you can control $10,000 by putting up only $1,000. Amplifies both gains and losses.','Básicos','#ff6d00','Ejemplo: 10x leverage en $1,000 te da exposición de $10,000. Un +5% se convierte en +50%, pero un -10% te liquida.','Example: 10x leverage on $1,000 gives you $10,000 exposure. A +5% becomes +50%, but -10% liquidates you.'],
+  ['Open Interest (OI)','Total de contratos de futuros abiertos y no cerrados. Mide el dinero real apostado en el mercado. OI subiendo = dinero nuevo entrando.','Total open and unclosed futures contracts. Measures real money bet in the market. Rising OI = new money entering.','Derivados','#9c27b0','Ejemplo: OI subiendo con precio subiendo = nueva demanda entrando. Confirmación de tendencia.','Example: OI rising with price rising = new demand entering. Trend confirmation.'],
+  ['Long Squeeze','Evento donde el precio cae rápidamente, liquidando a los traders que estaban largos con apalancamiento. Causa caídas en cascada.','Event where price falls rapidly, liquidating leveraged long traders. Causes cascading drops.','Derivados','#ff1744','Ejemplo: Demasiados traders largos con apalancamiento → el precio cae un poco → los largos se liquidan → el precio cae más.','Example: Too many leveraged longs → price drops a bit → longs liquidate → price drops more.'],
+  ['Short Squeeze','Lo opuesto al long squeeze. El precio sube rápidamente, liquidando a los cortos. A menudo un movimiento violento hacia arriba.','Opposite of long squeeze. Price rises rapidly, liquidating short traders. Often a violent upward move.','Derivados','#00e676','Ejemplo: Muchos cortos esperan que BTC baje → precio sube → los cortos se liquidan → precio explota más arriba.','Example: Many shorts expect BTC to drop → price rises → shorts liquidate → price explodes higher.'],
+  ['Whale','Jugador con grandes cantidades de capital. Sus movimientos pueden mover el mercado. Una whale comprando = presión alcista.','Player with large amounts of capital. Their moves can move the market. A whale buying = bullish pressure.','Básicos','#9c27b0','Ejemplo: Una whale moviendo 1,000 BTC a un exchange puede señalar intención de venta (presión bajista).','Example: A whale moving 1,000 BTC to an exchange may signal selling intent (bearish pressure).'],
+  ['Market Cap','Valor total del mercado. Price × Supply. Para BTC: precio × total de BTC en circulación.','Total market value. Price × Supply. For BTC: price × total BTC in circulation.','Básicos','#00b0ff','Ejemplo: BTC a $100k con 19.8M BTC en circulación = market cap de $1.98 trillion.','Example: BTC at $100k with 19.8M BTC circulating = $1.98 trillion market cap.'],
+  ['Dominancia BTC','Porcentaje del market cap total de cripto que pertenece a Bitcoin. Alta dominancia = dinero en BTC. Baja = dinero en altcoins.','Percentage of total crypto market cap that belongs to Bitcoin. High dominance = money in BTC. Low = money in altcoins.','Básicos','#f7931a','Ejemplo: Dominancia BTC en 55% y bajando → el dinero está fluyendo hacia altcoins (inicio de altseason).','Example: BTC dominance at 55% and falling → money is flowing to altcoins (start of altseason).'],
+  ['Altseason','Período donde las altcoins suben más que Bitcoin. Típicamente ocurre después de que BTC establece nuevos ATH.','Period where altcoins outperform Bitcoin. Typically happens after BTC establishes new ATHs.','Básicos','#00e676','Ejemplo: Si BTC sube 50% en 3 meses pero ETH sube 150%, estamos en altseason.','Example: If BTC rises 50% in 3 months but ETH rises 150%, we are in altseason.'],
+  ['ATH (All-Time High)','El precio más alto que un activo ha alcanzado en toda su historia.','The highest price an asset has ever reached in its entire history.','Básicos','#ffd740','Ejemplo: El ATH de BTC en 2024 fue $108,353.','Example: BTC ATH in 2024 was $108,353.'],
+  ['DCA (Dollar Cost Average)','Estrategia de comprar cantidades fijas regularmente (ej: $100 cada semana), sin importar el precio. Reduce el riesgo de timing.','Strategy of buying fixed amounts regularly (e.g. $100 every week), regardless of price. Reduces timing risk.','Estrategia','#00e676','Ejemplo: Comprar $50 de BTC cada lunes durante 6 meses, independientemente de si el precio sube o baja.','Example: Buy $50 of BTC every Monday for 6 months, regardless of whether price goes up or down.'],
+  ['Stop Loss','Orden automática para vender si el precio cae a cierto nivel. Protege contra pérdidas mayores.','Automatic order to sell if price falls to a certain level. Protects against larger losses.','Estrategia','#ff1744','Ejemplo: Compras BTC a $90k, pones stop loss en $81k (10% abajo). Si cae a $81k, vendes automáticamente.','Example: You buy BTC at $90k, set stop loss at $81k (10% below). If it falls to $81k, you automatically sell.'],
+  ['Take Profit','Orden automática para vender cuando el precio sube a cierto nivel. Asegura ganancias sin tener que estar mirando el mercado.','Automatic order to sell when price rises to a certain level. Locks in profits without watching the market.','Estrategia','#00e676','Ejemplo: Compras a $90k, pones take profit en $108k. Cuando llega, vendes automáticamente con ganancia.','Example: You buy at $90k, set take profit at $108k. When it hits, you automatically sell for profit.'],
+  ['Perpetual / Perp','Contrato de futuros sin fecha de vencimiento. Puedes mantenerlo indefinidamente. El funding rate es el mecanismo de equilibrio.','Futures contract with no expiration date. You can hold it indefinitely. The funding rate is the balancing mechanism.','Derivados','#9c27b0','Ejemplo: Un perp de BTC/USDT te permite apostar al precio de BTC sin comprar BTC real, con apalancamiento.','Example: A BTC/USDT perp lets you bet on BTC price without buying real BTC, with leverage.'],
+  ['HODL','Jerga cripto para mantener activos a largo plazo sin vender, independientemente de la volatilidad del mercado.','Crypto slang for holding assets long-term without selling, regardless of market volatility.','Básicos','#ffd740','Origen: Error de tipeo de "hold" en un foro de 2013 que se viralizó como "I AM HODLING".','Origin: Typo of "hold" in a 2013 forum post that went viral as "I AM HODLING".'],
+  ['Halving','Evento programado de Bitcoin que reduce a la mitad la recompensa por minar un bloque. Ocurre cada ~4 años (~210,000 bloques).','Programmed Bitcoin event that cuts the mining block reward in half. Happens every ~4 years (~210,000 blocks).','Bitcoin','#f7931a','El último halving fue en abril 2024: la recompensa bajó de 6.25 BTC a 3.125 BTC por bloque.','The last halving was April 2024: reward dropped from 6.25 BTC to 3.125 BTC per block.'],
+  ['Realized Price','El precio promedio al que todos los BTCs existentes fueron movidos/transaccionados por última vez en la blockchain. Proxy del costo promedio de todos los holders.','The average price at which all existing BTCs were last moved/transacted on the blockchain. Proxy for the average cost basis of all holders.','On-chain','#00b0ff','Si el precio spot está sobre el Realized Price, la mayoría de holders están en ganancia.','If spot price is above Realized Price, most holders are in profit.'],
+  ['MVRV Ratio','Market Value / Realized Value. Compara el precio de mercado con el precio realizado. > 3.5 históricamente = zona de techo. < 1 = zona de fondo.','Market Value / Realized Value. Compares market price to realized price. > 3.5 historically = top zone. < 1 = bottom zone.','On-chain','#9c27b0','MVRV = 1.5 significa que los holders tienen en promedio 50% de ganancia.','MVRV = 1.5 means holders have on average 50% unrealized profit.'],
+  ['Order Book','Lista de todas las órdenes de compra (bids) y venta (asks) pendientes en un exchange. Muestra la liquidez disponible a cada precio.','List of all pending buy (bids) and sell (asks) orders on an exchange. Shows available liquidity at each price.','Trading','#00b0ff','Una pared de compra (buy wall) grande puede actuar como soporte. Una pared de venta puede actuar como resistencia.','A large buy wall can act as support. A sell wall can act as resistance.'],
+  ['Soporte / Resistencia','Soporte = nivel de precio donde la demanda históricamente ha detenido caídas. Resistencia = nivel donde las ventas históricamente han detenido subidas.','Support = price level where demand has historically stopped drops. Resistance = level where selling has historically stopped rises.','Trading','#ffd740','Si BTC rebotó en $85k tres veces, ese es un soporte fuerte. Si no logra superar $100k tres veces, eso es resistencia.','If BTC bounced at $85k three times, that is strong support. If it fails to break $100k three times, that is resistance.'],
+];
+
+var _glossCurrent = { cat: 'all', search: '' };
+
+function glossOpen() {
+  var el = document.getElementById('glossModal');
+  if (el) { el.classList.add('show'); renderGlosario(); }
+}
+function glossClose() {
+  var el = document.getElementById('glossModal');
+  if (el) el.classList.remove('show');
+}
+
+function renderGlosario() {
+  var lang = typeof _lang !== 'undefined' ? _lang : 'en';
+  var cats = ['all'];
+  _GLOSARIO.forEach(function(g){ if(cats.indexOf(g[3])===-1) cats.push(g[3]); });
+
+  var catEl = document.getElementById('glossCats');
+  if (catEl) {
+    catEl.innerHTML = cats.map(function(c) {
+      return '<div class="gloss-cat' + (c===_glossCurrent.cat?' active':'') + '" onclick="glossSetCat(\'' + c + '\')">' +
+        (c==='all'?(lang==='es'?'Todos':'All'):c) + '</div>';
+    }).join('');
+  }
+
+  var search = _glossCurrent.search.toLowerCase();
+  var listEl = document.getElementById('glossList');
+  if (!listEl) return;
+
+  var filtered = _GLOSARIO.filter(function(g) {
+    var matchCat    = _glossCurrent.cat === 'all' || g[3] === _glossCurrent.cat;
+    var term        = g[0].toLowerCase();
+    var defES       = g[1].toLowerCase();
+    var defEN       = g[2].toLowerCase();
+    var matchSearch = !search || term.indexOf(search)!==-1 || defES.indexOf(search)!==-1 || defEN.indexOf(search)!==-1;
+    return matchCat && matchSearch;
+  });
+
+  listEl.innerHTML = filtered.map(function(g) {
+    var def     = lang==='es' ? g[1] : g[2];
+    var example = lang==='es' ? g[5] : g[6];
+    return '<div class="gloss-item" style="border-left-color:' + g[4] + '">' +
+      '<div class="gloss-term">' + g[0] + ' <span class="gloss-tag" style="background:' + g[4] + '18;color:' + g[4] + '">' + g[3] + '</span></div>' +
+      '<div class="gloss-def">' + def + '</div>' +
+      (example ? '<div class="gloss-example">' + example + '</div>' : '') +
+    '</div>';
+  }).join('') || '<div style="font-family:var(--mono);font-size:9px;color:var(--t2);text-align:center;padding:20px">' +
+    (lang==='es'?'Sin resultados.':'No results.') + '</div>';
+}
+
+function glossSetCat(cat) {
+  _glossCurrent.cat = cat;
+  renderGlosario();
+}
+function glossFilter() {
+  var inp = document.getElementById('glossSearch');
+  _glossCurrent.search = inp ? inp.value : '';
+  renderGlosario();
+}
+
+/* ════════════════════════════════════════
+   Wire up all new features
+════════════════════════════════════════ */
+function loadAllNewFeatures() {
+  renderSemaforo();
+  renderCycleGuide();
+  renderMacroCal();
+  loadScreener();
 }
 
 /* ═══════════════════════════════════════════════
