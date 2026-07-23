@@ -4477,7 +4477,7 @@ function _aiFormat(t) {
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
     .replace(/\*\*(.+?)\*\*/g,'<strong style="color:var(--t3)">$1</strong>')
     .replace(/\*([^*]+?)\*/g,'<em>$1</em>')
-    .replace(/`([^`]+?)`/g,'<code style="background:rgba(255,255,255,.07);padding:1px 5px;border-radius:3px;font-family:var(--mono);font-size:.78rem">$1</code>')
+    .replace(/\x60([^\x60]+?)\x60/g,'<code style="background:rgba(255,255,255,.07);padding:1px 5px;border-radius:3px;font-family:var(--mono);font-size:.78rem">$1</code>')
     .replace(/\n\n/g,'<br><br>').replace(/\n/g,'<br>');
 }
 
