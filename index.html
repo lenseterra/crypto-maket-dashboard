@@ -1038,6 +1038,42 @@ body::before {
 }
 .gauss-interp-action-icon { font-size:1rem; flex-shrink:0; }
 
+
+/* ═══ GAUSS ENHANCEMENTS: tooltip, sigma note, range table ═══ */
+.gauss-tooltip {
+  position:absolute; pointer-events:none; z-index:20;
+  background:#0d1822; border:1px solid rgba(0,229,255,.35);
+  border-radius:8px; padding:8px 11px; font-family:var(--mono);
+  font-size:9px; line-height:1.6; color:var(--t3);
+  box-shadow:0 8px 24px rgba(0,0,0,.6); opacity:0; transition:opacity .12s;
+  white-space:nowrap; transform:translate(-50%,-100%);
+}
+.gauss-tooltip.show { opacity:1; }
+.gauss-tooltip .tt-title { color:#00e5ff; font-weight:700; margin-bottom:3px; }
+.gauss-hover-line { pointer-events:none; opacity:0; transition:opacity .12s; }
+.gauss-hover-line.show { opacity:1; }
+.gauss-hover-zone { cursor:crosshair; }
+
+.gauss-sigma-note {
+  margin-top:8px; padding:8px 11px; background:rgba(255,255,255,.025);
+  border:1px solid rgba(255,255,255,.06); border-left:3px solid #00e5ff;
+  border-radius:0 6px 6px 0; font-size:10px; line-height:1.6; color:var(--t2);
+}
+.gauss-sigma-note strong { color:var(--t3); }
+
+.gauss-range-table { margin-top:12px; }
+.gauss-range-title { font-family:var(--mono); font-size:8px; letter-spacing:1.5px;
+  color:var(--t2); text-transform:uppercase; margin-bottom:8px; }
+.gauss-range-row {
+  display:grid; grid-template-columns:28px 1fr auto auto; gap:10px; align-items:center;
+  padding:9px 12px; border-radius:8px; margin-bottom:6px; border:1px solid;
+}
+.gauss-range-icon { font-size:1.1rem; text-align:center; }
+.gauss-range-label { font-family:var(--mono); font-size:9.5px; }
+.gauss-range-label .sub { display:block; font-size:8px; color:var(--t2); margin-top:2px; }
+.gauss-range-prices { font-family:var(--mono); font-size:10px; font-weight:700; text-align:right; white-space:nowrap; }
+.gauss-range-pct { font-family:var(--mono); font-size:11px; font-weight:700; text-align:right; min-width:42px; }
+
 </style>
 </head>
 <body>
@@ -5166,48 +5202,69 @@ function renderGaussian(d) {
   var body = document.getElementById('gaussBody');
   if (!body) return;
 
-  /* ── Build SVG bell curve ── */
-  var w = 600, h = 160, padX = 30, padY = 10;
-  var plotW = w - padX*2, plotH = h - padY*2 - 20;
+  /* ── Build SVG bell curve with PRICE + SIGMA axis ── */
+  var w = 640, h = 190, padX = 40, padY = 14;
+  var plotW = w - padX*2, plotH = h - padY*2 - 26;
 
-  var range = 4; // show -4sigma to +4sigma
+  var range = 3.5; // show -3.5sigma to +3.5sigma
   var points = [];
-  var maxPdf = _gaussPDF(0, 0, 1); // peak at mean
+  var maxPdf = _gaussPDF(0, 0, 1);
 
-  for (var i = 0; i <= 100; i++) {
-    var xSigma = -range + (i/100)*range*2;
-    var yVal = _gaussPDF(xSigma, 0, 1) / maxPdf; // normalize 0-1
-    var px = padX + (i/100)*plotW;
+  for (var i = 0; i <= 120; i++) {
+    var xSigma = -range + (i/120)*range*2;
+    var yVal = _gaussPDF(xSigma, 0, 1) / maxPdf;
+    var px = padX + (i/120)*plotW;
     var py = padY + plotH - (yVal*plotH);
-    points.push([px.toFixed(1), py.toFixed(1)]);
+    points.push([px, py, xSigma]);
   }
 
-  var pathD = 'M' + points.map(function(p){return p[0]+','+p[1];}).join(' L');
-
-  /* Area fill path (closed to bottom) */
+  var pathD = 'M' + points.map(function(p){return p[0].toFixed(1)+','+p[1].toFixed(1);}).join(' L');
   var areaD = pathD + ' L' + (padX+plotW).toFixed(1) + ',' + (padY+plotH).toFixed(1) +
               ' L' + padX.toFixed(1) + ',' + (padY+plotH).toFixed(1) + ' Z';
 
-  /* Sigma zone backgrounds (colored vertical bands) */
+  /* Convert sigma -> BTC price using mean/sd of returns */
+  function sigmaToPrice(s) {
+    var retPct = d.mean + s * d.sd; // % return
+    return d.currentPrice * (1 + retPct/100);
+  }
+  function fmtPrice(p) {
+    return '$' + Math.round(p).toLocaleString('en');
+  }
+
+  /* Sigma zone backgrounds (KEEP existing colored fills) */
   var sigmaZones = [
-    {from:-4, to:-3, color:'#ff1744'}, {from:-3, to:-2, color:'#ff6d00'},
-    {from:-2, to:-1, color:'#ffd740'}, {from:-1, to:0,  color:'#00e676'},
-    {from:0,  to:1,  color:'#00e676'}, {from:1,  to:2,  color:'#ffd740'},
-    {from:2,  to:3,  color:'#ff6d00'}, {from:3,  to:4,  color:'#ff1744'},
+    {from:-3.5, to:-3, color:'#ff1744'}, {from:-3, to:-2, color:'#ff6d00'},
+    {from:-2,   to:-1, color:'#ffd740'}, {from:-1, to:0,  color:'#00e676'},
+    {from:0,    to:1,  color:'#00e676'}, {from:1,  to:2,  color:'#ffd740'},
+    {from:2,    to:3,  color:'#ff6d00'}, {from:3,  to:3.5,color:'#ff1744'},
   ];
   var zoneRects = sigmaZones.map(function(z) {
     var x1 = padX + ((z.from+range)/(range*2))*plotW;
     var x2 = padX + ((z.to+range)/(range*2))*plotW;
-    return '<rect x="'+x1.toFixed(1)+'" y="'+padY+'" width="'+(x2-x1).toFixed(1)+'" height="'+plotH+'" fill="'+z.color+'" opacity="0.04"/>';
+    return '<rect x="'+x1.toFixed(1)+'" y="'+padY+'" width="'+(x2-x1).toFixed(1)+'" height="'+plotH+'" fill="'+z.color+'" opacity="0.045"/>';
   }).join('');
 
-  /* Sigma gridlines + labels */
+  /* 68/95/99.7 probability band labels (Option B) */
+  var bandLabels = [
+    {from:-1, to:1,   text:'68%', y:padY+18},
+    {from:-2, to:2,   text:'95%', y:padY+34},
+  ];
+  var bandLabelsSvg = bandLabels.map(function(b) {
+    var x1 = padX + ((b.from+range)/(range*2))*plotW;
+    var x2 = padX + ((b.to+range)/(range*2))*plotW;
+    var midX = (x1+x2)/2;
+    return '<text x="'+midX.toFixed(1)+'" y="'+b.y+'" text-anchor="middle" font-family="monospace" font-size="8" fill="rgba(255,255,255,.3)" font-weight="700">'+b.text+'</text>';
+  }).join('');
+
+  /* Sigma gridlines + PRICE labels (top) + sigma labels (bottom) — Option A */
   var sigmaLines = [-3,-2,-1,0,1,2,3].map(function(s) {
     var x = padX + ((s+range)/(range*2))*plotW;
-    var lbl = s===0 ? 'μ' : (s>0?'+':'') + s + 'σ';
-    var col = s===0 ? '#00e5ff' : Math.abs(s)>=2 ? '#ff6d00' : 'rgba(255,255,255,.25)';
+    var sigLbl = s===0 ? 'μ' : (s>0?'+':'') + s + 'σ';
+    var priceLbl = fmtPrice(sigmaToPrice(s));
+    var col = s===0 ? '#00e5ff' : Math.abs(s)>=2 ? '#ff6d00' : 'rgba(255,255,255,.3)';
     return '<line x1="'+x.toFixed(1)+'" y1="'+padY+'" x2="'+x.toFixed(1)+'" y2="'+(padY+plotH)+'" stroke="'+col+'" stroke-width="'+(s===0?1.5:1)+'" stroke-dasharray="'+(s===0?'none':'2,3')+'" opacity="'+(s===0?0.6:0.35)+'"/>' +
-      '<text x="'+x.toFixed(1)+'" y="'+(padY+plotH+14)+'" text-anchor="middle" class="gauss-sigma-label" fill="'+(s===0?'#00e5ff':'var(--t2)')+'">'+lbl+'</text>';
+      '<text x="'+x.toFixed(1)+'" y="'+(padY+plotH+13)+'" text-anchor="middle" font-family="monospace" font-size="7.5" fill="'+(s===0?'#00e5ff':'var(--t2)')+'" font-weight="'+(s===0?'700':'400')+'">'+priceLbl+'</text>' +
+      '<text x="'+x.toFixed(1)+'" y="'+(padY+plotH+24)+'" text-anchor="middle" font-family="monospace" font-size="7" fill="'+(s===0?'#00e5ff':'rgba(255,255,255,.35)')+'">'+sigLbl+'</text>';
   }).join('');
 
   /* Today's position marker */
@@ -5217,7 +5274,12 @@ function renderGaussian(d) {
   var todayY = padY + plotH - (todayYVal*plotH);
   var todayColor = Math.abs(d.zScore) > 2.5 ? '#ff1744' : Math.abs(d.zScore) > 1.5 ? '#ffd740' : '#00e676';
 
-  var svg = '<svg viewBox="0 0 '+w+' '+(h+8)+'" width="100%" height="'+(h+8)+'" preserveAspectRatio="xMidYMid meet">' +
+  /* Invisible hover-capture rect + crosshair line + dot (Option D: interactive hover) */
+  var hoverElems =
+    '<line id="gaussHoverLine" class="gauss-hover-line" x1="0" y1="'+padY+'" x2="0" y2="'+(padY+plotH)+'" stroke="#fff" stroke-width="1" stroke-dasharray="3,2" opacity="0.5"/>' +
+    '<circle id="gaussHoverDot" class="gauss-hover-line" cx="0" cy="0" r="4" fill="#fff" stroke="#00e5ff" stroke-width="2"/>';
+
+  var svg = '<svg id="gaussSvgEl" viewBox="0 0 '+w+' '+(h+8)+'" width="100%" height="'+(h+8)+'" preserveAspectRatio="xMidYMid meet" style="overflow:visible">' +
     '<defs>' +
       '<linearGradient id="gaussFill" x1="0" y1="0" x2="0" y2="1">' +
         '<stop offset="0%" stop-color="#00e5ff" stop-opacity="0.25"/>' +
@@ -5225,15 +5287,19 @@ function renderGaussian(d) {
       '</linearGradient>' +
     '</defs>' +
     zoneRects +
+    bandLabelsSvg +
     sigmaLines +
     '<path d="'+areaD+'" fill="url(#gaussFill)"/>' +
     '<path class="gauss-curve-path" d="'+pathD+'" stroke="#00e5ff"/>' +
     '<line x1="'+todayX.toFixed(1)+'" y1="'+todayY.toFixed(1)+'" x2="'+todayX.toFixed(1)+'" y2="'+(padY+plotH).toFixed(1)+'" stroke="'+todayColor+'" stroke-width="1.5" stroke-dasharray="3,2" opacity="0.7"/>' +
     '<circle class="gauss-today-dot" cx="'+todayX.toFixed(1)+'" cy="'+todayY.toFixed(1)+'" r="5" fill="'+todayColor+'" stroke="#020507" stroke-width="1.5"/>' +
-    '<text x="'+todayX.toFixed(1)+'" y="'+(todayY-12).toFixed(1)+'" class="gauss-today-tag" fill="'+todayColor+'">' + (lang==='es'?'HOY':'TODAY') + '</text>' +
+    '<text x="'+todayX.toFixed(1)+'" y="'+(todayY-12).toFixed(1)+'" class="gauss-today-tag" fill="'+todayColor+'" text-anchor="middle">' + (lang==='es'?'HOY':'TODAY') + '</text>' +
+    hoverElems +
+    '<rect class="gauss-hover-zone" x="'+padX+'" y="0" width="'+plotW+'" height="'+(padY+plotH)+'" fill="transparent" ' +
+      'onmousemove="_gaussHoverMove(event)" onmouseleave="_gaussHoverOut()"/>' +
   '</svg>';
 
-  /* ── Metrics ── */
+  /* ── Metrics (kept, secondary) ── */
   var zAbs = Math.abs(d.zScore);
   var zColor = zAbs > 2.5 ? 'var(--r1)' : zAbs > 1.5 ? 'var(--y1)' : 'var(--g1)';
   var zLabel = zAbs > 2.5 ? (lang==='es'?'EXTREMO':'EXTREME') : zAbs > 1.5 ? (lang==='es'?'INUSUAL':'UNUSUAL') : (lang==='es'?'NORMAL':'NORMAL');
@@ -5257,33 +5323,125 @@ function renderGaussian(d) {
         '<div class="gauss-metric-sub" style="color:'+varColor+'">'+varLabel+'</div></div>' +
     '</div>';
 
-  /* ── VaR range bar ── */
-  var rangePct = 50; // marker always centered since we show price range
-  var varHTML =
-    '<div class="gauss-var-wrap">' +
-      '<div class="gauss-var-title">' + (lang==='es'?'RANGO ESPERADO PRÓXIMAS 24H (95% CONFIANZA)':'EXPECTED RANGE NEXT 24H (95% CONFIDENCE)') + '</div>' +
-      '<div class="gauss-var-track"><div class="gauss-var-marker" style="left:50%"></div></div>' +
-      '<div class="gauss-var-labels">' +
-        '<span style="color:var(--r1)">$' + Math.round(d.varLower).toLocaleString('en') + '</span>' +
-        '<span style="color:var(--t3)">$' + Math.round(d.currentPrice).toLocaleString('en') + ' (' + (lang==='es'?'actual':'now') + ')</span>' +
-        '<span style="color:var(--g1)">$' + Math.round(d.varUpper).toLocaleString('en') + '</span>' +
+  /* ── NEW: Sigma explainer note ── */
+  var sigmaNote = '<div class="gauss-sigma-note">' +
+    (lang==='es' ?
+      '📖 <strong>¿Qué es σ (sigma)?</strong> Es la "desviación estándar" — mide cuánto se mueve normalmente el precio. <strong>μ (mu)</strong> es el promedio. Cada σ que te alejas del centro, el movimiento es más raro: dentro de ±1σ ocurre el 68% de las veces, dentro de ±2σ el 95%, dentro de ±3σ el 99.7%. Mientras más lejos del centro esté el punto de HOY, más inusual fue el movimiento.' :
+      '📖 <strong>What is σ (sigma)?</strong> It is the "standard deviation" — measures how much price normally moves. <strong>μ (mu)</strong> is the average. Each σ away from center, the move gets rarer: within ±1σ happens 68% of the time, within ±2σ happens 95%, within ±3σ happens 99.7%. The farther the TODAY dot is from center, the more unusual the move.'
+    ) + '</div>';
+
+  /* ── NEW: Range probability table (Option C) ── */
+  var r1Lo = sigmaToPrice(-1), r1Hi = sigmaToPrice(1);
+  var r2Lo = sigmaToPrice(-2), r2Hi = sigmaToPrice(2);
+  var r3Lo = sigmaToPrice(-3), r3Hi = sigmaToPrice(3);
+
+  var rangeRows = [
+    { icon:'🟢', pct:'68%', color:'#00e676',
+      label: lang==='es' ? 'Muy probable' : 'Very likely',
+      sub:   lang==='es' ? '±1 desviación estándar' : '±1 standard deviation',
+      lo:r1Lo, hi:r1Hi },
+    { icon:'🟡', pct:'95%', color:'#ffd740',
+      label: lang==='es' ? 'Probable' : 'Likely',
+      sub:   lang==='es' ? '±2 desviaciones estándar' : '±2 standard deviations',
+      lo:r2Lo, hi:r2Hi },
+    { icon:'🔴', pct:'99.7%', color:'#ff6d00',
+      label: lang==='es' ? 'Casi seguro' : 'Almost certain',
+      sub:   lang==='es' ? '±3 desviaciones estándar' : '±3 standard deviations',
+      lo:r3Lo, hi:r3Hi },
+  ];
+
+  var rangeTableHTML =
+    '<div class="gauss-range-table">' +
+      '<div class="gauss-range-title">' + (lang==='es'?'RANGOS DE PRECIO Y PROBABILIDAD (24H)':'PRICE RANGES AND PROBABILITY (24H)') + '</div>' +
+      rangeRows.map(function(r) {
+        return '<div class="gauss-range-row" style="border-color:'+r.color+'30;background:'+r.color+'08">' +
+          '<div class="gauss-range-icon">'+r.icon+'</div>' +
+          '<div class="gauss-range-label" style="color:var(--t3)">'+r.label+'<span class="sub">'+r.sub+'</span></div>' +
+          '<div class="gauss-range-prices" style="color:var(--t3)">'+fmtPrice(r.lo)+' — '+fmtPrice(r.hi)+'</div>' +
+          '<div class="gauss-range-pct" style="color:'+r.color+'">'+r.pct+'</div>' +
+        '</div>';
+      }).join('') +
+      '<div style="font-family:var(--mono);font-size:8px;color:var(--t2);margin-top:6px;opacity:.7">' +
+      (lang==='es'?'Ejemplo de lectura: hay 95% de probabilidad histórica de que BTC esté entre '+fmtPrice(r2Lo)+' y '+fmtPrice(r2Hi)+' en las próximas 24h.':
+                   'Reading example: there is a 95% historical probability BTC will be between '+fmtPrice(r2Lo)+' and '+fmtPrice(r2Hi)+' in the next 24h.') +
       '</div>' +
     '</div>';
 
-  /* ── Interpretation (beginner-friendly) ── */
+  /* Store data for hover tooltip access */
+  window._gaussData = { mean:d.mean, sd:d.sd, currentPrice:d.currentPrice, range:range, padX:padX, plotW:plotW, padY:padY, plotH:plotH, maxPdf:maxPdf, lang:lang };
+
+  /* ── Interpretation ── */
   var interp = _buildInterpretation(d, lang);
 
   body.innerHTML =
-    '<div class="gauss-svg-wrap">' + svg + '</div>' +
+    '<div class="gauss-svg-wrap" id="gaussSvgWrap" style="position:relative">' + svg +
+      '<div class="gauss-tooltip" id="gaussTooltip"></div>' +
+    '</div>' +
+    sigmaNote +
     '<div class="gauss-summary-row">' +
       '<span>' + (lang==='es'?'Retorno hoy:':'Today return:') + ' <strong style="color:'+(d.todayReturn>=0?'var(--g1)':'var(--r1)')+'">' + (d.todayReturn>=0?'+':'') + d.todayReturn.toFixed(2) + '%</strong></span>' +
       '<span>' + (lang==='es'?'Media 90d:':'90d mean:') + ' <strong>' + (d.mean>=0?'+':'') + d.mean.toFixed(2) + '%</strong></span>' +
       '<span>σ: <strong>' + d.sd.toFixed(2) + '%</strong></span>' +
     '</div>' +
     metricsHTML +
-    varHTML +
+    rangeTableHTML +
     interp;
 }
+
+/* ── Hover interaction handlers (Option D) ── */
+function _gaussHoverMove(evt) {
+  var gd = window._gaussData;
+  if (!gd) return;
+  var svg = document.getElementById('gaussSvgEl');
+  if (!svg) return;
+
+  var pt = svg.createSVGPoint();
+  pt.x = evt.clientX; pt.y = evt.clientY;
+  var ctm = svg.getScreenCTM();
+  if (!ctm) return;
+  var loc = pt.matrixTransform(ctm.inverse());
+
+  var xSigma = ((loc.x - gd.padX) / gd.plotW) * (gd.range*2) - gd.range;
+  xSigma = Math.max(-gd.range, Math.min(gd.range, xSigma));
+
+  var yVal = _gaussPDF(xSigma, 0, 1) / gd.maxPdf;
+  var curveX = gd.padX + ((xSigma+gd.range)/(gd.range*2))*gd.plotW;
+  var curveY = gd.padY + gd.plotH - (yVal*gd.plotH);
+
+  var line = document.getElementById('gaussHoverLine');
+  var dot  = document.getElementById('gaussHoverDot');
+  if (line) { line.setAttribute('x1', curveX); line.setAttribute('x2', curveX); line.classList.add('show'); }
+  if (dot)  { dot.setAttribute('cx', curveX); dot.setAttribute('cy', curveY); dot.classList.add('show'); }
+
+  var retPct = gd.mean + xSigma * gd.sd;
+  var price  = gd.currentPrice * (1 + retPct/100);
+  var pct    = _normalCDF(xSigma) * 100;
+  var rarity = pct > 50 ? (100-pct) : pct;
+
+  var tt = document.getElementById('gaussTooltip');
+  if (tt) {
+    var lang = gd.lang;
+    var freqText = lang==='es' ?
+      'Ocurre ~' + rarity.toFixed(1) + '% de los días' :
+      'Occurs ~' + rarity.toFixed(1) + '% of days';
+    tt.innerHTML =
+      '<div class="tt-title">$' + Math.round(price).toLocaleString('en') + '</div>' +
+      '<div>' + (xSigma>=0?'+':'') + xSigma.toFixed(2) + 'σ &middot; ' + (lang==='es'?'Percentil':'Percentile') + ' ' + pct.toFixed(0) + '&deg;</div>' +
+      '<div style="color:var(--t2)">' + freqText + '</div>';
+    tt.style.left = curveX + 'px';
+    tt.style.top  = (curveY - 12) + 'px';
+    tt.classList.add('show');
+  }
+}
+function _gaussHoverOut() {
+  var line = document.getElementById('gaussHoverLine');
+  var dot  = document.getElementById('gaussHoverDot');
+  var tt   = document.getElementById('gaussTooltip');
+  if (line) line.classList.remove('show');
+  if (dot)  dot.classList.remove('show');
+  if (tt)   tt.classList.remove('show');
+}
+
 
 function _buildInterpretation(d, lang) {
   var zAbs = Math.abs(d.zScore);
