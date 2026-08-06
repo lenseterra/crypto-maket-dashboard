@@ -962,6 +962,82 @@ body::before {
   padding:2px 6px; border-radius:3px; flex-shrink:0; }
 .macro-note { font-size:9px; color:var(--t2); margin-top:2px; }
 
+
+/* ═══ GAUSSIAN DISTRIBUTION PANEL ═══ */
+.gauss-wrap { margin-bottom:14px; }
+.gauss-svg-wrap { position:relative; padding:10px 4px 4px; }
+.gauss-svg-wrap svg { display:block; width:100%; height:auto; }
+
+.gauss-curve-path {
+  fill:none; stroke-width:2.5;
+  stroke-dasharray:900; stroke-dashoffset:900;
+  animation: gaussDraw 1.4s cubic-bezier(.4,0,.2,1) forwards;
+}
+@keyframes gaussDraw { to { stroke-dashoffset:0; } }
+
+.gauss-today-dot {
+  animation: gaussPulse 1.8s ease-in-out infinite;
+}
+@keyframes gaussPulse {
+  0%,100% { r:5; opacity:1; }
+  50%     { r:7; opacity:.7; }
+}
+
+.gauss-sigma-label { font-family:var(--mono); font-size:8px; }
+.gauss-today-tag {
+  font-family:var(--mono); font-size:8.5px; font-weight:700;
+  text-anchor:middle;
+}
+
+.gauss-summary-row {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-top:8px; padding:8px 12px; background:rgba(255,255,255,.03);
+  border-radius:8px; border:1px solid var(--border);
+  font-family:var(--mono); font-size:9px; color:var(--t2);
+}
+.gauss-summary-row strong { color:var(--t3); }
+
+/* 3 metric cards */
+.gauss-metrics { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:12px; }
+.gauss-metric {
+  background:var(--p2); border:1px solid var(--border); border-radius:9px;
+  padding:10px 12px; text-align:center;
+}
+.gauss-metric-lbl { font-family:var(--mono); font-size:7.5px; letter-spacing:1.5px;
+  color:var(--t2); text-transform:uppercase; margin-bottom:5px; }
+.gauss-metric-val { font-family:var(--mono); font-size:1.15rem; font-weight:700; line-height:1; }
+.gauss-metric-sub { font-family:var(--mono); font-size:8px; margin-top:3px; }
+
+/* VaR range bar */
+.gauss-var-wrap { margin-top:12px; padding:12px 14px; background:var(--p2);
+  border:1px solid var(--border); border-radius:9px; }
+.gauss-var-title { font-family:var(--mono); font-size:8px; letter-spacing:1.5px;
+  color:var(--t2); text-transform:uppercase; margin-bottom:10px; }
+.gauss-var-track { position:relative; height:8px; border-radius:4px;
+  background:linear-gradient(90deg,#00e676,#ffd740,#00e676); margin:6px 0; }
+.gauss-var-marker { position:absolute; top:-3px; width:3px; height:14px;
+  background:#fff; border-radius:2px; transform:translateX(-50%);
+  box-shadow:0 0 6px rgba(255,255,255,.7); }
+.gauss-var-labels { display:flex; justify-content:space-between;
+  font-family:var(--mono); font-size:8px; color:var(--t2); margin-top:4px; }
+
+/* ── Interpretation box (beginner-friendly) ── */
+.gauss-interp {
+  margin-top:12px; padding:14px 16px; border-radius:10px;
+  border:1px solid; position:relative; overflow:hidden;
+}
+.gauss-interp-header { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+.gauss-interp-icon { font-size:1.3rem; line-height:1; }
+.gauss-interp-title { font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:1px; }
+.gauss-interp-body { font-size:12px; line-height:1.7; color:var(--t2); }
+.gauss-interp-body strong { color:var(--t3); }
+.gauss-interp-action {
+  display:flex; align-items:flex-start; gap:8px; margin-top:10px;
+  padding:9px 12px; border-radius:8px; background:rgba(255,255,255,.04);
+  font-size:11px; line-height:1.6;
+}
+.gauss-interp-action-icon { font-size:1rem; flex-shrink:0; }
+
 </style>
 </head>
 <body>
@@ -1344,6 +1420,19 @@ body::before {
         <div class="sk sk-line" style="height:120px"></div>
         <div class="sk sk-line" style="height:120px"></div>
       </div>
+    </div>
+  </div>
+
+  <!-- ══ DISTRIBUCIÓN GAUSSIANA BTC ══ -->
+  <div class="panel gauss-wrap" id="gaussPanel">
+    <div class="ph">
+      <div class="pt"><div class="pdot" style="background:#00e5ff"></div>
+        <span id="gaussTitle">DISTRIBUCIÓN ESTADÍSTICA · RETORNOS 90D</span>
+      </div>
+      <span class="pbadge" style="background:rgba(0,229,255,.1);color:#00e5ff" id="gaussBadge">CALCULANDO</span>
+    </div>
+    <div class="pb" id="gaussBody">
+      <div class="sk sk-line" style="height:200px"></div>
     </div>
   </div>
 
@@ -2847,7 +2936,8 @@ async function refreshAll() {
     loadTPI(),
     loadDominance(),
     loadNewIndicators(),
-    loadScreener()
+    loadScreener(),
+    loadGaussian()
   ]);
 
   // Compute composite signal after all data loaded
@@ -4986,6 +5076,293 @@ function loadAllNewFeatures() {
   renderCycleGuide();
   renderMacroCal();
   loadScreener();
+}
+
+
+/* ════════════════════════════════════════════════════════════════
+   GAUSSIAN DISTRIBUTION ANALYSIS
+   Calculates daily log returns from 90d of Binance klines,
+   builds a normal distribution model, and shows:
+   - Animated bell curve with today's position marked
+   - Z-Score, Percentile, VaR (Value at Risk)
+   - Beginner-friendly interpretation with recommendation
+════════════════════════════════════════════════════════════════ */
+
+function _erf(x) {
+  /* Abramowitz-Stegun approximation of the error function */
+  var sign = x < 0 ? -1 : 1;
+  x = Math.abs(x);
+  var a1=0.254829592, a2=-0.284496736, a3=1.421413741, a4=-1.453152027, a5=1.061405429, p=0.3275911;
+  var t = 1 / (1 + p * x);
+  var y = 1 - (((((a5*t + a4)*t) + a3)*t + a2)*t + a1)*t*Math.exp(-x*x);
+  return sign * y;
+}
+
+function _normalCDF(z) {
+  /* Cumulative distribution function -> percentile 0-1 */
+  return 0.5 * (1 + _erf(z / Math.SQRT2));
+}
+
+function _gaussPDF(x, mean, sd) {
+  var exponent = -Math.pow(x - mean, 2) / (2 * sd * sd);
+  return (1 / (sd * Math.sqrt(2 * Math.PI))) * Math.exp(exponent);
+}
+
+async function loadGaussian() {
+  var body  = document.getElementById('gaussBody');
+  var badge = document.getElementById('gaussBadge');
+  if (!body) return;
+  var lang = typeof _lang !== 'undefined' ? _lang : 'en';
+
+  try {
+    var res = await fetch('https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1d&limit=91');
+    if (!res.ok) throw new Error('klines ' + res.status);
+    var raw = await res.json();
+    var closes = raw.map(function(k){ return parseFloat(k[4]); });
+    var n = closes.length;
+    if (n < 30) throw new Error('insufficient data');
+
+    /* Daily log returns */
+    var returns = [];
+    for (var i = 1; i < n; i++) {
+      returns.push(Math.log(closes[i] / closes[i-1]) * 100); // as %
+    }
+
+    var todayReturn = returns[returns.length - 1];
+    var mean = returns.reduce(function(a,b){return a+b;},0) / returns.length;
+    var variance = returns.reduce(function(a,r){return a + Math.pow(r-mean,2);},0) / returns.length;
+    var sd = Math.sqrt(variance);
+
+    var zScore = sd > 0 ? (todayReturn - mean) / sd : 0;
+    var percentile = _normalCDF(zScore) * 100;
+
+    /* VaR 95% for next 24h (1.645 = z for 95% one-tail) */
+    var var95 = 1.645 * sd;
+    var currentPrice = closes[n-1];
+    var varUpper = currentPrice * (1 + (mean + var95)/100);
+    var varLower = currentPrice * (1 + (mean - var95)/100);
+
+    renderGaussian({
+      returns: returns, mean: mean, sd: sd, zScore: zScore,
+      percentile: percentile, todayReturn: todayReturn,
+      currentPrice: currentPrice, varUpper: varUpper, varLower: varLower, var95: var95
+    });
+
+    /* Badge */
+    var absZ = Math.abs(zScore);
+    var zLabel = absZ > 2.5 ? (lang==='es'?'EXTREMO':'EXTREME') :
+                 absZ > 1.5 ? (lang==='es'?'INUSUAL':'UNUSUAL') :
+                              (lang==='es'?'NORMAL':'NORMAL');
+    var zColor = absZ > 2.5 ? '#ff1744' : absZ > 1.5 ? '#ffd740' : '#00e676';
+    if (badge) { badge.textContent = zLabel; badge.style.color = zColor; badge.style.background = zColor+'18'; }
+
+  } catch(e) {
+    body.innerHTML = '<div class="err-box"><div class="err-msg">' + e.message + '</div><button class="retry-btn" onclick="loadGaussian()">&#8635; Retry</button></div>';
+  }
+}
+
+function renderGaussian(d) {
+  var lang = typeof _lang !== 'undefined' ? _lang : 'en';
+  var body = document.getElementById('gaussBody');
+  if (!body) return;
+
+  /* ── Build SVG bell curve ── */
+  var w = 600, h = 160, padX = 30, padY = 10;
+  var plotW = w - padX*2, plotH = h - padY*2 - 20;
+
+  var range = 4; // show -4sigma to +4sigma
+  var points = [];
+  var maxPdf = _gaussPDF(0, 0, 1); // peak at mean
+
+  for (var i = 0; i <= 100; i++) {
+    var xSigma = -range + (i/100)*range*2;
+    var yVal = _gaussPDF(xSigma, 0, 1) / maxPdf; // normalize 0-1
+    var px = padX + (i/100)*plotW;
+    var py = padY + plotH - (yVal*plotH);
+    points.push([px.toFixed(1), py.toFixed(1)]);
+  }
+
+  var pathD = 'M' + points.map(function(p){return p[0]+','+p[1];}).join(' L');
+
+  /* Area fill path (closed to bottom) */
+  var areaD = pathD + ' L' + (padX+plotW).toFixed(1) + ',' + (padY+plotH).toFixed(1) +
+              ' L' + padX.toFixed(1) + ',' + (padY+plotH).toFixed(1) + ' Z';
+
+  /* Sigma zone backgrounds (colored vertical bands) */
+  var sigmaZones = [
+    {from:-4, to:-3, color:'#ff1744'}, {from:-3, to:-2, color:'#ff6d00'},
+    {from:-2, to:-1, color:'#ffd740'}, {from:-1, to:0,  color:'#00e676'},
+    {from:0,  to:1,  color:'#00e676'}, {from:1,  to:2,  color:'#ffd740'},
+    {from:2,  to:3,  color:'#ff6d00'}, {from:3,  to:4,  color:'#ff1744'},
+  ];
+  var zoneRects = sigmaZones.map(function(z) {
+    var x1 = padX + ((z.from+range)/(range*2))*plotW;
+    var x2 = padX + ((z.to+range)/(range*2))*plotW;
+    return '<rect x="'+x1.toFixed(1)+'" y="'+padY+'" width="'+(x2-x1).toFixed(1)+'" height="'+plotH+'" fill="'+z.color+'" opacity="0.04"/>';
+  }).join('');
+
+  /* Sigma gridlines + labels */
+  var sigmaLines = [-3,-2,-1,0,1,2,3].map(function(s) {
+    var x = padX + ((s+range)/(range*2))*plotW;
+    var lbl = s===0 ? 'μ' : (s>0?'+':'') + s + 'σ';
+    var col = s===0 ? '#00e5ff' : Math.abs(s)>=2 ? '#ff6d00' : 'rgba(255,255,255,.25)';
+    return '<line x1="'+x.toFixed(1)+'" y1="'+padY+'" x2="'+x.toFixed(1)+'" y2="'+(padY+plotH)+'" stroke="'+col+'" stroke-width="'+(s===0?1.5:1)+'" stroke-dasharray="'+(s===0?'none':'2,3')+'" opacity="'+(s===0?0.6:0.35)+'"/>' +
+      '<text x="'+x.toFixed(1)+'" y="'+(padY+plotH+14)+'" text-anchor="middle" class="gauss-sigma-label" fill="'+(s===0?'#00e5ff':'var(--t2)')+'">'+lbl+'</text>';
+  }).join('');
+
+  /* Today's position marker */
+  var todaySigma = Math.max(-range, Math.min(range, d.zScore));
+  var todayX = padX + ((todaySigma+range)/(range*2))*plotW;
+  var todayYVal = _gaussPDF(todaySigma, 0, 1) / maxPdf;
+  var todayY = padY + plotH - (todayYVal*plotH);
+  var todayColor = Math.abs(d.zScore) > 2.5 ? '#ff1744' : Math.abs(d.zScore) > 1.5 ? '#ffd740' : '#00e676';
+
+  var svg = '<svg viewBox="0 0 '+w+' '+(h+8)+'" width="100%" height="'+(h+8)+'" preserveAspectRatio="xMidYMid meet">' +
+    '<defs>' +
+      '<linearGradient id="gaussFill" x1="0" y1="0" x2="0" y2="1">' +
+        '<stop offset="0%" stop-color="#00e5ff" stop-opacity="0.25"/>' +
+        '<stop offset="100%" stop-color="#00e5ff" stop-opacity="0.02"/>' +
+      '</linearGradient>' +
+    '</defs>' +
+    zoneRects +
+    sigmaLines +
+    '<path d="'+areaD+'" fill="url(#gaussFill)"/>' +
+    '<path class="gauss-curve-path" d="'+pathD+'" stroke="#00e5ff"/>' +
+    '<line x1="'+todayX.toFixed(1)+'" y1="'+todayY.toFixed(1)+'" x2="'+todayX.toFixed(1)+'" y2="'+(padY+plotH).toFixed(1)+'" stroke="'+todayColor+'" stroke-width="1.5" stroke-dasharray="3,2" opacity="0.7"/>' +
+    '<circle class="gauss-today-dot" cx="'+todayX.toFixed(1)+'" cy="'+todayY.toFixed(1)+'" r="5" fill="'+todayColor+'" stroke="#020507" stroke-width="1.5"/>' +
+    '<text x="'+todayX.toFixed(1)+'" y="'+(todayY-12).toFixed(1)+'" class="gauss-today-tag" fill="'+todayColor+'">' + (lang==='es'?'HOY':'TODAY') + '</text>' +
+  '</svg>';
+
+  /* ── Metrics ── */
+  var zAbs = Math.abs(d.zScore);
+  var zColor = zAbs > 2.5 ? 'var(--r1)' : zAbs > 1.5 ? 'var(--y1)' : 'var(--g1)';
+  var zLabel = zAbs > 2.5 ? (lang==='es'?'EXTREMO':'EXTREME') : zAbs > 1.5 ? (lang==='es'?'INUSUAL':'UNUSUAL') : (lang==='es'?'NORMAL':'NORMAL');
+
+  var pctColor = d.percentile > 95 || d.percentile < 5 ? 'var(--r1)' : d.percentile > 84 || d.percentile < 16 ? 'var(--y1)' : 'var(--b1)';
+  var pctLabel = d.percentile > 84 ? (lang==='es'?'Superior':'Upper') : d.percentile < 16 ? (lang==='es'?'Inferior':'Lower') : (lang==='es'?'Medio':'Middle');
+
+  var varColor = d.var95 > 4 ? 'var(--r1)' : d.var95 > 2.5 ? 'var(--y1)' : 'var(--g1)';
+  var varLabel = d.var95 > 4 ? (lang==='es'?'ALTO':'HIGH') : d.var95 > 2.5 ? (lang==='es'?'MODERADO':'MODERATE') : (lang==='es'?'BAJO':'LOW');
+
+  var metricsHTML =
+    '<div class="gauss-metrics">' +
+      '<div class="gauss-metric"><div class="gauss-metric-lbl">Z-SCORE</div>' +
+        '<div class="gauss-metric-val" style="color:'+zColor+'">'+(d.zScore>=0?'+':'')+d.zScore.toFixed(2)+'σ</div>' +
+        '<div class="gauss-metric-sub" style="color:'+zColor+'">'+zLabel+'</div></div>' +
+      '<div class="gauss-metric"><div class="gauss-metric-lbl">PERCENTIL</div>' +
+        '<div class="gauss-metric-val" style="color:'+pctColor+'">'+d.percentile.toFixed(0)+'°</div>' +
+        '<div class="gauss-metric-sub" style="color:'+pctColor+'">'+pctLabel+'</div></div>' +
+      '<div class="gauss-metric"><div class="gauss-metric-lbl">VaR 24H (95%)</div>' +
+        '<div class="gauss-metric-val" style="color:'+varColor+'">&#177;'+d.var95.toFixed(1)+'%</div>' +
+        '<div class="gauss-metric-sub" style="color:'+varColor+'">'+varLabel+'</div></div>' +
+    '</div>';
+
+  /* ── VaR range bar ── */
+  var rangePct = 50; // marker always centered since we show price range
+  var varHTML =
+    '<div class="gauss-var-wrap">' +
+      '<div class="gauss-var-title">' + (lang==='es'?'RANGO ESPERADO PRÓXIMAS 24H (95% CONFIANZA)':'EXPECTED RANGE NEXT 24H (95% CONFIDENCE)') + '</div>' +
+      '<div class="gauss-var-track"><div class="gauss-var-marker" style="left:50%"></div></div>' +
+      '<div class="gauss-var-labels">' +
+        '<span style="color:var(--r1)">$' + Math.round(d.varLower).toLocaleString('en') + '</span>' +
+        '<span style="color:var(--t3)">$' + Math.round(d.currentPrice).toLocaleString('en') + ' (' + (lang==='es'?'actual':'now') + ')</span>' +
+        '<span style="color:var(--g1)">$' + Math.round(d.varUpper).toLocaleString('en') + '</span>' +
+      '</div>' +
+    '</div>';
+
+  /* ── Interpretation (beginner-friendly) ── */
+  var interp = _buildInterpretation(d, lang);
+
+  body.innerHTML =
+    '<div class="gauss-svg-wrap">' + svg + '</div>' +
+    '<div class="gauss-summary-row">' +
+      '<span>' + (lang==='es'?'Retorno hoy:':'Today return:') + ' <strong style="color:'+(d.todayReturn>=0?'var(--g1)':'var(--r1)')+'">' + (d.todayReturn>=0?'+':'') + d.todayReturn.toFixed(2) + '%</strong></span>' +
+      '<span>' + (lang==='es'?'Media 90d:':'90d mean:') + ' <strong>' + (d.mean>=0?'+':'') + d.mean.toFixed(2) + '%</strong></span>' +
+      '<span>σ: <strong>' + d.sd.toFixed(2) + '%</strong></span>' +
+    '</div>' +
+    metricsHTML +
+    varHTML +
+    interp;
+}
+
+function _buildInterpretation(d, lang) {
+  var zAbs = Math.abs(d.zScore);
+  var isHigh = d.zScore > 0;
+
+  var icon, title, color, bg, border, body, action, actionIcon;
+
+  if (zAbs > 2.5) {
+    /* EXTREME */
+    icon = isHigh ? '🔥' : '🧊';
+    color = '#ff1744'; bg = 'rgba(255,23,68,.06)'; border = 'rgba(255,23,68,.25)';
+    if (lang === 'es') {
+      title = isHigh ? 'MOVIMIENTO EXTREMADAMENTE ALCISTA' : 'MOVIMIENTO EXTREMADAMENTE BAJISTA';
+      body = 'El precio de hoy se movió <strong>' + Math.abs(d.zScore).toFixed(1) + ' desviaciones estándar</strong> ' +
+        (isHigh ? 'por encima' : 'por debajo') + ' de lo normal. Esto es un evento estadísticamente ' +
+        '<strong>muy poco común</strong> — históricamente ocurre menos del ' + (100-d.percentile > 50 ? d.percentile.toFixed(0) : (100-d.percentile).toFixed(0)) + '% de los días.';
+      action = isHigh ?
+        'Movimientos tan extremos hacia arriba a menudo van seguidos de una pausa o corrección. No es momento de perseguir el precio — considera esperar una entrada más tranquila.' :
+        'Movimientos tan extremos hacia abajo pueden ser una sobrerreacción del mercado. Históricamente, este tipo de caídas extremas a veces preceden un rebote — pero también pueden continuar. Actúa con cautela.';
+      actionIcon = '⚠️';
+    } else {
+      title = isHigh ? 'EXTREMELY BULLISH MOVE' : 'EXTREMELY BEARISH MOVE';
+      body = 'Price moved <strong>' + Math.abs(d.zScore).toFixed(1) + ' standard deviations</strong> ' +
+        (isHigh ? 'above' : 'below') + ' normal. This is a statistically <strong>very rare event</strong> — ' +
+        'historically happens less than ' + (100-d.percentile > 50 ? d.percentile.toFixed(0) : (100-d.percentile).toFixed(0)) + '% of days.';
+      action = isHigh ?
+        'Such extreme upward moves are often followed by a pause or correction. This may not be the time to chase price — consider waiting for a calmer entry.' :
+        'Such extreme downward moves can be a market overreaction. Historically these extreme drops sometimes precede a bounce — but they can also continue. Act with caution.';
+      actionIcon = '⚠️';
+    }
+  } else if (zAbs > 1.5) {
+    /* UNUSUAL */
+    icon = isHigh ? '📈' : '📉';
+    color = '#ffd740'; bg = 'rgba(255,215,64,.06)'; border = 'rgba(255,215,64,.25)';
+    if (lang === 'es') {
+      title = isHigh ? 'MOVIMIENTO ALCISTA POCO COMÚN' : 'MOVIMIENTO BAJISTA POCO COMÚN';
+      body = 'El precio se movió más de lo usual hoy — <strong>' + d.zScore.toFixed(1) + ' desviaciones estándar</strong> ' +
+        (isHigh ? 'por encima' : 'por debajo') + ' del promedio de los últimos 90 días. No es extremo, pero vale la pena prestar atención.';
+      action = isHigh ?
+        'El impulso alcista es notable. Si ya tienes posición, considera asegurar parte de las ganancias. Si buscas entrar, espera una confirmación adicional.' :
+        'La presión bajista es notable. Si estás pensando en comprar, podría ser prudente esperar a que el movimiento se estabilice antes de entrar.';
+      actionIcon = '💡';
+    } else {
+      title = isHigh ? 'UNUSUAL UPWARD MOVE' : 'UNUSUAL DOWNWARD MOVE';
+      body = 'Price moved more than usual today — <strong>' + d.zScore.toFixed(1) + ' standard deviations</strong> ' +
+        (isHigh ? 'above' : 'below') + ' the 90-day average. Not extreme, but worth paying attention to.';
+      action = isHigh ?
+        'The bullish momentum is notable. If you already hold a position, consider securing part of the gains. If looking to enter, wait for further confirmation.' :
+        'The bearish pressure is notable. If considering a buy, it may be prudent to wait for the move to stabilize before entering.';
+      actionIcon = '💡';
+    }
+  } else {
+    /* NORMAL */
+    icon = '⚖️';
+    color = '#00e676'; bg = 'rgba(0,230,118,.06)'; border = 'rgba(0,230,118,.25)';
+    if (lang === 'es') {
+      title = 'MOVIMIENTO DENTRO DE LO NORMAL';
+      body = 'El precio de hoy se comportó <strong>dentro del rango estadísticamente normal</strong> — nada fuera de lo común comparado con los últimos 90 días. El mercado está en su comportamiento habitual.';
+      action = 'No hay señal estadística de alarma ni de oportunidad especial en este momento. Es un buen día para seguir tu plan sin apresurarte por el movimiento del precio.';
+      actionIcon = '✅';
+    } else {
+      title = 'MOVEMENT WITHIN NORMAL RANGE';
+      body = 'Price behaved <strong>within the statistically normal range</strong> — nothing unusual compared to the last 90 days. The market is behaving as expected.';
+      action = 'There is no statistical alarm or special opportunity signal right now. It is a good day to stick to your plan without rushing based on price movement.';
+      actionIcon = '✅';
+    }
+  }
+
+  return '<div class="gauss-interp" style="background:'+bg+';border-color:'+border+'">' +
+    '<div class="gauss-interp-header">' +
+      '<span class="gauss-interp-icon">'+icon+'</span>' +
+      '<span class="gauss-interp-title" style="color:'+color+'">'+title+'</span>' +
+    '</div>' +
+    '<div class="gauss-interp-body">'+body+'</div>' +
+    '<div class="gauss-interp-action">' +
+      '<span class="gauss-interp-action-icon">'+actionIcon+'</span>' +
+      '<span>'+action+'</span>' +
+    '</div>' +
+  '</div>';
 }
 
 /* ═══════════════════════════════════════════════
