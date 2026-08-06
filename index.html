@@ -1063,16 +1063,22 @@ body::before {
 
 .gauss-range-table { margin-top:12px; }
 .gauss-range-title { font-family:var(--mono); font-size:8px; letter-spacing:1.5px;
-  color:var(--t2); text-transform:uppercase; margin-bottom:8px; }
-.gauss-range-row {
-  display:grid; grid-template-columns:28px 1fr auto auto; gap:10px; align-items:center;
-  padding:9px 12px; border-radius:8px; margin-bottom:6px; border:1px solid;
+  color:var(--t2); text-transform:uppercase; margin-bottom:6px; }
+.gauss-range-explainer {
+  font-size:10.5px; line-height:1.6; color:var(--t2); margin-bottom:10px;
+  padding:8px 11px; background:rgba(0,229,255,.05); border:1px solid rgba(0,229,255,.15);
+  border-radius:7px;
 }
+.gauss-range-explainer strong { color:var(--t3); }
+.gauss-range-row {
+  display:grid; grid-template-columns:56px 24px 1fr auto; gap:10px; align-items:center;
+  padding:10px 12px; border-radius:8px; margin-bottom:6px; border:1px solid;
+}
+.gauss-range-pct-big { font-family:var(--mono); font-size:1.15rem; font-weight:700; text-align:center; line-height:1; }
 .gauss-range-icon { font-size:1.1rem; text-align:center; }
 .gauss-range-label { font-family:var(--mono); font-size:9.5px; }
 .gauss-range-label .sub { display:block; font-size:8px; color:var(--t2); margin-top:2px; }
 .gauss-range-prices { font-family:var(--mono); font-size:10px; font-weight:700; text-align:right; white-space:nowrap; }
-.gauss-range-pct { font-family:var(--mono); font-size:11px; font-weight:700; text-align:right; min-width:42px; }
 
 </style>
 </head>
@@ -5336,29 +5342,34 @@ function renderGaussian(d) {
   var r3Lo = sigmaToPrice(-3), r3Hi = sigmaToPrice(3);
 
   var rangeRows = [
-    { icon:'🟢', pct:'68%', color:'#00e676',
-      label: lang==='es' ? 'Muy probable' : 'Very likely',
-      sub:   lang==='es' ? '±1 desviación estándar' : '±1 standard deviation',
+    { icon:'🎯', pct:'68%', color:'#00e676',
+      label: lang==='es' ? 'Rango ESTRECHO' : 'NARROW range',
+      sub:   lang==='es' ? 'El más preciso · ±1σ' : 'Most precise · ±1σ',
       lo:r1Lo, hi:r1Hi },
-    { icon:'🟡', pct:'95%', color:'#ffd740',
-      label: lang==='es' ? 'Probable' : 'Likely',
-      sub:   lang==='es' ? '±2 desviaciones estándar' : '±2 standard deviations',
+    { icon:'📊', pct:'95%', color:'#ffd740',
+      label: lang==='es' ? 'Rango MEDIO' : 'MEDIUM range',
+      sub:   lang==='es' ? 'Balance precisión/certeza · ±2σ' : 'Balance precision/certainty · ±2σ',
       lo:r2Lo, hi:r2Hi },
-    { icon:'🔴', pct:'99.7%', color:'#ff6d00',
-      label: lang==='es' ? 'Casi seguro' : 'Almost certain',
-      sub:   lang==='es' ? '±3 desviaciones estándar' : '±3 standard deviations',
+    { icon:'🛡️', pct:'99.7%', color:'#ff6d00',
+      label: lang==='es' ? 'Rango AMPLIO' : 'WIDE range',
+      sub:   lang==='es' ? 'El más seguro · ±3σ' : 'Most certain · ±3σ',
       lo:r3Lo, hi:r3Hi },
   ];
 
   var rangeTableHTML =
     '<div class="gauss-range-table">' +
       '<div class="gauss-range-title">' + (lang==='es'?'RANGOS DE PRECIO Y PROBABILIDAD (24H)':'PRICE RANGES AND PROBABILITY (24H)') + '</div>' +
+      '<div class="gauss-range-explainer">' +
+        (lang==='es' ?
+          '💡 Mientras <strong>más ancho</strong> el rango, <strong>más seguro</strong> estás de que el precio caiga ahí — pero es menos preciso. Mientras más angosto, más preciso pero más incierto.' :
+          '💡 The <strong>wider</strong> the range, the <strong>more certain</strong> you can be the price lands there — but it is less precise. The narrower, the more precise but less certain.') +
+      '</div>' +
       rangeRows.map(function(r) {
         return '<div class="gauss-range-row" style="border-color:'+r.color+'30;background:'+r.color+'08">' +
+          '<div class="gauss-range-pct-big" style="color:'+r.color+'">'+r.pct+'</div>' +
           '<div class="gauss-range-icon">'+r.icon+'</div>' +
           '<div class="gauss-range-label" style="color:var(--t3)">'+r.label+'<span class="sub">'+r.sub+'</span></div>' +
           '<div class="gauss-range-prices" style="color:var(--t3)">'+fmtPrice(r.lo)+' — '+fmtPrice(r.hi)+'</div>' +
-          '<div class="gauss-range-pct" style="color:'+r.color+'">'+r.pct+'</div>' +
         '</div>';
       }).join('') +
       '<div style="font-family:var(--mono);font-size:8px;color:var(--t2);margin-top:6px;opacity:.7">' +
