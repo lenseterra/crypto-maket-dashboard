@@ -1080,6 +1080,23 @@ body::before {
 .gauss-range-label .sub { display:block; font-size:8px; color:var(--t2); margin-top:2px; }
 .gauss-range-prices { font-family:var(--mono); font-size:10px; font-weight:700; text-align:right; white-space:nowrap; }
 
+
+/* ═══ GAUSS TIMEFRAME SELECTOR ═══ */
+.gauss-tf-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; flex-wrap:wrap; gap:8px; }
+.gauss-tf-tabs { display:flex; gap:5px; }
+.gauss-tf-tab {
+  padding:5px 14px; border-radius:7px; border:1px solid rgba(255,255,255,.1);
+  font-family:var(--mono); font-size:9px; font-weight:700; letter-spacing:1px;
+  cursor:pointer; background:rgba(255,255,255,.03); color:var(--t2); transition:all .2s;
+}
+.gauss-tf-tab:hover { color:var(--t3); border-color:rgba(0,229,255,.25); }
+.gauss-tf-tab.active { background:rgba(0,229,255,.1); color:#00e5ff; border-color:rgba(0,229,255,.35); }
+
+/* Multi-timeframe tooltip rows */
+.gauss-tt-tf-row { display:flex; justify-content:space-between; gap:14px; font-size:9px; }
+.gauss-tt-tf-lbl { color:var(--t2); }
+.gauss-tt-tf-val { font-weight:700; }
+
 </style>
 </head>
 <body>
@@ -1473,10 +1490,19 @@ body::before {
       </div>
       <span class="pbadge" style="background:rgba(0,229,255,.1);color:#00e5ff" id="gaussBadge">CALCULANDO</span>
     </div>
-    <div class="pb" id="gaussBody">
+    <div class="pb">
+      <div class="gauss-tf-row">
+        <div class="gauss-tf-tabs" id="gaussTfTabs">
+          <button class="gauss-tf-tab" onclick="setGaussTimeframe('1H')" id="gaussTf1H">1H</button>
+          <button class="gauss-tf-tab" onclick="setGaussTimeframe('4H')" id="gaussTf4H">4H</button>
+          <button class="gauss-tf-tab active" onclick="setGaussTimeframe('1D')" id="gaussTf1D">1D</button>
+        </div>
+      </div>
+      <div id="gaussBody">
       <div class="sk sk-line" style="height:200px"></div>
     </div>
   </div>
+    </div>
 
   <!-- MVRV PANEL -->
   <div class="mvrv-wrap" id="mvrvWrap">
@@ -5185,7 +5211,7 @@ async function loadGaussian() {
     var n = closes.length;
     if (n < 30) throw new Error('insufficient data');
 
-    /* Daily log returns */
+    /* Daily log returns (base for all timeframe scaling) */
     var returns = [];
     for (var i = 1; i < n; i++) {
       returns.push(Math.log(closes[i] / closes[i-1]) * 100); // as %
@@ -5194,34 +5220,73 @@ async function loadGaussian() {
     var todayReturn = returns[returns.length - 1];
     var mean = returns.reduce(function(a,b){return a+b;},0) / returns.length;
     var variance = returns.reduce(function(a,r){return a + Math.pow(r-mean,2);},0) / returns.length;
-    var sd = Math.sqrt(variance);
+    var sdDaily = Math.sqrt(variance);
 
-    var zScore = sd > 0 ? (todayReturn - mean) / sd : 0;
-    var percentile = _normalCDF(zScore) * 100;
-
-    /* VaR 95% for next 24h (1.645 = z for 95% one-tail) */
-    var var95 = 1.645 * sd;
     var currentPrice = closes[n-1];
-    var varUpper = currentPrice * (1 + (mean + var95)/100);
-    var varLower = currentPrice * (1 + (mean - var95)/100);
 
-    renderGaussian({
-      returns: returns, mean: mean, sd: sd, zScore: zScore,
-      percentile: percentile, todayReturn: todayReturn,
-      currentPrice: currentPrice, varUpper: varUpper, varLower: varLower, var95: var95
-    });
+    /* Store base daily stats globally for timeframe recalculation */
+    window._gaussBase = {
+      returns: returns, meanDaily: mean, sdDaily: sdDaily,
+      todayReturn: todayReturn, currentPrice: currentPrice, lang: lang
+    };
 
-    /* Badge */
-    var absZ = Math.abs(zScore);
-    var zLabel = absZ > 2.5 ? (lang==='es'?'EXTREMO':'EXTREME') :
-                 absZ > 1.5 ? (lang==='es'?'INUSUAL':'UNUSUAL') :
-                              (lang==='es'?'NORMAL':'NORMAL');
-    var zColor = absZ > 2.5 ? '#ff1744' : absZ > 1.5 ? '#ffd740' : '#00e676';
-    if (badge) { badge.textContent = zLabel; badge.style.color = zColor; badge.style.background = zColor+'18'; }
+    renderGaussianForTimeframe(_gaussTfCurrent || '1D');
 
   } catch(e) {
     body.innerHTML = '<div class="err-box"><div class="err-msg">' + e.message + '</div><button class="retry-btn" onclick="loadGaussian()">&#8635; Retry</button></div>';
   }
+}
+
+/* ── Timeframe scaling (random walk: sigma scales with sqrt(time)) ── */
+var _gaussTfCurrent = '1D';
+var _GAUSS_TF_HOURS = { '1H': 1, '4H': 4, '1D': 24 };
+
+function setGaussTimeframe(tf) {
+  _gaussTfCurrent = tf;
+  ['1H','4H','1D'].forEach(function(k) {
+    var el = document.getElementById('gaussTf' + k);
+    if (el) el.classList.toggle('active', k === tf);
+  });
+  renderGaussianForTimeframe(tf);
+}
+
+function renderGaussianForTimeframe(tf) {
+  var base = window._gaussBase;
+  if (!base) return;
+  var lang = base.lang;
+
+  var hours = _GAUSS_TF_HOURS[tf] || 24;
+  var scaleFactor = Math.sqrt(hours / 24); // sqrt-of-time scaling
+
+  var mean = base.meanDaily * (hours / 24); // drift scales linearly
+  var sd   = base.sdDaily * scaleFactor;    // volatility scales with sqrt(time)
+
+  var zScore = sd > 0 ? (base.todayReturn * scaleFactor - mean) / sd : 0;
+  /* Note: for the "today" marker we keep it referenced to the DAILY return always,
+     scaled proportionally, so the dot position is consistent across timeframes */
+  var todayReturnScaled = base.todayReturn * (hours/24 < 1 ? 1 : 1); // keep raw daily return as reference
+  zScore = sd > 0 ? (base.todayReturn - mean) / sd : 0;
+
+  var percentile = _normalCDF(zScore) * 100;
+  var var95 = 1.645 * sd;
+  var currentPrice = base.currentPrice;
+  var varUpper = currentPrice * (1 + (mean + var95)/100);
+  var varLower = currentPrice * (1 + (mean - var95)/100);
+
+  renderGaussian({
+    mean: mean, sd: sd, zScore: zScore,
+    percentile: percentile, todayReturn: base.todayReturn,
+    currentPrice: currentPrice, varUpper: varUpper, varLower: varLower, var95: var95,
+    timeframe: tf, hours: hours
+  });
+
+  var badge = document.getElementById('gaussBadge');
+  var absZ = Math.abs(zScore);
+  var zLabel = absZ > 2.5 ? (lang==='es'?'EXTREMO':'EXTREME') :
+               absZ > 1.5 ? (lang==='es'?'INUSUAL':'UNUSUAL') :
+                            (lang==='es'?'NORMAL':'NORMAL');
+  var zColor = absZ > 2.5 ? '#ff1744' : absZ > 1.5 ? '#ffd740' : '#00e676';
+  if (badge) { badge.textContent = zLabel + ' · ' + tf; badge.style.color = zColor; badge.style.background = zColor+'18'; }
 }
 
 function renderGaussian(d) {
@@ -5400,7 +5465,18 @@ function renderGaussian(d) {
     '</div>';
 
   /* Store data for hover tooltip access */
-  window._gaussData = { mean:d.mean, sd:d.sd, currentPrice:d.currentPrice, range:range, padX:padX, plotW:plotW, padY:padY, plotH:plotH, maxPdf:maxPdf, lang:lang };
+  /* Store current timeframe data + precompute stats for ALL 3 timeframes for tooltip comparison */
+  var _base = window._gaussBase || {};
+  var _tfStats = {};
+  ['1H','4H','1D'].forEach(function(tfKey) {
+    var hrs = _GAUSS_TF_HOURS[tfKey];
+    var sf  = Math.sqrt(hrs/24);
+    _tfStats[tfKey] = {
+      mean: (_base.meanDaily||0) * (hrs/24),
+      sd:   (_base.sdDaily||0) * sf
+    };
+  });
+  window._gaussData = { mean:d.mean, sd:d.sd, currentPrice:d.currentPrice, range:range, padX:padX, plotW:plotW, padY:padY, plotH:plotH, maxPdf:maxPdf, lang:lang, tfStats:_tfStats, currentTf: d.timeframe || '1D' };
 
   /* ── Interpretation ── */
   var interp = _buildInterpretation(d, lang);
@@ -5411,6 +5487,7 @@ function renderGaussian(d) {
     '</div>' +
     sigmaNote +
     '<div class="gauss-summary-row">' +
+      '<span>' + (lang==='es'?'Horizonte:':'Horizon:') + ' <strong style="color:#00e5ff">' + (d.timeframe||'1D') + '</strong></span>' +
       '<span>' + (lang==='es'?'Retorno hoy:':'Today return:') + ' <strong style="color:'+(d.todayReturn>=0?'var(--g1)':'var(--r1)')+'">' + (d.todayReturn>=0?'+':'') + d.todayReturn.toFixed(2) + '%</strong></span>' +
       '<span>' + (lang==='es'?'Media 90d:':'90d mean:') + ' <strong>' + (d.mean>=0?'+':'') + d.mean.toFixed(2) + '%</strong></span>' +
       '<span>σ: <strong>' + d.sd.toFixed(2) + '%</strong></span>' +
@@ -5445,13 +5522,27 @@ function _gaussHoverMove(evt) {
   if (line) { line.setAttribute('x1', curveX); line.setAttribute('x2', curveX); line.classList.add('show'); }
   if (dot)  { dot.setAttribute('cx', curveX); dot.setAttribute('cy', curveY); dot.classList.add('show'); }
 
+  /* Price at this point, using the CURRENT timeframe's mean/sd (matches the curve shown) */
   var retPct = gd.mean + xSigma * gd.sd;
   var price  = gd.currentPrice * (1 + retPct/100);
   var pct    = _normalCDF(xSigma) * 100;
   var rarity = pct > 50 ? (100-pct) : pct;
-
-  /* Probabilidad de ALCANZAR este precio o uno más extremo (cola de la distribución) */
   var reachProb = xSigma >= 0 ? (100 - pct) : pct;
+
+  /* ── NEW: probability of reaching THIS SAME PRICE across 1H / 4H / 1D ── */
+  var tfProbs = {};
+  if (gd.tfStats) {
+    ['1H','4H','1D'].forEach(function(tfKey) {
+      var st = gd.tfStats[tfKey];
+      if (!st || st.sd <= 0) { tfProbs[tfKey] = null; return; }
+      /* Required % return to reach `price` from currentPrice */
+      var reqRetPct = (price / gd.currentPrice - 1) * 100;
+      var z = (reqRetPct - st.mean) / st.sd;
+      var cdf = _normalCDF(z) * 100;
+      var prob = z >= 0 ? (100 - cdf) : cdf;
+      tfProbs[tfKey] = prob;
+    });
+  }
 
   var tt = document.getElementById('gaussTooltip');
   if (tt) {
@@ -5460,18 +5551,39 @@ function _gaussHoverMove(evt) {
       'Ocurre ~' + rarity.toFixed(1) + '% de los días' :
       'Occurs ~' + rarity.toFixed(1) + '% of days';
     var reachText = lang==='es' ?
-      'Prob. de llegar aquí: ' + reachProb.toFixed(1) + '%' :
-      'Prob. of reaching here: ' + reachProb.toFixed(1) + '%';
+      'Prob. de llegar aquí (' + gd.currentTf + '): ' + reachProb.toFixed(1) + '%' :
+      'Prob. of reaching here (' + gd.currentTf + '): ' + reachProb.toFixed(1) + '%';
+
+    var tfRowsHTML = '';
+    if (gd.tfStats) {
+      var tfLabel = lang==='es' ? 'Por horizonte:' : 'By horizon:';
+      tfRowsHTML = '<div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,.08)">' +
+        '<div style="color:var(--t2);font-size:8px;margin-bottom:3px">' + tfLabel + '</div>';
+      ['1H','4H','1D'].forEach(function(tfKey) {
+        var p = tfProbs[tfKey];
+        var isActive = tfKey === gd.currentTf;
+        var pTxt = p===null ? '—' : p.toFixed(1) + '%';
+        var pColor = isActive ? '#00e5ff' : 'var(--t3)';
+        tfRowsHTML += '<div class="gauss-tt-tf-row">' +
+          '<span class="gauss-tt-tf-lbl">' + tfKey + (isActive?' &#9679;':'') + '</span>' +
+          '<span class="gauss-tt-tf-val" style="color:' + pColor + '">' + pTxt + '</span>' +
+        '</div>';
+      });
+      tfRowsHTML += '</div>';
+    }
+
     tt.innerHTML =
       '<div class="tt-title">$' + Math.round(price).toLocaleString('en') + '</div>' +
       '<div>' + (xSigma>=0?'+':'') + xSigma.toFixed(2) + 'σ &middot; ' + (lang==='es'?'Percentil':'Percentile') + ' ' + pct.toFixed(0) + '&deg;</div>' +
       '<div style="color:var(--t2)">' + freqText + '</div>' +
-      '<div style="color:#00e5ff;font-weight:700">' + reachText + '</div>';
+      '<div style="color:#00e5ff;font-weight:700">' + reachText + '</div>' +
+      tfRowsHTML;
     tt.style.left = curveX + 'px';
     tt.style.top  = (curveY - 12) + 'px';
     tt.classList.add('show');
   }
 }
+
 function _gaussHoverOut() {
   var line = document.getElementById('gaussHoverLine');
   var dot  = document.getElementById('gaussHoverDot');
