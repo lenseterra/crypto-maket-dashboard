@@ -1097,6 +1097,52 @@ body::before {
 .gauss-tt-tf-lbl { color:var(--t2); }
 .gauss-tt-tf-val { font-weight:700; }
 
+
+/* ═══ ADJUSTED PROBABILITY SCORE (context-aware) ═══ */
+.adj-wrap { margin-bottom:14px; }
+.adj-disclaimer {
+  padding:8px 12px; margin-bottom:12px; border-radius:8px;
+  background:rgba(255,215,64,.06); border:1px solid rgba(255,215,64,.2);
+  font-size:10px; line-height:1.6; color:var(--t2);
+}
+.adj-disclaimer strong { color:var(--y1); }
+
+.adj-split { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:12px; }
+@media(max-width:700px){ .adj-split{ grid-template-columns:1fr; } }
+
+.adj-gauge-col { display:flex; flex-direction:column; align-items:center; text-align:center; }
+.adj-gauge-label { font-family:var(--mono); font-size:8px; letter-spacing:1.5px;
+  color:var(--t2); text-transform:uppercase; margin-bottom:8px; }
+.adj-bias-badge {
+  display:inline-flex; align-items:center; gap:6px; padding:6px 16px;
+  border-radius:20px; margin-top:8px; font-family:var(--mono); font-size:11px; font-weight:700;
+}
+.adj-split-bar { width:100%; height:14px; border-radius:7px; overflow:hidden;
+  display:flex; margin:10px 0 6px; border:1px solid rgba(255,255,255,.1); }
+.adj-split-seg { display:flex; align-items:center; justify-content:center;
+  font-family:var(--mono); font-size:9px; font-weight:700; color:#020507; transition:width .5s; }
+.adj-split-labels { display:flex; justify-content:space-between; width:100%;
+  font-family:var(--mono); font-size:8px; color:var(--t2); }
+
+.adj-factors { display:flex; flex-direction:column; gap:5px; }
+.adj-factor-row {
+  display:flex; align-items:center; gap:8px; padding:7px 10px;
+  background:var(--p2); border-radius:7px; border-left:3px solid transparent;
+}
+.adj-factor-row.pos { border-left-color:var(--g1); }
+.adj-factor-row.neg { border-left-color:var(--r1); }
+.adj-factor-row.neu { border-left-color:var(--y1); }
+.adj-factor-icon { font-size:13px; flex-shrink:0; }
+.adj-factor-name { font-family:var(--mono); font-size:9px; color:var(--t2); flex:1; }
+.adj-factor-val  { font-family:var(--mono); font-size:9px; font-weight:700; flex-shrink:0; }
+.adj-factor-weight { font-family:var(--mono); font-size:7.5px; color:var(--t2); opacity:.6; flex-shrink:0; width:34px; text-align:right; }
+
+.adj-summary {
+  margin-top:12px; padding:12px 14px; border-radius:10px; border:1px solid;
+  font-size:12px; line-height:1.7;
+}
+.adj-summary strong { color:var(--t3); }
+
 </style>
 </head>
 <body>
@@ -1503,6 +1549,19 @@ body::before {
     </div>
   </div>
     </div>
+
+  <!-- ══ SCORE AJUSTADO POR CONTEXTO (separado de la Campana de Gauss) ══ -->
+  <div class="panel adj-wrap" id="adjPanel">
+    <div class="ph">
+      <div class="pt"><div class="pdot" style="background:#e040fb"></div>
+        <span id="adjTitle">SCORE AJUSTADO POR CONTEXTO</span>
+      </div>
+      <span class="pbadge" style="background:rgba(224,64,251,.1);color:#e040fb" id="adjBadge">CALCULANDO</span>
+    </div>
+    <div class="pb" id="adjBody">
+      <div class="sk sk-line" style="height:180px"></div>
+    </div>
+  </div>
 
   <!-- MVRV PANEL -->
   <div class="mvrv-wrap" id="mvrvWrap">
@@ -2762,6 +2821,7 @@ function computeSignal() {
   renderSemaforo();
   renderCycleGuide();
   renderMacroCal();
+  loadAdjustedScore();
   // Update master panel with fresh data
   setTimeout(renderMasterPanel, 100);
 }
@@ -3008,7 +3068,8 @@ async function refreshAll() {
     loadDominance(),
     loadNewIndicators(),
     loadScreener(),
-    loadGaussian()
+    loadGaussian(),
+    loadAdjustedScore()
   ]);
 
   // Compute composite signal after all data loaded
@@ -5672,6 +5733,197 @@ function _buildInterpretation(d, lang) {
       '<span>'+action+'</span>' +
     '</div>' +
   '</div>';
+}
+
+
+/* ════════════════════════════════════════════════════════════════
+   ADJUSTED PROBABILITY SCORE — context-aware directional bias
+   Separate from the pure Gaussian bell curve above.
+   Combines: trend (LTPI/MTPI), momentum (RSI/MACD), volume (CVD),
+   sentiment (Funding Rate, Fear & Greed).
+
+   IMPORTANT: this is an interpretive layer, not a prediction.
+   The pure statistical score (Gauss bell curve) remains untouched.
+════════════════════════════════════════════════════════════════ */
+
+function loadAdjustedScore() {
+  var body  = document.getElementById('adjBody');
+  var badge = document.getElementById('adjBadge');
+  if (!body) return;
+  var lang = typeof _lang !== 'undefined' ? _lang : 'en';
+
+  var factors = [];
+  var totalScore = 0; // -1 to +1 range, weighted sum
+  var totalWeight = 0;
+
+  /* 1. Trend — LTPI (weight 0.22) */
+  var ltpi = state.tpi && state.tpi.ltpi;
+  if (ltpi !== undefined && ltpi !== null) {
+    var ltpiNorm = Math.max(-1, Math.min(1, ltpi * 2)); // ltpi already -1..1 roughly
+    factors.push({
+      icon:'📈', name: lang==='es'?'Tendencia (LTPI)':'Trend (LTPI)',
+      val: (ltpi>=0?'+':'')+ltpi.toFixed(3),
+      score: ltpiNorm, weight: 0.22
+    });
+    totalScore += ltpiNorm * 0.22; totalWeight += 0.22;
+  }
+
+  /* 2. Mid-term Trend — MTPI (weight 0.15) */
+  var mtpi = state.tpi && state.tpi.mtpi;
+  if (mtpi !== undefined && mtpi !== null) {
+    var mtpiNorm = Math.max(-1, Math.min(1, mtpi * 2));
+    factors.push({
+      icon:'📊', name: lang==='es'?'Tendencia Media (MTPI)':'Mid Trend (MTPI)',
+      val: (mtpi>=0?'+':'')+mtpi.toFixed(3),
+      score: mtpiNorm, weight: 0.15
+    });
+    totalScore += mtpiNorm * 0.15; totalWeight += 0.15;
+  }
+
+  /* 3. Momentum — RSI (weight 0.15) */
+  var rsi = state.rsi;
+  if (rsi !== null && rsi !== undefined) {
+    /* RSI extreme oversold = bullish bias, extreme overbought = bearish bias (contrarian) */
+    var rsiScore = rsi < 30 ? 0.6 : rsi < 45 ? 0.2 : rsi > 70 ? -0.6 : rsi > 55 ? -0.2 : 0;
+    factors.push({
+      icon:'📐', name:'RSI (14)', val: rsi.toFixed(1),
+      score: rsiScore, weight: 0.15
+    });
+    totalScore += rsiScore * 0.15; totalWeight += 0.15;
+  }
+
+  /* 4. Momentum — MACD (weight 0.13) */
+  var macd = state.macd;
+  if (macd) {
+    var macdScore = macd.bullish ? (macd.crossed ? 0.7 : 0.4) : (macd.crossed ? -0.7 : -0.4);
+    factors.push({
+      icon:'〰️', name:'MACD', val: macd.bullish ? 'BULL' : 'BEAR',
+      score: macdScore, weight: 0.13
+    });
+    totalScore += macdScore * 0.13; totalWeight += 0.13;
+  }
+
+  /* 5. Volume pressure — CVD (weight 0.12) */
+  var cvd = state.cvd;
+  if (cvd) {
+    var cvdScore = cvd.current > 0 ? Math.min(0.7, 0.3 + Math.abs(cvd.current)/1e8) : Math.max(-0.7, -0.3 - Math.abs(cvd.current)/1e8);
+    factors.push({
+      icon:'💧', name:'CVD', val: cvd.current >= 0 ? (lang==='es'?'Compra':'Buy') : (lang==='es'?'Venta':'Sell'),
+      score: cvdScore, weight: 0.12
+    });
+    totalScore += cvdScore * 0.12; totalWeight += 0.12;
+  }
+
+  /* 6. Sentiment — Funding Rate (weight 0.13, contrarian) */
+  var fr = state.fr && state.fr['BTCUSDT'];
+  if (fr !== undefined) {
+    /* Negative FR = bullish contrarian, very positive FR = bearish contrarian */
+    var frScore = fr < -0.01 ? 0.6 : fr > 0.08 ? -0.7 : fr > 0.04 ? -0.3 : fr < 0.01 ? 0.2 : 0;
+    factors.push({
+      icon:'💸', name: lang==='es'?'Funding Rate':'Funding Rate',
+      val: (fr>=0?'+':'')+fr.toFixed(4)+'%',
+      score: frScore, weight: 0.13
+    });
+    totalScore += frScore * 0.13; totalWeight += 0.13;
+  }
+
+  /* 7. Sentiment — Fear & Greed (weight 0.10, contrarian) */
+  var fg = state.fg;
+  if (fg !== null && fg !== undefined) {
+    var fgScore = fg < 25 ? 0.6 : fg > 80 ? -0.6 : fg < 45 ? 0.2 : fg > 60 ? -0.2 : 0;
+    factors.push({
+      icon:'😨', name:'Fear & Greed', val: fg + '/100',
+      score: fgScore, weight: 0.10
+    });
+    totalScore += fgScore * 0.10; totalWeight += 0.10;
+  }
+
+  if (totalWeight === 0) {
+    body.innerHTML = '<div class="err-box"><div class="err-msg">' +
+      (lang==='es' ? 'Esperando datos de indicadores...' : 'Waiting for indicator data...') +
+      '</div><button class="retry-btn" onclick="loadAdjustedScore()">&#8635; Retry</button></div>';
+    return;
+  }
+
+  /* Normalize final score by actual total weight used (in case some factors are missing) */
+  var finalScore = totalScore / totalWeight; // -1 to +1
+
+  renderAdjustedScore(finalScore, factors, lang);
+}
+
+function renderAdjustedScore(score, factors, lang) {
+  var body  = document.getElementById('adjBody');
+  var badge = document.getElementById('adjBadge');
+  if (!body) return;
+
+  /* Convert score (-1..+1) to bullish/bearish split percentages */
+  var bullPct = Math.round(50 + score * 50);
+  bullPct = Math.max(2, Math.min(98, bullPct));
+  var bearPct = 100 - bullPct;
+
+  var isBull = score > 0.1, isBear = score < -0.1;
+  var biasColor = isBull ? '#00e676' : isBear ? '#ff1744' : '#ffd740';
+  var biasLabel = isBull ? (score>0.4?(lang==='es'?'FUERTEMENTE ALCISTA':'STRONGLY BULLISH'):(lang==='es'?'ALCISTA':'BULLISH')) :
+                  isBear ? (score<-0.4?(lang==='es'?'FUERTEMENTE BAJISTA':'STRONGLY BEARISH'):(lang==='es'?'BAJISTA':'BEARISH')) :
+                           (lang==='es'?'NEUTRAL / MIXTO':'NEUTRAL / MIXED');
+
+  if (badge) { badge.textContent = biasLabel; badge.style.color = biasColor; badge.style.background = biasColor+'18'; }
+
+  /* Factor rows sorted by absolute weighted contribution */
+  var sortedFactors = factors.slice().sort(function(a,b){ return Math.abs(b.score*b.weight) - Math.abs(a.score*a.weight); });
+  var factorRows = sortedFactors.map(function(f) {
+    var cls = f.score > 0.1 ? 'pos' : f.score < -0.1 ? 'neg' : 'neu';
+    var col = f.score > 0.1 ? 'var(--g1)' : f.score < -0.1 ? 'var(--r1)' : 'var(--y1)';
+    return '<div class="adj-factor-row ' + cls + '">' +
+      '<span class="adj-factor-icon">' + f.icon + '</span>' +
+      '<span class="adj-factor-name">' + f.name + '</span>' +
+      '<span class="adj-factor-val" style="color:' + col + '">' + f.val + '</span>' +
+      '<span class="adj-factor-weight">' + (f.weight*100).toFixed(0) + '%</span>' +
+    '</div>';
+  }).join('');
+
+  var summaryBG = isBull ? 'rgba(0,230,118,.06)' : isBear ? 'rgba(255,23,68,.06)' : 'rgba(255,215,64,.06)';
+  var summaryBD = isBull ? 'rgba(0,230,118,.2)'  : isBear ? 'rgba(255,23,68,.2)'  : 'rgba(255,215,64,.2)';
+
+  var summaryText;
+  if (lang === 'es') {
+    summaryText = isBull ?
+      'Las señales combinadas de tendencia, momentum, volumen y sentimiento apuntan actualmente hacia un <strong>sesgo alcista</strong>. Esto NO es una garantía de que el precio suba — es una lectura de contexto que puede cambiar rápidamente si las condiciones del mercado se mueven.' :
+      isBear ?
+      'Las señales combinadas apuntan actualmente hacia un <strong>sesgo bajista</strong>. Como con cualquier análisis de contexto, esto puede revertirse — úsalo como una pieza más del rompecabezas, no como certeza.' :
+      'Las señales están <strong>mixtas o neutrales</strong> — no hay un sesgo direccional claro en este momento. Podría ser un buen momento para esperar mayor confirmación antes de tomar una posición direccional.';
+  } else {
+    summaryText = isBull ?
+      'Combined signals from trend, momentum, volume and sentiment currently point to a <strong>bullish bias</strong>. This is NOT a guarantee price will rise — it is a contextual reading that can change quickly if market conditions shift.' :
+      isBear ?
+      'Combined signals currently point to a <strong>bearish bias</strong>. As with any contextual analysis, this can reverse — use it as one piece of the puzzle, not certainty.' :
+      'Signals are <strong>mixed or neutral</strong> — there is no clear directional bias right now. This could be a good time to wait for further confirmation before taking a directional position.';
+  }
+
+  body.innerHTML =
+    '<div class="adj-disclaimer">' +
+      '<strong>' + (lang==='es'?'⚠️ Importante:':'⚠️ Important:') + '</strong> ' +
+      (lang==='es' ?
+        'Este score combina señales técnicas (tendencia, momentum, volumen, sentimiento) y es <strong>diferente</strong> de la Campana de Gauss estadística pura de arriba. La campana de Gauss no tiene opinión sobre dirección; este panel sí — basado en indicadores que pueden fallar.' :
+        'This score combines technical signals (trend, momentum, volume, sentiment) and is <strong>different</strong> from the pure statistical Gaussian bell curve above. The bell curve has no directional opinion; this panel does — based on indicators that can be wrong.') +
+    '</div>' +
+    '<div class="adj-split">' +
+      '<div class="adj-gauge-col">' +
+        '<div class="adj-gauge-label">' + (lang==='es'?'SESGO DIRECCIONAL':'DIRECTIONAL BIAS') + '</div>' +
+        '<div style="font-family:var(--mono);font-size:2rem;font-weight:700;color:' + biasColor + '">' + (score>=0?'+':'') + (score*100).toFixed(0) + '</div>' +
+        '<div class="adj-bias-badge" style="color:' + biasColor + ';background:' + biasColor + '18;border:1px solid ' + biasColor + '35">' + biasLabel + '</div>' +
+        '<div class="adj-split-bar">' +
+          '<div class="adj-split-seg" style="width:' + bullPct + '%;background:linear-gradient(90deg,#00c853,#00e676)">' + bullPct + '%</div>' +
+          '<div class="adj-split-seg" style="width:' + bearPct + '%;background:linear-gradient(90deg,#ff1744,#ff5252)">' + bearPct + '%</div>' +
+        '</div>' +
+        '<div class="adj-split-labels"><span style="color:var(--g1)">' + (lang==='es'?'ALCISTA':'BULLISH') + '</span><span style="color:var(--r1)">' + (lang==='es'?'BAJISTA':'BEARISH') + '</span></div>' +
+      '</div>' +
+      '<div>' +
+        '<div class="adj-gauge-label">' + (lang==='es'?'SEÑALES ANALIZADAS ('+factors.length+')':'ANALYZED SIGNALS ('+factors.length+')') + '</div>' +
+        '<div class="adj-factors">' + factorRows + '</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="adj-summary" style="background:' + summaryBG + ';border-color:' + summaryBD + ';color:var(--t2)">' + summaryText + '</div>';
 }
 
 /* ═══════════════════════════════════════════════
