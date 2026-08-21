@@ -1133,8 +1133,8 @@ body::before {
 .adj-factor-row.neg { border-left-color:var(--r1); }
 .adj-factor-row.neu { border-left-color:var(--y1); }
 .adj-factor-icon { font-size:13px; flex-shrink:0; }
-.adj-factor-name { font-family:var(--mono); font-size:9px; color:var(--t2); flex:1; }
-.adj-factor-val  { font-family:var(--mono); font-size:9px; font-weight:700; flex-shrink:0; }
+.adj-factor-name { font-family:var(--mono); font-size:8.5px; color:var(--t2); flex:1; line-height:1.4; }
+.adj-factor-val  { font-family:var(--mono); font-size:9px; font-weight:700; flex-shrink:0; white-space:nowrap; }
 .adj-factor-weight { font-family:var(--mono); font-size:7.5px; color:var(--t2); opacity:.6; flex-shrink:0; width:34px; text-align:right; }
 
 .adj-summary {
@@ -5765,7 +5765,7 @@ function loadAdjustedScore() {
   if (ltpi !== undefined && ltpi !== null) {
     var ltpiNorm = Math.max(-1, Math.min(1, ltpi * 2)); // ltpi already -1..1 roughly
     factors.push({
-      icon:'📈', name: lang==='es'?'Tendencia (LTPI)':'Trend (LTPI)',
+      icon:'📈', name: lang==='es'?'Tendencia Largo Plazo (LTPI)':'Long-Term Trend (LTPI)',
       val: (ltpi>=0?'+':'')+ltpi.toFixed(3),
       score: ltpiNorm, weight: 0.22
     });
@@ -5777,7 +5777,7 @@ function loadAdjustedScore() {
   if (mtpi !== undefined && mtpi !== null) {
     var mtpiNorm = Math.max(-1, Math.min(1, mtpi * 2));
     factors.push({
-      icon:'📊', name: lang==='es'?'Tendencia Media (MTPI)':'Mid Trend (MTPI)',
+      icon:'📊', name: lang==='es'?'Tendencia Mediano Plazo (MTPI)':'Mid-Term Trend (MTPI)',
       val: (mtpi>=0?'+':'')+mtpi.toFixed(3),
       score: mtpiNorm, weight: 0.15
     });
@@ -5790,7 +5790,7 @@ function loadAdjustedScore() {
     /* RSI extreme oversold = bullish bias, extreme overbought = bearish bias (contrarian) */
     var rsiScore = rsi < 30 ? 0.6 : rsi < 45 ? 0.2 : rsi > 70 ? -0.6 : rsi > 55 ? -0.2 : 0;
     factors.push({
-      icon:'📐', name:'RSI (14)', val: rsi.toFixed(1),
+      icon:'📐', name: lang==='es'?'Índice de Fuerza Relativa (RSI)':'Relative Strength Index (RSI)', val: rsi.toFixed(1),
       score: rsiScore, weight: 0.15
     });
     totalScore += rsiScore * 0.15; totalWeight += 0.15;
@@ -5801,7 +5801,7 @@ function loadAdjustedScore() {
   if (macd) {
     var macdScore = macd.bullish ? (macd.crossed ? 0.7 : 0.4) : (macd.crossed ? -0.7 : -0.4);
     factors.push({
-      icon:'〰️', name:'MACD', val: macd.bullish ? 'BULL' : 'BEAR',
+      icon:'〰️', name: lang==='es'?'Convergencia de Medias (MACD)':'Moving Avg. Convergence (MACD)', val: macd.bullish ? (lang==='es'?'ALCISTA':'BULL') : (lang==='es'?'BAJISTA':'BEAR'),
       score: macdScore, weight: 0.13
     });
     totalScore += macdScore * 0.13; totalWeight += 0.13;
@@ -5812,7 +5812,7 @@ function loadAdjustedScore() {
   if (cvd) {
     var cvdScore = cvd.current > 0 ? Math.min(0.7, 0.3 + Math.abs(cvd.current)/1e8) : Math.max(-0.7, -0.3 - Math.abs(cvd.current)/1e8);
     factors.push({
-      icon:'💧', name:'CVD', val: cvd.current >= 0 ? (lang==='es'?'Compra':'Buy') : (lang==='es'?'Venta':'Sell'),
+      icon:'💧', name: lang==='es'?'Presión de Volumen (CVD)':'Volume Pressure (CVD)', val: cvd.current >= 0 ? (lang==='es'?'Compra':'Buy') : (lang==='es'?'Venta':'Sell'),
       score: cvdScore, weight: 0.12
     });
     totalScore += cvdScore * 0.12; totalWeight += 0.12;
@@ -5824,7 +5824,7 @@ function loadAdjustedScore() {
     /* Negative FR = bullish contrarian, very positive FR = bearish contrarian */
     var frScore = fr < -0.01 ? 0.6 : fr > 0.08 ? -0.7 : fr > 0.04 ? -0.3 : fr < 0.01 ? 0.2 : 0;
     factors.push({
-      icon:'💸', name: lang==='es'?'Funding Rate':'Funding Rate',
+      icon:'💸', name: lang==='es'?'Tasa de Financiamiento (Funding Rate)':'Funding Rate',
       val: (fr>=0?'+':'')+fr.toFixed(4)+'%',
       score: frScore, weight: 0.13
     });
@@ -5836,7 +5836,7 @@ function loadAdjustedScore() {
   if (fg !== null && fg !== undefined) {
     var fgScore = fg < 25 ? 0.6 : fg > 80 ? -0.6 : fg < 45 ? 0.2 : fg > 60 ? -0.2 : 0;
     factors.push({
-      icon:'😨', name:'Fear & Greed', val: fg + '/100',
+      icon:'😨', name: lang==='es'?'Índice de Miedo y Codicia (F&G)':'Fear & Greed Index', val: fg + '/100',
       score: fgScore, weight: 0.10
     });
     totalScore += fgScore * 0.10; totalWeight += 0.10;
