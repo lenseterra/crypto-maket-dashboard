@@ -5450,16 +5450,23 @@ function _gaussHoverMove(evt) {
   var pct    = _normalCDF(xSigma) * 100;
   var rarity = pct > 50 ? (100-pct) : pct;
 
+  /* Probabilidad de ALCANZAR este precio o uno más extremo (cola de la distribución) */
+  var reachProb = xSigma >= 0 ? (100 - pct) : pct;
+
   var tt = document.getElementById('gaussTooltip');
   if (tt) {
     var lang = gd.lang;
     var freqText = lang==='es' ?
       'Ocurre ~' + rarity.toFixed(1) + '% de los días' :
       'Occurs ~' + rarity.toFixed(1) + '% of days';
+    var reachText = lang==='es' ?
+      'Prob. de llegar aquí: ' + reachProb.toFixed(1) + '%' :
+      'Prob. of reaching here: ' + reachProb.toFixed(1) + '%';
     tt.innerHTML =
       '<div class="tt-title">$' + Math.round(price).toLocaleString('en') + '</div>' +
       '<div>' + (xSigma>=0?'+':'') + xSigma.toFixed(2) + 'σ &middot; ' + (lang==='es'?'Percentil':'Percentile') + ' ' + pct.toFixed(0) + '&deg;</div>' +
-      '<div style="color:var(--t2)">' + freqText + '</div>';
+      '<div style="color:var(--t2)">' + freqText + '</div>' +
+      '<div style="color:#00e5ff;font-weight:700">' + reachText + '</div>';
     tt.style.left = curveX + 'px';
     tt.style.top  = (curveY - 12) + 'px';
     tt.classList.add('show');
