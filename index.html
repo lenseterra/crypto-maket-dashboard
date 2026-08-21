@@ -1554,7 +1554,7 @@ body::before {
   <div class="panel adj-wrap" id="adjPanel">
     <div class="ph">
       <div class="pt"><div class="pdot" style="background:#e040fb"></div>
-        <span id="adjTitle">SCORE AJUSTADO POR CONTEXTO</span>
+        <span id="adjTitle">HACIA DÓNDE APUNTA EL MERCADO (SEÑALES TÉCNICAS)</span>
       </div>
       <span class="pbadge" style="background:rgba(224,64,251,.1);color:#e040fb" id="adjBadge">CALCULANDO</span>
     </div>
@@ -4728,6 +4728,10 @@ function renderVolatility(vix) {
 }
 
 var _EDU_NOTES = {
+  'adjscore': {
+    es: {name:'Hacia Dónde Apunta el Mercado',what:'Combina 7 señales técnicas (tendencia, momentum, volumen y sentimiento) en un solo puntaje que indica hacia qué lado se inclina el mercado en este momento.',zones:'Puntaje cerca de +100 = mayoría de señales alcistas. Cerca de -100 = mayoría bajistas. Cerca de 0 = señales mixtas, sin dirección clara. La barra de reparto (ej: 62% / 38%) muestra visualmente ese balance.',tip:'💡 Este panel es DIFERENTE a la Campana de Gauss — la campana es pura estadística sin opinión de dirección, mientras este panel sí opina basado en indicadores técnicos reales.',warn:'⚠️ No es una predicción ni garantía. Los indicadores técnicos pueden fallar, especialmente en mercados con noticias inesperadas. Úsalo como una pieza más del análisis, nunca como única razón para operar.'},
+    en: {name:'Where the Market Is Pointing',what:'Combines 7 technical signals (trend, momentum, volume and sentiment) into a single score showing which direction the market currently leans.',zones:'Score near +100 = majority of signals bullish. Near -100 = majority bearish. Near 0 = mixed signals, no clear direction. The split bar (e.g. 62% / 38%) visually shows that balance.',tip:'💡 This panel is DIFFERENT from the Gaussian Bell Curve above — the bell curve is pure statistics with no directional opinion, while this panel does have an opinion based on real technical indicators.',warn:'⚠️ This is not a prediction or guarantee. Technical indicators can fail, especially around unexpected news. Use it as one piece of the analysis, never as the sole reason to trade.'}
+  },
   'rsi': {
     es: {name:'RSI — Indice de Fuerza Relativa',what:'Mide velocidad y magnitud del movimiento de precio. Escala 0-100.',zones:'Bajo 30 = Sobrevendido, zona historica de compra. Sobre 70 = Sobrecomprado, zona de tomar ganancias. 40-60 = Neutral.',tip:'💡 El RSI solo no es suficiente. Usalo para confirmar entradas con otras senales.',warn:'⚠️ En bull markets fuertes el RSI puede mantenerse sobre 70 semanas. No vendas solo por eso.'},
     en: {name:'RSI — Relative Strength Index',what:'Measures the speed and magnitude of price movement. Scale 0-100.',zones:'Below 30 = Oversold, historical buying zone. Above 70 = Overbought, take profit zone. 40-60 = Neutral.',tip:'💡 RSI alone is not enough. Use it to confirm entries alongside other signals.',warn:'⚠️ In strong bull markets RSI can stay above 70 for weeks. Do not sell just because of that.'}
@@ -5856,6 +5860,11 @@ function renderAdjustedScore(score, factors, lang) {
   var badge = document.getElementById('adjBadge');
   if (!body) return;
 
+  var titleEl = document.getElementById('adjTitle');
+  if (titleEl) titleEl.textContent = lang === 'es' ?
+    'HACIA DÓNDE APUNTA EL MERCADO (SEÑALES TÉCNICAS)' :
+    'WHERE THE MARKET IS POINTING (TECHNICAL SIGNALS)';
+
   /* Convert score (-1..+1) to bullish/bearish split percentages */
   var bullPct = Math.round(50 + score * 50);
   bullPct = Math.max(2, Math.min(98, bullPct));
@@ -5923,7 +5932,8 @@ function renderAdjustedScore(score, factors, lang) {
         '<div class="adj-factors">' + factorRows + '</div>' +
       '</div>' +
     '</div>' +
-    '<div class="adj-summary" style="background:' + summaryBG + ';border-color:' + summaryBD + ';color:var(--t2)">' + summaryText + '</div>';
+    '<div class="adj-summary" style="background:' + summaryBG + ';border-color:' + summaryBD + ';color:var(--t2)">' + summaryText + '</div>' +
+    _edu('adjscore', '#e040fb');
 }
 
 /* ═══════════════════════════════════════════════
