@@ -5731,10 +5731,11 @@ INSTRUCCIONES:
     document.getElementById('aiTyping')?.remove();
     const errDiv = document.createElement('div');
     errDiv.className = 'msg-row-bot';
-    errDiv.innerHTML = '<div class="bubble-bot" style="color:var(--r1)">⚠️ Error de conexión con la IA.<br><small style="color:var(--t2)">Asegúrate de que la API key de Anthropic está configurada en el servidor.</small></div>';
+    errDiv.innerHTML = '<div class="bubble-bot" style="color:var(--r1)">⚠️ Error de conexión con la IA.<br><small style="color:var(--t2)">' + (e.message || 'Error desconocido').replace(/</g,'&lt;') + '</small></div>';
     msgs.appendChild(errDiv);
     statusLbl.textContent = t('ai_status_error');
     statusLbl.style.color = 'var(--r1)';
+    console.error('AI chat error:', e);
   }
 
   msgs.scrollTop = msgs.scrollHeight;
